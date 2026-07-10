@@ -54,7 +54,7 @@ const ICONS={macbook:"💻",browser:"🧭",ai:"🤖",internet:"🌐",companies:"
 
 /* Per-lesson glyphs (emoji placeholders for now; swap for real art later). */
 const GAMEICON={
-  taps:"👆",trackpad:"🖐️",select:"🔲",window:"🪟",menus:"📋",controls:"🎛️",dock:"📌",install:"📦",
+  trackpad:"🖐️",select:"🔲",window:"🪟",menus:"📋",controls:"🎛️",dock:"📌",install:"📦",
   finder:"🗂️",finder2:"🗺️",files:"📄",folders:"📁",spotlight:"🔦",koreankb:"🇰🇷",text:"📝",keyboard:"⌨️",
   passwords:"🔒",passwords2:"🔐",passwords3:"🔑",passwords4:"🗝️",
   safari:"🧭",search:"🔎",mail:"✉️",scam:"⚠️",tricks:"🎭",privacy:"🤫",undo:"↩️",
