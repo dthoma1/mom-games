@@ -30,8 +30,8 @@ const DONE=k=>{try{return localStorage.getItem("momHub:done:"+k)==="1";}catch(e)
 const UI={
   kicker:{ko:"엄마를 위한 배움 게임",en:"Learning games for Mom"},
   title:{ko:"엄마의 오락실",en:"Mom's\u00A0Arcade"},
-  lede:{ko:"게임 카트리지를 하나 골라 플레이해 보세요. 천천히, 하나씩 배워요.",
-        en:"Pick a cartridge and start playing — learn gently, one game at a time."},
+  lede:{ko:"마음에 드는 앱을 하나 골라 눌러 보세요. 천천히, 하나씩 배워요.",
+        en:"Tap an app to start playing — learn gently, one game at a time."},
   foot:{ko:"엄마를 위해 사랑으로 만들었어요 💛",en:"Made with love, for Mom 💛"},
   back:{ko:"‹ 오락실로 돌아가기",en:"‹ Back to the arcade"},
   soon:{ko:"곧 나와요",en:"Coming soon"},
@@ -48,24 +48,13 @@ function bookGamesCount(b){ return b.soon?0:b.parts.reduce((s,p)=>s+p.games.leng
 function bookDoneCount(b){ if(b.soon) return 0;
   return b.parts.reduce((s,p)=>s+p.games.filter(g=>DONE(g.key)).length,0); }
 
-function cartInner(b){
-  const tot=bookGamesCount(b);
-  const meta = b.soon ? '' : `<div class="cartMeta">${LANG==='ko'?('게임 '+tot+'개'):(tot+' games')}</div>`;
-  const sideL = (LANG==='ko'?'엄마 에디션':'MOM EDITION')+' · DMG-'+b.vol;
-  const sideR = (LANG==='ko'?'이 면이 바깥쪽':'THIS SIDE OUT');
-  return `<div class="cart ${b.soon?'soon':''}" style="--c1:${b.c1};--c2:${b.c2}">
-    <div class="ridges"></div>
-    <div class="brand">${LANG==='ko'?'엄마의 오락실':"Mom's Arcade"}</div>
-    <div class="sideL">${sideL}</div>
-    <div class="sideR">${sideR}</div>
-    <div class="cartLabel">
-      ${b.soon?`<div class="soonTag">${UI.soon[LANG]}</div>`:''}
-      <div class="vol">Vol. ${b.vol}</div>
-      <div class="ct">${T(b,'t')}</div>
-      <div class="cten">${LANG==='ko'?b.ten:''}</div>
-      ${meta}
-    </div>
-    <div class="cartNotch"></div>
+/* Placeholder app-icon glyphs (emoji for now; swap for real art later). */
+const ICONS={macbook:"💻",ai:"🤖",internet:"🌐",companies:"🏢",social:"💬"};
+
+function tileInner(b){
+  return `<div class="tile ${b.soon?'soon':''}" style="--c1:${b.c1};--c2:${b.c2}">
+    ${b.soon?`<div class="soonTag">${UI.soon[LANG]}</div>`:''}
+    <div class="glyph">${ICONS[b.id]||"📱"}</div>
   </div>`;
 }
 
@@ -78,7 +67,7 @@ function renderShelf(){
   BOOKS.forEach(b=>{
     const a=document.createElement("a"); a.className="bookWrap";
     a.href=withLang(ROOT+SLUG[b.id]+"/");
-    let html=cartInner(b);
+    let html=tileInner(b);
     html+=`<div class="label">${T(b,'t')}</div>`;
     html+=`<div class="sublabel">${T(b,'sub')}</div>`;
     if(!b.soon){
@@ -100,7 +89,7 @@ function renderDetail(id){
   document.title = T(b,'t')+" · "+UI.kicker[LANG];
 
   const hero=document.getElementById("hero"); hero.innerHTML="";
-  const cover=document.createElement("div"); cover.innerHTML=cartInner(b); hero.appendChild(cover.firstElementChild);
+  const cover=document.createElement("div"); cover.innerHTML=tileInner(b); hero.appendChild(cover.firstElementChild);
   const tx=document.createElement("div"); tx.className="htext";
   const tot=bookGamesCount(b), d=bookDoneCount(b);
   tx.innerHTML=`<div class="hvol">Vol. ${b.vol}</div>
