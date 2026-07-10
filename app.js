@@ -28,12 +28,12 @@ const T=(o,k)=>o[(k||"")+ (LANG==="ko"?"ko":"en")];
 const DONE=k=>{try{return localStorage.getItem("momHub:done:"+k)==="1";}catch(e){return false;}};
 
 const UI={
-  kicker:{ko:"기술 생존 가이드",en:"Technology Survival Guides"},
-  title:{ko:"기술 생존 가이드",en:"Technology\u00A0Survival Guides"},
-  lede:{ko:"어렵게 느껴지는 기술을, 한 권씩 천천히. 읽고 싶은 책을 골라 보세요.",
-        en:"Technology made gentle — one book at a time. Choose a guide to begin."},
+  kicker:{ko:"엄마를 위한 배움 게임",en:"Learning games for Mom"},
+  title:{ko:"엄마의 오락실",en:"Mom's\u00A0Arcade"},
+  lede:{ko:"게임 카트리지를 하나 골라 플레이해 보세요. 천천히, 하나씩 배워요.",
+        en:"Pick a cartridge and start playing — learn gently, one game at a time."},
   foot:{ko:"엄마를 위해 사랑으로 만들었어요 💛",en:"Made with love, for Mom 💛"},
-  back:{ko:"‹ 책장으로 돌아가기",en:"‹ Back to the shelf"},
+  back:{ko:"‹ 오락실로 돌아가기",en:"‹ Back to the arcade"},
   soon:{ko:"곧 나와요",en:"Coming soon"},
   soonBanner:{ko:"이 책은 아직 준비 중이에요. 아래는 앞으로 담길 이야기예요 👇",
               en:"This book is still being written. Here's what's coming 👇"},
@@ -55,7 +55,7 @@ function cartInner(b){
   const sideR = (LANG==='ko'?'이 면이 바깥쪽':'THIS SIDE OUT');
   return `<div class="cart ${b.soon?'soon':''}" style="--c1:${b.c1};--c2:${b.c2}">
     <div class="ridges"></div>
-    <div class="brand">${LANG==='ko'?'기술 생존 가이드':'Tech Survival'}</div>
+    <div class="brand">${LANG==='ko'?'엄마의 오락실':"Mom's Arcade"}</div>
     <div class="sideL">${sideL}</div>
     <div class="sideR">${sideR}</div>
     <div class="cartLabel">
