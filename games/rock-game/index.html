@@ -128,11 +128,7 @@
   .binBulbs{display:flex;gap:34px;justify-content:center;align-items:flex-start;}
   .bunit{display:flex;flex-direction:column;align-items:center;gap:9px;}
   .bunit .pv{font-size:12.5px;font-weight:800;color:#64748b;}
-  .bitdots{display:flex;gap:10px;margin-top:2px;}
-  .bitdots .bd{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-size:15px;font-weight:800;background:#e5e7eb;color:#94a3b8;transition:.2s;}
-  .bitdots .bd.cur{background:#fde68a;color:#78350f;box-shadow:0 0 0 3px rgba(245,158,11,.3);}
-  .bitdots .bd.done{background:#22c55e;color:#fff;}
+  .bitdots{display:none;}
 
   .bitrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
   .bit{display:flex;flex-direction:column;align-items:center;gap:5px;}
@@ -379,15 +375,13 @@ const levels=[
           <div class="bunit"><div class="bulb sm on" id="bl1">💡</div><div class="toggle on" id="tg1"></div><div class="pv">${T({ko:"1의 자리",en:"the 1s"})}</div></div>
         </div>
         <div class="readout" id="ro"></div>
-        <div class="bitdots" id="bd"></div>
       </div>`;
       const BL=[st.querySelector("#bl0"),st.querySelector("#bl1")];
       const TG=[st.querySelector("#tg0"),st.querySelector("#tg1")];
-      const bn=st.querySelector("#bn"),ro=st.querySelector("#ro"),bd=st.querySelector("#bd");
+      const bn=st.querySelector("#bn"),ro=st.querySelector("#ro");
       const val=()=>bits[0]*2+bits[1];
       function renderRO(){ ro.innerHTML=`${bits[0]}${bits[1]} <span style="color:#94a3b8">=</span> <b>${val()}</b>`; }
-      function renderDots(){ bd.innerHTML=targets.map((t,k)=>`<span class="bd ${k<ti?'done':k===ti?'cur':''}">${t}</span>`).join(""); }
-      function renderTarget(){ bn.textContent=targets[ti]; bn.classList.remove("hit"); renderDots(); }
+      function renderTarget(){ bn.textContent=targets[ti]; bn.classList.remove("hit"); }
       function sync(i){ BL[i].classList.toggle("on",!!bits[i]); TG[i].classList.toggle("on",!!bits[i]); }
       TG.forEach((tg,i)=>tg.addEventListener("click",()=>{
         if(locked||busy)return; clearFocus(); bits[i]=bits[i]?0:1; beep(bits[i]?720:400,.09); sync(i); renderRO();
