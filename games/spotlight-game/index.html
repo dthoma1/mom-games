@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 스팟라이트 배우기</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#6366f1; --accent2:#ec4899; --good:#22c55e;
+    --desk1:#5b8def; --desk2:#a06cd5; --sel:#3b82f6;
+  }
+  *{box-sizing:border-box; -webkit-user-select:none; user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;
+    overscroll-behavior:none;touch-action:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1000px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;
+    border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:120;}
+
+  /* intro */
+  #introView{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(99,102,241,.12);padding:26px;text-align:center;overflow:auto;}
+  #introArt{font-size:70px;line-height:1.15;margin-bottom:10px;}
+  #introTitle{font-size:26px;font-weight:800;margin:4px 0;}
+  #introText{font-size:17px;line-height:1.7;max-width:660px;color:#374151;}
+  #introText b{color:var(--accent);}
+  .keycap{display:inline-block;min-width:26px;padding:2px 8px;margin:0 2px;border-radius:8px;
+    background:#f3f4f6;border:1px solid #d1d5db;border-bottom-width:3px;font-weight:800;color:#111827;}
+  .introBtns{margin-top:20px;display:flex;gap:10px;}
+
+  /* lesson */
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;}
+  #banner .t{font-size:18px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .i b{color:var(--accent);}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  /* fake desktop */
+  #desktop{position:relative;flex:1;min-height:0;border-radius:14px;overflow:hidden;
+    background:linear-gradient(160deg,var(--desk1),var(--desk2));
+    box-shadow:inset 0 0 60px rgba(0,0,0,.12), 0 18px 40px rgba(0,0,0,.18);}
+  #menubar{position:absolute;top:0;left:0;right:0;height:28px;background:rgba(255,255,255,.6);
+    backdrop-filter:blur(10px);display:flex;align-items:center;gap:2px;padding:0 8px;z-index:20;font-size:14px;}
+  .mbTitle{padding:3px 9px;border-radius:6px;font-weight:600;color:#111827;white-space:nowrap;}
+  .mbTitle.app{font-weight:800;}
+  #mbRight{margin-left:auto;display:flex;align-items:center;gap:4px;}
+  .trayIcon{padding:3px 6px;border-radius:6px;cursor:pointer;font-size:15px;line-height:1;}
+  .trayIcon:hover{background:rgba(0,0,0,.08);}
+  #spotIcon.pulse{animation:pulse 1.3s ease-in-out infinite;border-radius:6px;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}50%{box-shadow:0 0 0 4px rgba(255,255,255,.85);}}
+  #clockBtn{font-size:13px;color:#111827;padding:3px 4px;}
+
+  #deskHint{position:absolute;top:44%;left:0;right:0;text-align:center;color:rgba(255,255,255,.92);
+    font-size:15px;white-space:pre-line;text-shadow:0 1px 6px rgba(0,0,0,.35);pointer-events:none;padding:0 20px;}
+
+  /* fake opened app window */
+  #appWin{position:absolute;top:52px;left:50%;transform:translateX(-50%);width:min(360px,80%);height:150px;
+    background:#fff;border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.35);display:none;flex-direction:column;overflow:hidden;z-index:30;}
+  #appWin .tb{height:30px;background:#e9eaee;display:flex;align-items:center;gap:7px;padding:0 10px;}
+  #appWin .tb .d{width:11px;height:11px;border-radius:50%;}
+  .r{background:#ff5f57;} .y{background:#febc2e;} .g{background:#28c840;}
+  #appWin .bd{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;font-size:15px;color:#374151;}
+  #appWin .bd .big{font-size:48px;}
+
+  /* spotlight panel */
+  #spot{position:absolute;top:20%;left:50%;transform:translateX(-50%) scale(.96);width:min(560px,88%);
+    background:rgba(246,246,248,.86);backdrop-filter:blur(24px);border-radius:16px;
+    box-shadow:0 30px 80px rgba(0,0,0,.45);overflow:hidden;display:none;z-index:60;opacity:0;transition:opacity .12s, transform .12s;}
+  #spot.open{display:block;opacity:1;transform:translateX(-50%) scale(1);}
+  #spotSearch{display:flex;align-items:center;gap:10px;padding:12px 16px;}
+  #spotSearch .mag{font-size:24px;color:#6b7280;}
+  #spotInput{flex:1;border:none;background:transparent;font-size:24px;outline:none;color:#111827;
+    -webkit-user-select:text;user-select:text;}
+  #spotInput::placeholder{color:#9ca3af;}
+  #spotResults{max-height:280px;overflow:auto;border-top:1px solid rgba(0,0,0,.08);}
+  #spotResults:empty{display:none;}
+  .spotRow{display:flex;align-items:center;gap:12px;padding:9px 16px;cursor:pointer;}
+  .spotRow.sel{background:var(--sel);color:#fff;}
+  .spotRow .ic{font-size:26px;width:30px;text-align:center;}
+  .spotRow .txt{flex:1;min-width:0;}
+  .spotRow .tt{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .spotRow .sb{font-size:12px;color:#6b7280;}
+  .spotRow.sel .sb{color:rgba(255,255,255,.85);}
+  .spotRow .val{font-size:22px;font-weight:800;}
+  .spotCat{font-size:11px;font-weight:700;color:#9ca3af;padding:6px 16px 2px;text-transform:uppercase;letter-spacing:.4px;}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:100;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:130;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+  button.big.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+  .toast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;
+    padding:8px 16px;border-radius:999px;font-size:14px;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipStep()"></button>
+
+    <div id="introView" style="display:none;">
+      <div id="introArt">🔍</div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button class="big soft" id="introBack" onclick="prevIntro()"></button>
+        <button class="big" id="introNext" onclick="nextIntro()"></button>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+      </div>
+
+      <div id="desktop">
+        <div id="menubar">
+          <span class="mbTitle app-logo"></span>
+          <span class="mbTitle app">Finder</span>
+          <span class="mbTitle" id="menuFile"></span>
+          <span class="mbTitle" id="menuEdit"></span>
+          <span class="mbTitle" id="menuView"></span>
+          <span id="mbRight">
+            <span class="trayIcon">🔋</span>
+            <span class="trayIcon">📶</span>
+            <span class="trayIcon" id="spotIcon" title="Spotlight">🔍</span>
+            <span id="clockBtn"></span>
+          </span>
+        </div>
+
+        <div id="deskHint"></div>
+
+        <div id="appWin"><div class="tb"><span class="d r"></span><span class="d y"></span><span class="d g"></span></div>
+          <div class="bd"><span class="big" id="appWinIcon">🧭</span><span id="appWinName">Safari</span></div></div>
+
+        <div id="spot">
+          <div id="spotSearch"><span class="mag">🔍</span>
+            <input id="spotInput" type="text" autocomplete="off" spellcheck="false" /></div>
+          <div id="spotResults"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  title:{ko:"엄마의 스팟라이트 배우기",en:"Mom's Spotlight Lesson"},
+  h1:{ko:"🔍 엄마의 스팟라이트 배우기",en:"🔍 Learning Spotlight"},
+  sub:{ko:"맥북의 ‘돋보기 검색’으로 무엇이든 빠르게 찾는 법을 배워요.",en:"Learn to quickly find anything with your MacBook's magnifying-glass search."},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  introBack:{ko:"‹ 이전",en:"‹ Back"},
+  introNext:{ko:"다음 ▶",en:"Next ▶"},
+  introStart:{ko:"시작하기 ▶",en:"Start ▶"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"스팟라이트 달인!",en:"Spotlight master!"},
+  finalMsg:{ko:"이제 앱도, 파일도, 계산도 눈 깜짝할 새에 찾을 수 있어요. 정말 멋져요 💖",en:"Now you can find apps, files, and calculations in a flash. Wonderful work 💖"},
+  menuFile:{ko:"파일",en:"File"}, menuEdit:{ko:"편집",en:"Edit"}, menuView:{ko:"보기",en:"View"},
+  placeholder:{ko:"검색어를 입력하세요",en:"Type what to search for"},
+  deskHint:{ko:"오른쪽 위 🔍 돋보기를 누르세요",en:"Click the 🔍 at the top right"},
+  calcCat:{ko:"계산기",en:"Calculator"}, appCat:{ko:"응용 프로그램",en:"Applications"}, docCat:{ko:"문서",en:"Documents"}, webCat:{ko:"웹 검색",en:"Web Search"},
+  webSearch:{ko:q=>`‘${q}’ 웹에서 검색`,en:q=>`Search the web for ‘${q}’`},
+  safariOpen:{ko:"Safari에서 열기",en:"Open in Safari"},
+  calcToast:{ko:v=>`계산 결과: ${v} 🧮`,en:v=>`Calculation result: ${v} 🧮`},
+  webToast:{ko:q=>`웹에서 ‘${q}’ 검색! 🌐`,en:q=>`Search the web for ‘${q}’! 🌐`},
+  openToast:{ko:r=>`‘${T(r.label)}’을(를) 열었어요 ${r.icon}`,en:r=>`Opened ‘${T(r.label)}’ ${r.icon}`},
+  am:{ko:"오전",en:"AM"}, pm:{ko:"오후",en:"PM"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  next:{ko:"다음 ›",en:"Next ›"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG; document.title=T(UI.title);
+  document.getElementById("h1").textContent=T(UI.h1); document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip); document.getElementById("introBack").textContent=T(UI.introBack);
+  document.getElementById("restartBtn").textContent=T(UI.restart); document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle); document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.getElementById("menuFile").textContent=T(UI.menuFile); document.getElementById("menuEdit").textContent=T(UI.menuEdit); document.getElementById("menuView").textContent=T(UI.menuView);
+  document.getElementById("spotInput").placeholder=T(UI.placeholder);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG)); tickClock();
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final && els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(phase==="intro"){ showIntro(); }
+  else if(!doneGuard){ loadLesson(lidx); }
+}
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+const clickSnd=()=>beep(520,.05);
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+let toastT=null;
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1500); }
+
+/* ---------- catalog ---------- */
+const CATALOG=[
+  {type:"app", key:"safari", icon:"🧭", label:{ko:"Safari",en:"Safari"}, sub:UI.appCat, alias:["safari","사파리","인터넷","웹","브라우저"]},
+  {type:"app", key:"mail",   icon:"✉️", label:{ko:"Mail",en:"Mail"},   sub:UI.appCat, alias:["mail","메일","이메일","편지"]},
+  {type:"app", key:"photos", icon:"🖼️", label:{ko:"사진",en:"Photos"}, sub:UI.appCat, alias:["photo","photos","사진","포토"]},
+  {type:"app", key:"music",  icon:"🎵", label:{ko:"음악",en:"Music"},  sub:UI.appCat, alias:["music","음악","노래"]},
+  {type:"app", key:"notes",  icon:"📝", label:{ko:"메모",en:"Notes"},  sub:UI.appCat, alias:["note","notes","메모"]},
+  {type:"doc", key:"letter", icon:"📄", label:{ko:"편지.txt",en:"letter.txt"},     sub:{ko:"문서 — 오늘 오후 2:14",en:"Documents — today 2:14 PM"}, alias:["letter","편지","txt"]},
+  {type:"doc", key:"budget", icon:"📊", label:{ko:"가계부.xlsx",en:"budget.xlsx"}, sub:{ko:"문서 — 어제",en:"Documents — yesterday"}, alias:["budget","가계부","xlsx"]},
+  {type:"doc", key:"trip",   icon:"🗺️", label:{ko:"여행계획.txt",en:"trip-plan.txt"}, sub:{ko:"문서 — 지난주",en:"Documents — last week"}, alias:["trip","여행","plan"]},
+];
+
+/* ---------- spotlight logic ---------- */
+let listener=null;
+function notifyGame(type,payload){ if(listener) listener(type,payload); }
+
+const desktop=document.getElementById("desktop");
+const spot=document.getElementById("spot");
+const spotInput=document.getElementById("spotInput");
+const spotResults=document.getElementById("spotResults");
+const spotIcon=document.getElementById("spotIcon");
+const appWin=document.getElementById("appWin");
+let spotOpen=false, selIndex=0, currentRows=[];
+
+function calcExpr(q){
+  const cleaned=q.replace(/×/g,"*").replace(/x/gi,"*").replace(/÷/g,"/").trim();
+  if(!/[0-9]/.test(cleaned) || !/[+\-*/]/.test(cleaned)) return null;
+  if(!/^[0-9+\-*/.() ]+$/.test(cleaned)) return null;
+  try{ const v=Function('"use strict";return ('+cleaned+')')(); if(typeof v==="number" && isFinite(v)) return Math.round(v*1e6)/1e6; }catch(e){}
+  return null;
+}
+function buildRows(q){
+  const rows=[]; const query=q.trim().toLowerCase();
+  const cv=calcExpr(q);
+  if(cv!==null){ rows.push({type:"calc", icon:"🧮", label:{ko:q.trim()+" = "+cv,en:q.trim()+" = "+cv}, sub:UI.calcCat, value:cv, cat:UI.calcCat}); }
+  if(query){
+    CATALOG.forEach(it=>{
+      if(T(it.label).toLowerCase().includes(query) || it.alias.some(a=>a.toLowerCase().includes(query)))
+        rows.push({...it, cat: it.type==="app"?UI.appCat:UI.docCat});
+    });
+    rows.push({type:"web", icon:"🌐", label:{ko:UI.webSearch.ko(q.trim()),en:UI.webSearch.en(q.trim())}, sub:UI.safariOpen, query:q.trim(), cat:UI.webCat});
+  }
+  return rows;
+}
+function renderResults(){
+  const q=spotInput.value;
+  currentRows=buildRows(q);
+  spotResults.innerHTML="";
+  let lastCat=null;
+  currentRows.forEach((r,i)=>{
+    if(T(r.cat)!==lastCat){ const c=document.createElement("div"); c.className="spotCat"; c.textContent=T(r.cat); spotResults.appendChild(c); lastCat=T(r.cat); }
+    const el=document.createElement("div"); el.className="spotRow"+(i===selIndex?" sel":""); el.dataset.i=i;
+    el.innerHTML=`<span class="ic">${r.icon}</span><span class="txt"><div class="tt">${T(r.label)}</div><div class="sb">${T(r.sub)}</div></span>`;
+    el.addEventListener("click",()=>{ selIndex=i; activate(currentRows[i]); });
+    spotResults.appendChild(el);
+  });
+  if(selIndex>=currentRows.length) selIndex=Math.max(0,currentRows.length-1);
+  // notify calc preview (for the math lesson)
+  const calc=currentRows.find(r=>r.type==="calc");
+  if(calc) notifyGame("calc",{value:calc.value});
+}
+function openSpot(){
+  if(spotOpen) return; spotOpen=true; appWin.style.display="none";
+  spot.classList.add("open"); spotInput.value=""; selIndex=0; renderResults();
+  setTimeout(()=>spotInput.focus(),20); clickSnd(); notifyGame("open-spot",{});
+}
+function closeSpot(reason){
+  if(!spotOpen) return; spotOpen=false; spot.classList.remove("open"); spotInput.blur();
+  if(reason==="esc") notifyGame("close-spot",{});
+}
+function activate(r){
+  if(!r) return; clickSnd();
+  if(r.type==="calc"){ toast(UI.calcToast[LANG](r.value)); notifyGame("calc",{value:r.value}); return; }
+  if(r.type==="web"){ toast(UI.webToast[LANG](r.query)); notifyGame("activate",{type:"web",query:r.query}); closeSpot("activate"); return; }
+  // app or doc: show fake opened window
+  document.getElementById("appWinIcon").textContent=r.icon;
+  document.getElementById("appWinName").textContent=T(r.label);
+  closeSpot("activate"); appWin.style.display="flex";
+  toast(UI.openToast[LANG](r));
+  notifyGame("activate",{type:r.type,key:r.key});
+}
+
+spotIcon.addEventListener("click",()=>{ spotOpen?closeSpot("icon"):openSpot(); });
+spotInput.addEventListener("input",()=>{ selIndex=0; renderResults(); });
+spotInput.addEventListener("keydown",e=>{
+  if(e.key==="ArrowDown"){ e.preventDefault(); if(selIndex<currentRows.length-1){ selIndex++; renderResults(); } }
+  else if(e.key==="ArrowUp"){ e.preventDefault(); if(selIndex>0){ selIndex--; renderResults(); } }
+  else if(e.key==="Enter"){ e.preventDefault(); activate(currentRows[selIndex]); }
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape" && spotOpen){ e.preventDefault(); closeSpot("esc"); }
+});
+document.addEventListener("gesturestart",e=>e.preventDefault());
+
+/* live clock */
+function tickClock(){ const d=new Date(); let h=d.getHours(); const m=String(d.getMinutes()).padStart(2,"0");
+  const ap=h<12?T(UI.am):T(UI.pm); h=h%12; if(h===0)h=12; document.getElementById("clockBtn").textContent=LANG==="ko"?`${ap} ${h}:${m}`:`${h}:${m} ${ap}`; }
+
+/* ---------- content ---------- */
+let introIdx=0, phase="intro";
+const INTRO=[
+  { art:"🔍", title:{ko:"스팟라이트가 뭐예요?",en:"What is Spotlight?"},
+    html:{ko:`오른쪽 위의 <b>돋보기 🔍</b>가 바로 <b>스팟라이트</b>예요.<br><br>
+    컴퓨터 안의 <b>앱·파일·설정</b>을 무엇이든 <b>빠르게 찾아</b>줘요.<br>
+    서랍을 하나하나 뒤질 필요 없이, <b>이름만 적으면</b> 찾아 주는 똑똑한 도우미예요.`,
+    en:`The <b>magnifying glass 🔍</b> at the top right is <b>Spotlight</b>.<br><br>
+    It quickly finds <b>apps, files, and settings</b> inside your computer.<br>
+    Instead of opening every drawer, just <b>type the name</b> and this smart helper finds it for you.`} },
+  { art:"🔍", title:{ko:"여는 방법",en:"How to open it"},
+    html:{ko:`오른쪽 위의 <b>돋보기 🔍</b> 를 누르세요.<br><br>
+    그러면 화면 가운데에 <b>검색창</b>이 떠요.`,
+    en:`Click the <b>magnifying glass 🔍</b> at the top right.<br><br>
+    A <b>search box</b> will appear in the middle of the screen.`} },
+  { art:"⌨️", title:{ko:"어떻게 쓰나요",en:"How to use it"},
+    html:{ko:`검색창이 뜨면, 찾고 싶은 것의 <b>이름을 타이핑</b>하세요.<br><br>
+    아래에 결과가 주르륵 나오면, <b>원하는 것을 누르</b>거나 <span class="keycap">Return ↵</span>(엔터) 키를 누르면 열려요.<br><br>
+    그만두고 싶으면 <span class="keycap">esc</span> 키로 닫으면 돼요.`,
+    en:`When the search box appears, <b>type the name</b> of what you want to find.<br><br>
+    When results appear below, <b>click the one you want</b> or press <span class="keycap">Return ↵</span> to open it.<br><br>
+    If you want to stop, press <span class="keycap">esc</span> to close it.`} },
+]
+
+const LESSONS=[
+  { title:{ko:"① 스팟라이트 열기",en:"① Open Spotlight"},
+    instr:{ko:"오른쪽 위 <b>🔍 돋보기</b>를 눌러 검색창을 여세요.",
+           en:"Click the <b>🔍 magnifying glass</b> at the top right to open the search box."},
+    hint:{ko:"오른쪽 위 돋보기 🔍를 톡! 화면 가운데에 검색창이 나타나요.",en:"Tap the 🔍 at the top right! The search box appears in the middle of the screen."},
+    pulseSpot:true,
+    setup(done){ listener=(t,p)=>{ if(t==="open-spot") done("🔍",{ko:"검색창을 열었어요!",en:"You opened the search box!"}); }; } },
+
+  { title:{ko:"② 앱 찾아서 열기",en:"② Find and open an app"},
+    instr:{ko:"검색창에 <b>safari</b> 라고 입력하고, 나온 <b>Safari</b>를 눌러(또는 Return) 여세요.",
+           en:"Type <b>safari</b> in the search box, then click <b>Safari</b> (or press Return) to open it."},
+    hint:{ko:"앱 이름을 적으면 바로 찾아줘요. 메뉴를 뒤질 필요가 없어요. 몇 글자만 적어도 돼요.",
+          en:"Type an app name and Spotlight finds it right away. No need to hunt through menus — a few letters is enough."},
+    autoOpen:true,
+    setup(done){ listener=(t,p)=>{ if(t==="activate"&&p.type==="app"&&p.key==="safari") done("🧭",{ko:"스팟라이트로 앱을 열었어요!",en:"You opened an app with Spotlight!"}); }; } },
+
+  { title:{ko:"③ 빠른 계산하기",en:"③ Do a quick calculation"},
+    instr:{ko:"검색창에 <b>12+8</b> 이라고 입력해서, 계산 결과가 나오는지 보세요.",
+           en:"Type <b>12+8</b> in the search box and see the answer appear."},
+    hint:{ko:"스팟라이트는 계산기도 돼요! 숫자와 +, - 를 적으면 답이 바로 나와요. (예: 25 x 4)",
+          en:"Spotlight can be a calculator too! Type numbers and + or - to see the answer right away. (Example: 25 x 4)"},
+    autoOpen:true,
+    setup(done){ listener=(t,p)=>{ if(t==="calc"&&p.value===20) done("🧮",{ko:"스팟라이트로 계산했어요!",en:"You calculated with Spotlight!"}); }; } },
+
+  { title:{ko:"④ 문서(파일) 찾기",en:"④ Find a document (file)"},
+    instr:{ko:"검색창에 <b>letter</b> 라고 입력하고, <b>편지.txt</b> 문서를 눌러서 여세요.",
+           en:"Type <b>letter</b> in the search box, then click the <b>letter.txt</b> document to open it."},
+    hint:{ko:"파일이 어느 폴더에 있는지 몰라도 괜찮아요. 이름만 적으면 스팟라이트가 찾아 줘요.",
+          en:"It's okay if you don't know which folder a file is in. Type the name and Spotlight finds it."},
+    autoOpen:true,
+    setup(done){ listener=(t,p)=>{ if(t==="activate"&&p.type==="doc"&&p.key==="letter") done("📄",{ko:"파일을 찾아서 열었어요!",en:"You found and opened a file!"}); }; } },
+
+  { title:{ko:"⑤ 웹에서 검색하기",en:"⑤ Search the web"},
+    instr:{ko:"검색창에 <b>날씨</b> 처럼 궁금한 걸 적고, 맨 아래 <b>‘웹에서 검색’</b> 줄을 누르세요.",
+           en:"Type something you're curious about, like <b>weather</b>, then click the bottom <b>‘Search the web’</b> row."},
+    hint:{ko:"찾는 게 컴퓨터 안에 없으면, 스팟라이트가 인터넷에서 대신 찾아 줘요.",
+          en:"If it isn't on your computer, Spotlight can search the internet for you."},
+    autoOpen:true,
+    setup(done){ listener=(t,p)=>{ if(t==="activate"&&p.type==="web") done("🌐",{ko:"웹 검색까지 배웠어요!",en:"You learned web search too!"}); }; } },
+
+  { title:{ko:"⑥ 검색창 닫기",en:"⑥ Close the search box"},
+    instr:{ko:"스팟라이트를 연 다음, 아무것도 고르지 말고 <b>esc</b> 키를 눌러 <b>닫아</b> 보세요.",
+           en:"Open Spotlight, then don't choose anything — press <b>esc</b> to <b>close</b> it."},
+    hint:{ko:"잘못 열었거나 그만두고 싶을 땐 esc 키 하나면 깔끔하게 닫혀요. 걱정하지 않아도 돼요.",
+          en:"If you opened it by mistake or want to stop, one esc key closes it neatly. No worries."},
+    pulseSpot:true,
+    setup(done){ listener=(t,p)=>{ if(t==="close-spot") done("✋",{ko:"검색창을 깔끔하게 닫았어요!",en:"You closed the search box neatly!"}); }; } },
+]
+
+/* ---------- engine ---------- */
+let lidx=0, doneGuard=false;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"), introArt:document.getElementById("introArt"),
+  introTitle:document.getElementById("introTitle"), introText:document.getElementById("introText"),
+  introBack:document.getElementById("introBack"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"), skip:document.getElementById("skipBtn"),
+  bTitle:document.getElementById("bTitle"), bInstr:document.getElementById("bInstr"), bHint:document.getElementById("bHint"),
+  deskHint:document.getElementById("deskHint") };
+const totalSteps=INTRO.length+LESSONS.length;
+function doneCount(){ return phase==="intro"?introIdx:INTRO.length+lidx; }
+function updateProgress(){ els.step.textContent=UI.step[LANG](doneCount()+1,totalSteps); els.bar.style.width=(doneCount()/totalSteps*100)+"%"; }
+
+function showIntro(){ phase="intro"; els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none";
+  const c=INTRO[introIdx]; els.introArt.textContent=c.art; els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
+  els.introBack.style.visibility=introIdx===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=introIdx===INTRO.length-1?T(UI.introStart):T(UI.introNext); updateProgress(); }
+function nextIntro(){ if(introIdx<INTRO.length-1){ introIdx++; showIntro(); } else startLessons(); }
+function prevIntro(){ if(introIdx>0){ introIdx--; showIntro(); } }
+function startLessons(){ phase="lessons"; lidx=0; els.intro.style.display="none"; els.main.style.display="flex"; loadLesson(0); }
+
+function loadLesson(i){
+  const lv=LESSONS[i]; doneGuard=false;
+  els.bTitle.textContent=T(lv.title); els.bInstr.innerHTML=T(lv.instr); els.bHint.textContent="💡 "+T(lv.hint);
+  updateProgress(); listener=null;
+  closeSpot("load"); appWin.style.display="none"; spotIcon.classList.toggle("pulse", !!lv.pulseSpot);
+  els.deskHint.textContent = lv.pulseSpot ? T(UI.deskHint) : "";
+  lv.setup(onDone);
+  if(lv.autoOpen) openSpot();
+}
+function onDone(emoji,msg){
+  if(doneGuard) return; doneGuard=true;
+  listener=null; spotIcon.classList.remove("pulse");
+  els.bar.style.width=((INTRO.length+lidx+1)/totalSteps*100)+"%";
+  els.msg.textContent=msg?T(msg):praise(); els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex"; confetti(); chime();
+}
+function goNext(){ els.overlay.style.display="none"; lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function skipStep(){ if(phase==="intro"){ nextIntro(); return; } doneGuard=true; listener=null; closeSpot("skip"); spotIcon.classList.remove("pulse");
+  lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:spotlight","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.final.style.display="none"; closeSpot("restart"); appWin.style.display="none"; showIntro(); }
+
+tickClock(); setInterval(tickClock,10000);
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+applyStatic(); showIntro();
+</script>
+</body>
+</html>

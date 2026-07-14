@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI로 노래 만들기</title>
+<style>
+  :root{--bg1:#eef2ff;--bg2:#fdf2f8;--ink:#1f2937;--soft:#6b7280;--accent:#6366f1;--accent2:#ec4899;
+    --good:#22c55e;--macblue:#0a63ff;--desk1:#2b6cff;--desk2:#8a5cf6;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+  #banner .extra{margin-top:8px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;}
+  #replayBtn{font-size:14px;font-weight:700;color:var(--accent);background:#eef2ff;border:1px solid #dfe4ff;
+    border-radius:999px;padding:7px 16px;cursor:pointer;display:none;}
+  #stage{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;
+    background:linear-gradient(135deg,var(--desk1),var(--desk2));display:flex;align-items:center;justify-content:center;padding:18px;}
+
+  .bwin{background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.30);width:min(580px,96%);overflow:hidden;
+    display:flex;flex-direction:column;}
+  .btool{height:46px;background:linear-gradient(#f6f6f7,#e9e9eb);display:flex;align-items:center;gap:8px;padding:0 12px;
+    border-bottom:1px solid #e1e1e4;}
+  .dots{display:flex;gap:7px;margin-right:4px;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dot.r{background:#ff5f57;}.dot.y{background:#febc2e;}.dot.g{background:#28c840;}
+  .navbtn{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5b6270;
+    font-size:17px;cursor:pointer;flex:0 0 auto;}
+  .navbtn:hover{background:rgba(0,0,0,.06);}
+  .navbtn.off{opacity:.32;pointer-events:none;}
+  .addrbar{flex:1;height:32px;background:#fff;border:1px solid #d5d5da;border-radius:8px;display:flex;align-items:center;
+    padding:0 10px;gap:7px;font-size:14px;color:#374151;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);min-width:0;}
+  .addrbar .lock{font-size:11px;color:#9ca3af;}
+  .addrbar input{border:none;outline:none;flex:1;font-size:14px;background:transparent;min-width:0;color:#374151;}
+  .addrbar.focusRing{border-color:var(--macblue);box-shadow:0 0 0 3px rgba(10,99,255,.25);}
+  .tabstrip{height:34px;background:#e6e6e9;display:flex;align-items:flex-end;gap:2px;padding:0 8px;}
+  .tab{height:29px;background:#d3d3d8;border-radius:8px 8px 0 0;padding:0 12px;display:flex;align-items:center;gap:8px;
+    font-size:13px;color:#4b5563;max-width:170px;white-space:nowrap;overflow:hidden;}
+  .tab.active{background:#fff;color:#1f2937;}
+  .tabx{font-size:13px;color:#9ca3af;cursor:pointer;border-radius:4px;padding:0 3px;}
+  .tabx:hover{background:rgba(0,0,0,.1);}
+  .bcontent{background:#fff;flex:1;min-height:150px;padding:24px;text-align:center;overflow:hidden;transition:font-size .2s;}
+  .bcontent h2{margin:6px 0;}
+  .bcontent p{color:#6b7280;line-height:1.5;margin:8px 0;}
+  .fav{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+  .favIcon{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;
+    box-shadow:0 3px 8px rgba(0,0,0,.12);}
+
+  @keyframes tpulse{0%,100%{box-shadow:0 0 0 0 rgba(10,99,255,.55);}50%{box-shadow:0 0 0 7px rgba(10,99,255,0);}}
+  .target{animation:tpulse 1.4s infinite;border-radius:8px;position:relative;z-index:5;}
+  .miniToast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(43,47,54,.92);color:#fff;
+    font-size:13px;font-weight:600;padding:8px 15px;border-radius:999px;z-index:35;box-shadow:0 6px 16px rgba(0,0,0,.3);transition:opacity .2s;}
+
+  .demoCursor{position:absolute;width:26px;height:26px;z-index:40;pointer-events:none;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));transition:left .5s ease,top .5s ease,opacity .2s;}
+  .demoCursor.click{animation:clickPulse .35s ease;}
+  @keyframes clickPulse{0%{transform:scale(1);}50%{transform:scale(.8);}100%{transform:scale(1);}}
+  .clickRipple{position:absolute;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
+    z-index:39;pointer-events:none;animation:ripple .5s ease-out forwards;}
+  @keyframes ripple{from{transform:scale(.3);opacity:.85;}to{transform:scale(2.4);opacity:0;}}
+
+  #successOverlay{position:absolute;inset:0;background:rgba(255,255,255,.93);display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:12px;z-index:60;}
+  #successOverlay .be{font-size:76px;animation:pop .5s ease;}
+  #successOverlay .msg{font-size:24px;font-weight:800;color:var(--good);text-align:center;padding:0 20px;line-height:1.35;}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:95;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+
+  /* ===== firstchat-game specifics ===== */
+  .chatWin{width:min(560px,96%);height:min(420px,90%);background:#fff;border-radius:16px;
+    box-shadow:0 18px 50px rgba(0,0,0,.32);display:flex;flex-direction:column;overflow:hidden;position:relative;}
+  .chatBar{height:46px;background:linear-gradient(#f6f6f7,#e9e9eb);display:flex;align-items:center;gap:9px;
+    padding:0 14px;border-bottom:1px solid #e1e1e4;flex:0 0 auto;}
+  .chatBar .dots{display:flex;gap:7px;}
+  .chatBar .dot{width:12px;height:12px;border-radius:50%;}
+  .chatBar .dot.r{background:#ff5f57;}.chatBar .dot.y{background:#febc2e;}.chatBar .dot.g{background:#28c840;}
+  .chatBar .ttl{flex:1;text-align:center;font-size:14px;font-weight:700;color:#4b5563;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .msgs{flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:#fbfbfc;}
+  .msg{max-width:78%;padding:11px 14px;border-radius:16px;font-size:15px;line-height:1.45;white-space:pre-wrap;word-break:break-word;}
+  .msg.bot{align-self:flex-start;background:#eef1f6;color:#1f2937;border-bottom-left-radius:5px;display:flex;gap:8px;}
+  .msg.bot .bi{flex:0 0 auto;font-size:20px;}
+  .msg.me{align-self:flex-end;background:linear-gradient(90deg,#0a63ff,#3b82f6);color:#fff;border-bottom-right-radius:5px;}
+  .msg .cursorBlink::after{content:"▌";animation:blink 1s steps(1) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;padding:8px 12px 0;flex:0 0 auto;}
+  .chip{font-size:13px;font-weight:700;color:#3730a3;background:#eef2ff;border:1px solid #dfe4ff;border-radius:999px;
+    padding:8px 13px;cursor:pointer;transition:transform .1s;}
+  .chip:hover{filter:brightness(.98);}
+  .chip:active{transform:scale(.96);}
+  .chip.used{opacity:.4;pointer-events:none;}
+  .inputRow{display:flex;align-items:center;gap:8px;padding:10px 12px 12px;border-top:1px solid #eee;flex:0 0 auto;}
+  .chatField{flex:1;height:44px;background:#fff;border:1.5px solid #d5d5da;border-radius:22px;display:flex;align-items:center;
+    padding:0 16px;font-size:15px;color:#374151;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);min-width:0;}
+  .chatField input{border:none;outline:none;flex:1;font-size:15px;background:transparent;min-width:0;color:#374151;}
+  .chatField.focusRing{border-color:var(--macblue);box-shadow:0 0 0 3px rgba(10,99,255,.22);}
+  .sendBtn{width:44px;height:44px;flex:0 0 auto;border-radius:50%;border:none;cursor:pointer;color:#fff;font-size:19px;
+    background:linear-gradient(135deg,#0a63ff,#3b82f6);display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 12px rgba(10,99,255,.35);transition:transform .1s,opacity .15s;}
+  .sendBtn:active{transform:scale(.92);}
+  .sendBtn:disabled{opacity:.4;cursor:default;box-shadow:none;}
+  .typing{display:inline-flex;gap:4px;align-items:center;}
+  .typing span{width:7px;height:7px;border-radius:50%;background:#9aa0ad;animation:tdot 1s infinite;}
+  .typing span:nth-child(2){animation-delay:.15s;} .typing span:nth-child(3){animation-delay:.3s;}
+  @keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:.5;}30%{transform:translateY(-5px);opacity:1;}}
+  /* prompt cards */
+  .pCards{display:flex;gap:12px;padding:10px 12px 2px;flex:0 0 auto;flex-wrap:wrap;}
+  .pCard{flex:1 1 0;min-width:180px;background:#fff;border:2px solid #e5e7eb;border-radius:14px;padding:12px 14px;
+    cursor:pointer;text-align:left;transition:transform .1s,border-color .15s,box-shadow .15s;position:relative;}
+  .pCard:hover{border-color:#c7d2fe;box-shadow:0 4px 12px rgba(0,0,0,.08);}
+  .pCard:active{transform:scale(.98);}
+  .pCard .q{font-size:15px;font-weight:700;color:#1f2937;line-height:1.4;}
+  .pCard .tag{display:none;margin-top:8px;font-size:12px;font-weight:800;padding:4px 9px;border-radius:999px;}
+  .pCard.reveal .tag{display:inline-block;}
+  .pCard.good{border-color:var(--good);background:#f2fdf6;}
+  .pCard.good .tag{background:#dcfce7;color:#15803d;}
+  .pCard.vague{border-color:#f59e0b;background:#fffbeb;}
+  .pCard.vague .tag{background:#fef3c7;color:#b45309;}
+  .pCard.dim{opacity:.55;pointer-events:none;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+        <div class="extra"><button id="replayBtn" onclick="replayDemo()"></button></div>
+      </div>
+      <div id="stage"></div>
+    </div>
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <div id="finalNote" style="margin-top:16px;text-align:left;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:14px;padding:14px 16px;font-size:15px;line-height:1.5;"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div></div>
+  </div>
+</div>
+
+<script>
+/* ===== language ===== */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"🎵 AI로 노래 만들기",en:"🎵 Make a Song with AI"},
+  sub:{ko:"지금까지 배운 걸 모아, AI와 함께 노래를 한 곡 만들어 봐요! 🎶",
+       en:"Put it all together — let's make a whole song with AI! 🎶"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  replay:{ko:"👀 다시 보여주기",en:"👀 Show me again"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"노래를 만들었어요!",en:"You made a song!"},
+  finalMsg:{ko:"누구를 위한 건지 고르고, 주제를 정하고, <b>자세히 부탁</b>해서 노래를 만들고, <b>다시 부탁해</b> 다듬기까지 — 다 해내셨어요! 이제 무엇이든 만들 수 있어요 🎶💛",
+            en:"You chose who it's for, picked a topic, made a song with a <b>detailed ask</b>, and <b>asked again</b> to refine it — you did it all! Now you can make anything 🎶💛"},
+  finalNote:{ko:"💡 <b>참고:</b> ChatGPT는 노래 <b>가사(글)</b>를 정말 잘 써요. 하지만 ChatGPT 혼자서는 노래를 <b>소리 내어 불러주지는</b> 못해요. 진짜 <b>음악으로 듣고</b> 싶다면, 가사를 음악 앱(예: <b>Suno</b>)에 붙여넣으면 돼요. 다음 게임 <b>‘노래를 소리로 듣기’</b>에서 방법을 배워요! 🎧",
+             en:"💡 <b>Good to know:</b> ChatGPT is great at writing song <b>lyrics (the words)</b> — but ChatGPT alone can't <b>sing them out loud</b>. To actually <b>hear it as music</b>, paste the lyrics into a music app like <b>Suno</b>. The next game, <b>‘Hear Your Song’</b>, shows you how! 🎧"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  next:{ko:"다음 ›",en:"Next ›"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("replayBtn").textContent=T(UI.replay);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").innerHTML=T(UI.finalMsg);
+  document.getElementById("finalNote").innerHTML=T(UI.finalNote);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(!doneLock){ loadLevel(current); } }
+
+/* ===== praise + sound + confetti ===== */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ===== cursors ===== */
+const SVG_ARROW=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 3 L5 20 L9.5 15.8 L12.6 22 L15.2 20.8 L12.1 14.8 L18 14.8 Z" fill="#111" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const SVG_IBEAM=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g><g fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g></svg>`;
+function makeCursor(kind){ const c=document.createElement("div"); c.className="demoCursor";
+  c.innerHTML=kind==="ibeam"?SVG_IBEAM:SVG_ARROW; return c; }
+
+/* ===== state + helpers ===== */
+const stage=document.getElementById("stage");
+let locked=false,currentDemo=null;
+function clearStage(){ stage.innerHTML=""; }
+function stageXY(el){ const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect();
+  return {x:r.left-s.left+r.width/2,y:r.top-s.top+r.height/2}; }
+function ripple(x,y){ const r=document.createElement("div"); r.className="clickRipple";
+  r.style.left=(x-13)+"px"; r.style.top=(y-13)+"px"; stage.appendChild(r); setTimeout(()=>r.remove(),520); }
+function markTarget(el){ if(el) el.classList.add("target"); }
+function showToast(msg){ let t=stage.querySelector(".miniToast");
+  if(!t){ t=document.createElement("div"); t.className="miniToast"; stage.appendChild(t); }
+  t.textContent=msg; t.style.opacity="1"; clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>{ t.style.opacity="0"; },1800); }
+
+/* ===== chat builders ===== */
+let chatEl=null;
+function makeChat(){
+  const win=document.createElement("div"); win.className="chatWin";
+  win.innerHTML=`
+    <div class="chatBar">
+      <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+      <div class="ttl">🤖 ${T({ko:"AI 도우미",en:"AI Helper"})}</div>
+      <div style="width:40px"></div>
+    </div>
+    <div class="msgs" id="msgs"></div>
+    <div class="chips" id="chips"></div>
+    <div class="inputRow">
+      <div class="chatField" id="chatField"><input id="chatInput" readonly placeholder="${T({ko:'여기에 메시지를 적어요…',en:'Type your message here…'})}"></div>
+      <button class="sendBtn" id="sendBtn" disabled>✈️</button>
+    </div>`;
+  stage.appendChild(win); chatEl=win;
+  return win;
+}
+function addMsg(who,text){
+  const m=document.createElement("div"); m.className="msg "+who;
+  if(who==="bot"){ m.innerHTML=`<span class="bi">🤖</span><span class="tx"></span>`; m.querySelector(".tx").textContent=text; }
+  else { m.textContent=text; }
+  const box=document.getElementById("msgs"); box.appendChild(m); box.scrollTop=box.scrollHeight;
+  return m;
+}
+function showTyping(){
+  const m=document.createElement("div"); m.className="msg bot"; m.id="typingRow";
+  m.innerHTML=`<span class="bi">🤖</span><span class="typing"><span></span><span></span><span></span></span>`;
+  const box=document.getElementById("msgs"); box.appendChild(m); box.scrollTop=box.scrollHeight;
+}
+function streamBot(text,cb){
+  showTyping();
+  setTimeout(()=>{
+    const t=document.getElementById("typingRow"); if(t) t.remove();
+    const m=addMsg("bot",""); const tx=m.querySelector(".tx"); tx.classList.add("cursorBlink");
+    const box=document.getElementById("msgs");
+    let i=0; const iv=setInterval(()=>{
+      tx.textContent=text.slice(0,++i); box.scrollTop=box.scrollHeight;
+      if(i%3===0) beep(680,.02);
+      if(i>=text.length){ clearInterval(iv); tx.classList.remove("cursorBlink"); if(cb) setTimeout(cb,250); }
+    },38);
+  },900);
+}
+function addChip(label,onUse){
+  const c=document.createElement("div"); c.className="chip"; c.textContent=T(label);
+  c.addEventListener("click",()=>{ if(c.classList.contains("used"))return; onUse(c); });
+  document.getElementById("chips").appendChild(c); return c;
+}
+function clearChips(){ const c=document.getElementById("chips"); if(c) c.innerHTML=""; }
+function setSend(on){ const b=document.getElementById("sendBtn"); if(b) b.disabled=!on; }
+function makeCards(){ const d=document.createElement("div"); d.className="pCards"; d.id="pCards";
+  chatEl.querySelector(".inputRow").before(d); return d; }
+function addCard(text,kind,tag,onPick){
+  const c=document.createElement("div"); c.className="pCard "+kind;
+  c.innerHTML=`<div class="q">${T(text)}</div><div class="tag">${T(tag)}</div>`;
+  c.addEventListener("click",()=>{ if(locked)return; onPick(c); });
+  document.getElementById("pCards").appendChild(c); return c;
+}
+
+/* ===== demos ===== */
+function replayDemo(){ if(currentDemo) currentDemo(); }
+function showReplay(on){ document.getElementById("replayBtn").style.display=on?"inline-flex":"none"; }
+function autoDemo(fn,delay){ currentDemo=fn; showReplay(!!fn); if(fn) setTimeout(()=>{ if(!locked) fn(); },delay||800); }
+function demoTap(getTarget,atClick,reset,holdMs,kind){
+  return function run(){ if(locked) return; locked=true;
+    const target=getTarget(); if(!target){ locked=false; return; }
+    const cur=makeCursor(kind); stage.appendChild(cur);
+    const {x,y}=stageXY(target);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+34)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-4)+"px"; cur.style.top=(kind==="ibeam"?y-13:y-2)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(560,.05); if(atClick)atClick(target); },760);
+    setTimeout(()=>{ if(reset)reset(target); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },760+(holdMs||900));
+  };
+}
+function demoType(getInput,word,holdMs){
+  return function run(){ if(locked) return; locked=true;
+    const f=getInput(); if(!f){ locked=false; return; }
+    const bar=f.closest(".addrbar"); const {x,y}=stageXY(f);
+    const cur=makeCursor("ibeam"); stage.appendChild(cur);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+28)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-6)+"px"; cur.style.top=(y-13)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(540,.05); if(bar)bar.classList.add("focusRing"); f.value="";
+      let i=0; const iv=setInterval(()=>{ f.value=word.slice(0,++i); beep(700,.03); if(i>=word.length) clearInterval(iv); },170);
+    },780);
+    setTimeout(()=>{ f.value=""; if(bar)bar.classList.remove("focusRing"); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },780+(holdMs||1600));
+  };
+}
+
+/* ===== capstone state ===== */
+const song={ who:null, topic:null, lyrics:null };
+const WHO=[
+  {ko:"조카에게 💛",en:"my nephew 💛",g:{ko:"조카",en:"nephew"}},
+  {ko:"손주에게 💛",en:"my grandchild 💛",g:{ko:"손주",en:"grandchild"}},
+  {ko:"친구에게 💛",en:"my friend 💛",g:{ko:"친구",en:"friend"}}
+];
+const TOPICS=[
+  {ko:"강아지 🐶",en:"a puppy 🐶",word:{ko:"강아지",en:"puppy"},
+    lyrics:{ko:"🎵 멍멍이 폴짝, 폴짝폴짝!\n꼬리 살랑, 웃음 방긋!\n우리 아가, 사랑해 뿅! 🐶💛",
+            en:"🎵 Puppy hops, hip-hip-hop!\nWagging tail that won't stop!\nDear little one, we love you lots! 🐶💛"}},
+  {ko:"무지개 🌈",en:"a rainbow 🌈",word:{ko:"무지개",en:"rainbow"},
+    lyrics:{ko:"🌈 빨강 노랑 파랑 예쁜 색,\n하늘 위에 반짝 다리 놨네!\n방긋 웃어봐요, 우리 아가! 💛",
+            en:"🌈 Red and yellow, green and blue,\na sparkling bridge up high for you!\nSmile so bright, we love you true! 💛"}},
+  {ko:"잘 자 노래 🌙",en:"a goodnight song 🌙",word:{ko:"잘 자 노래",en:"goodnight"},
+    lyrics:{ko:"🌙 반짝반짝 별빛 아래,\n포근포근 이불 덮고,\n잘 자요 우리 아가, 꿈나라로! ⭐",
+            en:"🌙 Under stars that twinkle bright,\ntucked in cozy, warm and tight,\nsleep now, little one — goodnight! ⭐"}}
+];
+function detailedAsk(){
+  const who=song.who.g, tp=song.topic.word;
+  return {ko:`세 살 ${who.ko}를 위한, 짧고 귀여운 ${tp.ko} 노래 만들어줘`,
+          en:`Make a short, cute ${tp.en} song for my 3-year-old ${who.en}`};
+}
+
+/* ===== levels ===== */
+const levels=[
+  { title:{ko:"① 누구를 위한 노래인가요?",en:"① Who is the song for?"},
+    instr:{ko:"먼저 <b>누구에게</b> 줄 노래인지 정해요. 아래에서 하나 골라 보세요.",
+           en:"First, decide <b>who</b> the song is for. Pick one below."},
+    hint:{ko:"이름 대신 ‘조카·손주·친구’처럼 골라도 충분해요.",en:"Choosing ‘nephew, grandchild, friend’ (no names) is plenty."},
+    build(done){
+      makeChat();
+      addMsg("bot",T({ko:"함께 노래를 만들어 봐요! 누구에게 줄 노래인가요? 🎵",en:"Let's make a song together! Who is it for? 🎵"}));
+      WHO.forEach(w=>addChip(w,(c)=>{
+        if(locked)return; locked=true; song.who=w;
+        document.querySelectorAll(".chip").forEach(x=>x.classList.add("used"));
+        addMsg("me",T(w));
+        streamBot(T({ko:"좋아요! 이제 어떤 노래로 만들까요? 🎶",en:"Lovely! Now, what should the song be about? 🎶"}),
+          ()=>{ locked=false; done("💛",{ko:"누구에게 줄지 정했어요!",en:"You chose who it's for!"}); });
+      }));
+      autoDemo(demoTap(()=>document.querySelector(".chip")),1200);
+    } },
+
+  { title:{ko:"② 주제를 정하고 부탁하기",en:"② Pick a topic and ask"},
+    instr:{ko:"노래의 <b>주제</b>를 골라요. 그러면 <b>자세한 부탁</b>이 완성돼요 — 보내기(✈️)를 누르면 AI가 노래를 만들어요!",
+           en:"Pick a <b>topic</b>. That builds a <b>detailed ask</b> — tap send (✈️) and AI writes your song!"},
+    hint:{ko:"주제를 고르면 부탁 문장이 저절로 채워져요.",en:"Choosing a topic fills in the ask for you."},
+    build(done){
+      makeChat();
+      addMsg("bot",T({ko:"어떤 노래로 만들까요? 아래에서 골라요 🎶",en:"What's the song about? Pick one 🎶"}));
+      const input=document.getElementById("chatInput");
+      TOPICS.forEach(tp=>addChip(tp,(c)=>{
+        if(locked)return; song.topic=tp;
+        document.querySelectorAll(".chip").forEach(x=>x.classList.add("used"));
+        input.value=T(detailedAsk()); setSend(true);
+        showToast(T({ko:"부탁이 완성됐어요! 보내기(✈️)를 눌러요",en:"Your ask is ready! Tap send (✈️)"}));
+        const send=document.getElementById("sendBtn");
+        send.onclick=()=>{
+          if(locked)return; locked=true; setSend(false);
+          addMsg("me",input.value); input.value=""; song.lyrics=tp.lyrics;
+          streamBot(T(tp.lyrics),()=>{ locked=false; done("🎵",{ko:"노래가 완성됐어요!",en:"Your song is made!"}); });
+        };
+        autoDemo(demoTap(()=>document.getElementById("sendBtn")),700);
+      }));
+      autoDemo(demoTap(()=>document.querySelector(".chip")),1200);
+    } },
+
+  { title:{ko:"③ 다시 부탁해 다듬기",en:"③ Ask again to refine"},
+    instr:{ko:"마음에 들면 그대로 두고, 바꾸고 싶으면 아래를 눌러요. 몇 번이든 <b>다시 부탁</b>할 수 있어요!",
+           en:"Love it? Keep it. Want a change? Tap below — you can <b>ask again</b> as many times as you like!"},
+    hint:{ko:"‘이대로 좋아요’를 누르면 완성돼요.",en:"Tap ‘It's perfect!’ to finish."},
+    build(done){
+      makeChat();
+      const base=song.lyrics||{ko:"🎵 우리 아가, 사랑해! 💛",en:"🎵 Dear little one, we love you! 💛"};
+      addMsg("bot",T(base));
+      addMsg("bot",T({ko:"마음에 드세요? 바꾸고 싶으면 아래를 눌러요 🙂",en:"Do you like it? Tap below to tweak it 🙂"}));
+      const tweak=(reqLabel,transform)=>{ addMsg("me",T(reqLabel)); locked=true;
+        streamBot(transform(),()=>{ locked=false; }); };
+      addChip({ko:"더 짧게 ✂️",en:"Shorter ✂️"},(c)=>{ if(locked)return; c.classList.add("used");
+        tweak({ko:"더 짧게 해줘",en:"Make it shorter"},()=>{
+          const lines=T(base).split("\n"); const s=[lines[0],lines[lines.length-1]].join("\n");
+          return (LANG==="ko"?"네! 짧게 줄였어요:\n":"Sure! Shorter:\n")+s; }); });
+      addChip({ko:"더 신나게 🎉",en:"Livelier 🎉"},(c)=>{ if(locked)return; c.classList.add("used");
+        tweak({ko:"더 신나게 해줘",en:"Make it livelier"},()=>
+          (LANG==="ko"?"좋아요! 더 신나게! 🎉\n":"Yay! Livelier! 🎉\n")+T(base).replace(/!/g,"! 🎉")); });
+      addChip({ko:"라임 더! 🎤",en:"More rhyme! 🎤"},(c)=>{ if(locked)return; c.classList.add("used");
+        tweak({ko:"라임을 더 넣어줘",en:"Add more rhyme"},()=>
+          (LANG==="ko"?"라임을 더 살렸어요! 🎤\n":"With extra rhyme! 🎤\n")+T(base)); });
+      addChip({ko:"이대로 좋아요! ✅",en:"It's perfect! ✅"},(c)=>{ if(locked)return; locked=true;
+        document.querySelectorAll(".chip").forEach(x=>x.classList.add("used"));
+        addMsg("me",T({ko:"이대로 완벽해요!",en:"It's perfect as it is!"}));
+        streamBot(T({ko:"완성이에요! 정말 멋진 노래예요 🎶💛",en:"All done! What a wonderful song 🎶💛"}),
+          ()=>{ locked=false; done("🎉",{ko:"노래 완성! 최고예요!",en:"Song complete! Amazing!"}); }); });
+      autoDemo(demoTap(()=>{const cs=document.querySelectorAll(".chip");return cs[cs.length-1];}),1400);
+    } }
+];
+
+/* ===== engine ===== */
+let current=0,doneLock=false;
+const els={ bar:document.getElementById("progressBar"),step:document.getElementById("stepText"),
+  main:document.getElementById("mainView"),final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"),msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+function loadLevel(i){
+  clearStage(); locked=false; currentDemo=null; showReplay(false);
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.innerHTML=T(lv.instr); banner.h.textContent="💡 "+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  requestAnimationFrame(()=>lv.build(onLevelDone));
+}
+function onLevelDone(emoji,msg){
+  if(doneLock) return; doneLock=true; locked=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(()=>{
+    els.msg.textContent=msg?T(msg):praise();
+    els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime();
+  },650);
+  setTimeout(()=>{
+    els.overlay.style.display="none"; doneLock=false;
+    current++; if(current>=levels.length) showFinal(); else loadLevel(current);
+  },2250);
+}
+function skipLevel(){ if(doneLock) return; current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block"; try{localStorage.setItem("momHub:done:song","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ current=0; doneLock=false; els.main.style.display="flex"; els.skip.style.display="block";
+  els.final.style.display="none"; loadLevel(0); }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+applyStatic(); loadLevel(0);
+</script>
+</body>
+</html>

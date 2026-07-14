@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 2단계 인증 배우기 (비밀번호 2편)</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#6366f1; --accent2:#ec4899; --good:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+  }
+  *{box-sizing:border-box; -webkit-user-select:none; user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;
+    overscroll-behavior:none;touch-action:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1000px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;
+    border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:120;}
+
+  /* intro */
+  #introView{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(99,102,241,.12);padding:26px;text-align:center;overflow:auto;}
+  #introArt{font-size:70px;line-height:1.15;margin-bottom:10px;}
+  #introTitle{font-size:26px;font-weight:800;margin:4px 0;}
+  #introText{font-size:17px;line-height:1.7;max-width:700px;color:#374151;}
+  #introText b{color:var(--accent);}
+  .introBtns{margin-top:20px;display:flex;gap:10px;}
+
+  /* illustrated scenes */
+  .scene{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:2px auto 12px;}
+  .scene .fig{font-size:46px;line-height:1;}
+  .scene .arw{font-size:26px;color:#c7cad1;}
+  .scene .steal{animation:steal 1.4s ease-in-out infinite;}
+  @keyframes steal{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px) rotate(8deg);}}
+  .twoLocks{display:flex;gap:22px;justify-content:center;margin:4px auto 12px;flex-wrap:wrap;}
+  .lockCard{background:#f8fafc;border:2px solid #e2e8f0;border-radius:14px;padding:12px 16px;min-width:150px;}
+  .lockCard .big{font-size:40px;} .lockCard .lab{font-size:13px;color:var(--soft);margin-top:4px;}
+  .lockCard .lab b{color:var(--accent);}
+
+  /* lesson */
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;}
+  #banner .t{font-size:18px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .i b{color:var(--accent);}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  #stage{position:relative;flex:1;min-height:0;border-radius:16px;overflow:auto;
+    background:#fff;box-shadow:0 14px 34px rgba(99,102,241,.14);
+    display:flex;align-items:center;justify-content:center;padding:18px;}
+  .panel{width:100%;max-width:640px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;}
+  .kbtn{font-size:17px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border:none;border-radius:999px;padding:13px 26px;cursor:pointer;box-shadow:0 6px 16px rgba(99,102,241,.3);}
+  .kbtn:active{transform:translateY(1px);} .kbtn:disabled{opacity:.5;cursor:default;}
+  .note{font-size:15px;line-height:1.6;color:#374151;background:#eef2ff;border-radius:12px;padding:12px 16px;max-width:580px;}
+  .note b{color:var(--accent);}
+  .note.good{background:#ecfdf5;} .note.good b{color:var(--good);}
+  .note.bad{background:#fef2f2;} .note.bad b{color:var(--bad);}
+  .note.warn{background:#fffbeb;} .note.warn b{color:var(--warn);}
+
+  /* phone + login */
+  .twofa{display:flex;gap:22px;flex-wrap:wrap;align-items:center;justify-content:center;width:100%;}
+  .phone{width:170px;background:#0f172a;border-radius:24px;padding:14px 12px 18px;color:#fff;text-align:center;
+    box-shadow:0 12px 26px rgba(0,0,0,.3);}
+  .phone .top{font-size:11px;color:#94a3b8;margin-bottom:8px;}
+  .phone .msgApp{font-size:12px;color:#cbd5e1;}
+  .phone .code{font-family:"SF Mono",Menlo,monospace;font-size:30px;font-weight:800;letter-spacing:6px;margin:8px 0;color:#7dd3fc;}
+  .loginBox{width:260px;background:#f8fafc;border:2px solid #e2e8f0;border-radius:16px;padding:16px;text-align:center;}
+  .loginBox .step{font-size:13px;margin:6px 0;}
+  .loginBox .step .ok{color:var(--good);font-weight:700;}
+  .codeInput{font-family:"SF Mono",Menlo,monospace;font-size:24px;letter-spacing:8px;text-align:center;width:190px;
+    padding:10px;border:2px solid #cbd5e1;border-radius:12px;-webkit-user-select:text;user-select:text;}
+  .codeInput:focus{outline:none;border-color:var(--accent);}
+
+  /* push notification card */
+  .pushCard{width:210px;background:#1e293b;border-radius:16px;padding:14px;color:#e2e8f0;text-align:center;box-shadow:0 10px 24px rgba(0,0,0,.3);}
+  .pushCard .pt{font-size:12px;color:#94a3b8;}
+  .pushCard .pmain{font-size:15px;font-weight:700;margin:8px 0 4px;line-height:1.4;}
+  .pushCard .psub{font-size:12px;color:#cbd5e1;}
+  .pushBtns{display:flex;gap:8px;margin-top:12px;}
+  .pushBtns button{flex:1;border:none;border-radius:10px;padding:10px;font-weight:800;cursor:pointer;font-size:15px;}
+  .btnApprove{background:#22c55e;color:#fff;} .btnDeny{background:#ef4444;color:#fff;}
+  .pushBtns button:active{transform:translateY(1px);}
+
+  /* fingerprint */
+  .fpBtn{width:120px;height:120px;border-radius:50%;border:3px solid #c7d2fe;background:#eef2ff;font-size:56px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:background .2s;}
+  .fpBtn:active{background:#e0e7ff;}
+  .fpBtn.scanning{animation:fpScan 1s ease-out;}
+  @keyframes fpScan{0%{box-shadow:0 0 0 0 rgba(99,102,241,.5);}100%{box-shadow:0 0 0 26px rgba(99,102,241,0);}}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:60;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:130;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);overflow:auto;}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+  button.big.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipStep()"></button>
+
+    <div id="introView" style="display:none;">
+      <div id="introArt">🔒</div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button class="big soft" id="introBack" onclick="prevIntro()"></button>
+        <button class="big" id="introNext" onclick="nextIntro()"></button>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+      </div>
+      <div id="stage"></div>
+      <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:16px;margin-top:8px;line-height:1.7;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  pageTitle:{ko:"엄마의 2단계 인증 배우기 (비밀번호 2편)",en:"Learning Two-Step Verification (Passwords Part 2)"},
+  h1:{ko:"🔒 엄마의 2단계 인증 배우기 <span style=\"font-size:14px;color:#6b7280;\">(비밀번호 2편)</span>",en:"🔒 Learning Two-Step Verification <span style=\"font-size:14px;color:#6b7280;\">(Passwords Part 2)</span>"},
+  sub:{ko:"해커 이야기 · 문자 코드 · 앱 승인 · 지문/얼굴 · 모르는 요청 거부",en:"Hackers · text codes · app approval · fingerprint/face · denying unknown requests"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  introBack:{ko:"‹ 이전",en:"‹ Back"},
+  introNext:{ko:"다음 ▶",en:"Next ▶"},
+  introStart:{ko:"시작하기 ▶",en:"Start ▶"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"2단계 인증 지킴이!",en:"Two-step verification protector!"},
+  finalMsg:{ko:"이제 엄마는 알아요 —<br>2단계 인증은 <b>비밀번호(아는 것)</b> + <b>두 번째 단계(가진 것)</b>예요.<br>문자 코드·앱 승인·지문으로 통과하고, <b>모르는 요청은 꼭 거부</b>! 💖<br><span style=\"font-size:14px;color:#6b7280;\">다음엔 <b style=\"color:#6366f1;\">3편</b>에서 비밀번호가 아예 필요 없는 ‘패스키’를 배워요!</span>",
+            en:"Now you know —<br>two-step verification means <b>a password (something you know)</b> + <b>a second step (something you have)</b>.<br>Use text codes, app approval, or a fingerprint to get in, and <b>always deny unknown requests</b>! 💖<br><span style=\"font-size:14px;color:#6b7280;\">Next, in <b style=\"color:#6366f1;\">part 3</b>, we'll learn about passkeys, which do not need passwords at all!</span>"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  next:{ko:"다음 ›",en:"Next ›"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.title=T(UI.pageTitle);
+  document.getElementById("h1").innerHTML=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("introBack").textContent=T(UI.introBack);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").innerHTML=T(UI.finalMsg);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){
+  LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(phase==="intro"){ showIntro(); }
+  else if(!doneGuard){ loadLesson(lidx); }
+}
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+const clickSnd=()=>beep(520,.05);
+const buzz=()=>{beep(200,.18);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ---------- intro (the story) ---------- */
+let introIdx=0, phase="intro";
+const INTRO=[
+  { art:"🦹", title:{ko:"해커 이야기",en:"A story about hackers"},
+    html:{ko:`<div class="scene">
+      <span class="fig">🦹</span><span class="fig">💻</span>
+      <span class="arw">➜</span><span class="fig">🔓</span>
+      <span class="arw">➜</span><span class="fig steal">💸</span>
+    </div>
+    옛날 어느 날, <b>나쁜 해커들</b>이 사람들의 <b>약한 비밀번호를 알아내서</b>
+    남의 <b>돈과 정보를 훔치기</b> 시작했어요.<br><br>
+    비밀번호 하나만 뚫으면 문이 활짝 열리니, 정말 큰일이었죠. 😟`,
+    en:`<div class="scene">
+      <span class="fig">🦹</span><span class="fig">💻</span>
+      <span class="arw">➜</span><span class="fig">🔓</span>
+      <span class="arw">➜</span><span class="fig steal">💸</span>
+    </div>
+    One day, <b>bad hackers</b> figured out people's <b>weak passwords</b>
+    and started stealing other people's <b>money and information</b>.<br><br>
+    If one password opened the whole door, that was a very big problem. 😟`} },
+  { art:"🛡️", title:{ko:"그래서 만든 것 — 2단계 인증",en:"So they made two-step verification"},
+    html:{ko:`똑똑한 <b>컴퓨터 개발자들</b>이 고민 끝에 <b>2단계 인증</b>을 만들었어요.<br><br>
+    어려운 말 같지만 뜻은 아주 간단해요:<br>
+    “문을 열기 전에 <b>한 단계를 더</b> 거쳐야 한다.”<br><br>
+    비밀번호를 맞혀도, <b>두 번째 단계</b>를 통과하지 못하면 못 들어가요.`,
+    en:`Smart <b>computer developers</b> thought hard and made <b>two-step verification</b>.<br><br>
+    It sounds difficult, but it means something simple:<br>
+    “Before opening the door, you must pass <b>one more step</b>.”<br><br>
+    Even if someone knows the password, they cannot get in unless they pass <b>the second step</b>.`} },
+  { art:"🔑", title:{ko:"두 개의 자물쇠",en:"Two locks"},
+    html:{ko:`<div class="twoLocks">
+      <div class="lockCard"><div class="big">🔑</div><div class="lab">1단계 · <b>아는 것</b><br>(비밀번호)</div></div>
+      <div class="lockCard"><div class="big">📱</div><div class="lab">2단계 · <b>가진 것</b><br>(엄마 휴대폰·지문)</div></div>
+    </div>
+    2단계 인증은 <b>자물쇠 두 개</b>예요. 첫째는 엄마가 <b>아는 것</b>(비밀번호),
+    둘째는 엄마만 <b>가진 것</b>(휴대폰·지문).<br><br>
+    해커가 비밀번호를 훔쳐도 <b>엄마 휴대폰은 없으니</b> 두 번째 자물쇠에서 막혀요. 이제 하나씩 해볼까요? 😊`,
+    en:`<div class="twoLocks">
+      <div class="lockCard"><div class="big">🔑</div><div class="lab">Step 1 · <b>Something you know</b><br>(password)</div></div>
+      <div class="lockCard"><div class="big">📱</div><div class="lab">Step 2 · <b>Something you have</b><br>(your phone or fingerprint)</div></div>
+    </div>
+    Two-step verification is like <b>two locks</b>. The first is something you <b>know</b> (your password),
+    and the second is something only you <b>have</b> (your phone or fingerprint).<br><br>
+    Even if a hacker steals the password, <b>they do not have your phone</b>, so the second lock stops them. Now let's try each one 😊`} },
+];
+
+/* ---------- lessons ---------- */
+const stage=document.getElementById("stage");
+let doneGuard=false;
+
+const LESSONS=[
+  /* 1. SMS code */
+  { title:{ko:"① 문자 코드 입력하기",en:"① Enter a text-message code"},
+    instr:{ko:"엄마가 은행에 로그인 중이에요. 엄마 휴대폰에 온 <b>6자리 코드</b>를 입력해 2단계를 통과하세요.",en:"You are logging in to the bank. Enter the <b>6-digit code</b> sent to your phone to pass step two."},
+    hint:{ko:"비밀번호가 새어 나가도, 휴대폰에 오는 이 코드까지는 훔칠 수 없어요. 그래서 든든해요.",en:"Even if a password leaks, a thief still cannot get the code sent to your phone. That makes it safer."},
+    render(stage,done){
+      const code=String(Math.floor(100000+Math.random()*900000));
+      stage.innerHTML=`<div class="panel"><div class="twofa">
+        <div class="phone"><div class="top">${T({ko:"📱 엄마 휴대폰",en:"📱 Your phone"})}</div>
+          <div class="msgApp">${T({ko:"문자 메시지",en:"Text message"})}</div>
+          <div class="code">${code.slice(0,3)} ${code.slice(3)}</div>
+          <div class="msgApp">${T({ko:"로그인 확인 코드예요",en:"Login verification code"})}</div></div>
+        <div class="loginBox">
+          <div style="font-weight:800;margin-bottom:6px;">${T({ko:"은행 로그인",en:"Bank login"})}</div>
+          <div class="step">${T({ko:"1단계 · 비밀번호",en:"Step 1 · Password"})} <span class="ok">${T({ko:"✅ 통과",en:"✅ Passed"})}</span></div>
+          <div class="step">${T({ko:"2단계 · 코드 입력",en:"Step 2 · Enter code"})}</div>
+          <input class="codeInput" id="codeIn" inputmode="numeric" maxlength="6" placeholder="000000" />
+          <div class="note bad" id="twoNote" style="display:none;margin-top:10px;"></div>
+        </div>
+      </div>
+      <div class="note">${T({ko:"💡 왼쪽 휴대폰의 <b>6자리 숫자</b>를 오른쪽 칸에 그대로 입력하세요.",en:"💡 Type the <b>6 digits</b> from the phone on the left into the box on the right."})}</div>
+      </div>`;
+      const inp=stage.querySelector("#codeIn"), note=stage.querySelector("#twoNote");
+      setTimeout(()=>inp.focus(),100);
+      inp.addEventListener("input",()=>{ const v=inp.value.replace(/\D/g,""); inp.value=v;
+        if(v.length===6){ if(v===code){ chime(); inp.disabled=true;
+            note.style.display="block"; note.className="note good"; note.style.marginTop="10px";
+            note.innerHTML=T({ko:"<b>로그인 성공!</b> 진짜 주인만 통과했어요 🎉",en:"<b>Login successful!</b> Only the real owner passed 🎉"});
+            setTimeout(()=>done("🔢",T({ko:"문자 코드로 2단계를 통과했어요!",en:"You passed step two with a text-message code!"})),900);
+          } else { buzz(); note.style.display="block"; note.className="note bad"; note.style.marginTop="10px";
+            note.innerHTML=T({ko:"코드가 달라요. 휴대폰에 온 <b>6자리</b>를 그대로 넣어 보세요.",en:"That code is different. Try typing the exact <b>6 digits</b> from the phone."}); }
+        } else { note.style.display="none"; }
+      });
+    }},
+
+  /* 2. App push approve */
+  { title:{ko:"② 앱 알림으로 승인하기",en:"② Approve with an app notification"},
+    instr:{ko:"어떤 앱은 코드 대신 <b>휴대폰 알림</b>이 떠요. 엄마가 방금 로그인했으니 <b>승인</b>을 누르세요.",en:"Some apps show a <b>phone notification</b> instead of a code. Since you just logged in, press <b>Approve</b>."},
+    hint:{ko:"엄마가 직접 로그인한 게 맞으면 승인! 톡 한 번이면 끝이라 아주 편해요.",en:"If it really was you logging in, approve it! One tap is all it takes, so it is very convenient."},
+    render(stage,done){
+      stage.innerHTML=`<div class="panel">
+        <div class="note">${T({ko:"엄마가 방금 <b>로그인 버튼</b>을 눌렀어요. 휴대폰에 확인 알림이 왔어요 👇",en:"You just pressed the <b>login button</b>. A confirmation notification arrived on your phone 👇"})}</div>
+        <div class="pushCard">
+          <div class="pt">${T({ko:"📱 알림 · 은행 앱",en:"📱 Notification · Bank app"})}</div>
+          <div class="pmain">${T({ko:"🔔 로그인하려고 해요<br>지금 엄마가 맞나요?",en:"🔔 Someone is trying to log in<br>Is this you?"})}</div>
+          <div class="psub">${T({ko:"방금 · 이 기기",en:"Just now · this device"})}</div>
+          <div class="pushBtns"><button class="btnDeny" id="denyBtn">${T({ko:"거부",en:"Deny"})}</button><button class="btnApprove" id="okBtn">${T({ko:"승인",en:"Approve"})}</button></div>
+        </div>
+        <div class="note" id="pNote" style="display:none;"></div>
+      </div>`;
+      const note=stage.querySelector("#pNote");
+      stage.querySelector("#okBtn").onclick=()=>{ chime(); done("👍",T({ko:"앱 알림으로 간편하게 승인했어요!",en:"You approved easily with an app notification!"})); };
+      stage.querySelector("#denyBtn").onclick=()=>{ buzz(); note.style.display="block"; note.className="note warn";
+        note.innerHTML=T({ko:"이번엔 <b>엄마가 직접</b> 로그인 중이라 <b>승인</b>이 맞아요 🙂 승인을 눌러 보세요.",en:"This time <b>you</b> are the one logging in, so <b>Approve</b> is correct 🙂 Try pressing Approve."}); };
+    }},
+
+  /* 3. Biometrics */
+  { title:{ko:"③ 지문·얼굴로 통과하기",en:"③ Pass with a fingerprint or face"},
+    instr:{ko:"두 번째 단계를 <b>지문</b>으로도 할 수 있어요. 아래 지문 단추를 눌러 통과해 보세요.",en:"The second step can also use a <b>fingerprint</b>. Press the fingerprint button below to pass."},
+    hint:{ko:"지문이나 얼굴은 엄마 ‘몸’이라서 아무도 훔치거나 흉내 낼 수 없어요. 그래서 안전해요.",en:"Your fingerprint or face is part of you, so nobody can steal or copy it easily. That makes it safe."},
+    render(stage,done){
+      stage.innerHTML=`<div class="panel">
+        <div class="loginBox" style="width:280px;">
+          <div style="font-weight:800;margin-bottom:6px;">${T({ko:"쇼핑 앱 로그인",en:"Shopping app login"})}</div>
+          <div class="step">${T({ko:"1단계 · 비밀번호",en:"Step 1 · Password"})} <span class="ok">${T({ko:"✅ 통과",en:"✅ Passed"})}</span></div>
+          <div class="step">${T({ko:"2단계 · 지문으로 확인",en:"Step 2 · Check fingerprint"})}</div>
+        </div>
+        <button class="fpBtn" id="fp">👆</button>
+        <div class="note" id="fpNote">${T({ko:"지문 단추를 <b>한 번 꾹</b> 눌러 보세요.",en:"Press the fingerprint button <b>once and hold</b>."})}</div>
+      </div>`;
+      const fp=stage.querySelector("#fp"), note=stage.querySelector("#fpNote");
+      fp.onclick=()=>{ fp.disabled=true; fp.classList.add("scanning"); clickSnd();
+        note.textContent=T({ko:"확인 중…",en:"Checking…"});
+        setTimeout(()=>{ fp.textContent="✅"; chime();
+          note.className="note good"; note.innerHTML=T({ko:"<b>지문 확인 완료!</b> 엄마 몸이 열쇠가 됐어요 🎉",en:"<b>Fingerprint confirmed!</b> Your body became the key 🎉"});
+          setTimeout(()=>done("🫆",T({ko:"지문으로 2단계를 통과했어요!",en:"You passed step two with a fingerprint!"})),900);
+        },1000);
+      };
+    }},
+
+  /* 4. Deny an unexpected request */
+  { title:{ko:"④ 모르는 요청은 거부하기",en:"④ Deny unknown requests"},
+    instr:{ko:"이번엔 엄마가 <b>아무것도 안 했는데</b> 알림이 왔어요! 누가 몰래 들어오려는 거예요. <b>거부</b>를 누르세요.",en:"This time a notification came even though <b>you did nothing</b>! Someone is trying to sneak in. Press <b>Deny</b>."},
+    hint:{ko:"내가 로그인하지 않았는데 승인 요청이 오면, 누군가 내 비밀번호로 시도 중인 거예요. 꼭 거부!",en:"If you get an approval request when you did not log in, someone is trying with your password. Always deny it!"},
+    render(stage,done){
+      stage.innerHTML=`<div class="panel">
+        <div class="note bad">${T({ko:"⚠️ 엄마는 지금 <b>로그인하지 않았어요</b>. 그런데 휴대폰에 승인 요청이 왔어요. 누군가 엄마 비밀번호로 <b>몰래 들어오려는</b> 거예요!",en:"⚠️ You are <b>not logging in right now</b>. But an approval request arrived on your phone. Someone is using your password to <b>try to sneak in</b>!"})}</div>
+        <div class="pushCard">
+          <div class="pt">${T({ko:"📱 알림 · 은행 앱",en:"📱 Notification · Bank app"})}</div>
+          <div class="pmain">${T({ko:"🔔 로그인하려고 해요<br>지금 엄마가 맞나요?",en:"🔔 Someone is trying to log in<br>Is this you?"})}</div>
+          <div class="psub">${T({ko:"방금 · <b style=\"color:#fca5a5;\">모르는 기기</b>",en:"Just now · <b style=\"color:#fca5a5;\">unknown device</b>"})}</div>
+          <div class="pushBtns"><button class="btnDeny" id="denyBtn">${T({ko:"거부",en:"Deny"})}</button><button class="btnApprove" id="okBtn">${T({ko:"승인",en:"Approve"})}</button></div>
+        </div>
+        <div class="note" id="dNote" style="display:none;"></div>
+      </div>`;
+      const note=stage.querySelector("#dNote");
+      stage.querySelector("#denyBtn").onclick=()=>{ chime(); done("🛡️",T({ko:"해커를 막았어요! 모르는 요청은 거부가 정답이에요!",en:"You stopped the hacker! Denying unknown requests is the right answer!"})); };
+      stage.querySelector("#okBtn").onclick=()=>{ buzz(); note.style.display="block"; note.className="note bad";
+        note.innerHTML=T({ko:"잠깐! 엄마가 <b>시작하지 않은</b> 요청이에요. 승인하면 해커가 들어와요. <b>거부</b>를 누르세요.",en:"Wait! This is a request <b>you did not start</b>. If you approve, the hacker gets in. Press <b>Deny</b>."}); };
+    }},
+];
+
+/* ---------- engine ---------- */
+let lidx=0;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"), introArt:document.getElementById("introArt"),
+  introTitle:document.getElementById("introTitle"), introText:document.getElementById("introText"),
+  introBack:document.getElementById("introBack"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"), skip:document.getElementById("skipBtn"),
+  bTitle:document.getElementById("bTitle"), bInstr:document.getElementById("bInstr"), bHint:document.getElementById("bHint") };
+const totalSteps=INTRO.length+LESSONS.length;
+function doneCount(){ return phase==="intro"?introIdx:INTRO.length+lidx; }
+function updateProgress(){ els.step.textContent=T(UI.step)(doneCount()+1,totalSteps); els.bar.style.width=(doneCount()/totalSteps*100)+"%"; }
+
+function showIntro(){ phase="intro"; els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none";
+  const c=INTRO[introIdx]; els.introArt.textContent=c.art; els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
+  els.introBack.style.visibility=introIdx===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=introIdx===INTRO.length-1?T(UI.introStart):T(UI.introNext); updateProgress(); }
+function nextIntro(){ if(introIdx<INTRO.length-1){ introIdx++; showIntro(); } else startLessons(); }
+function prevIntro(){ if(introIdx>0){ introIdx--; showIntro(); } }
+function startLessons(){ phase="lessons"; lidx=0; els.intro.style.display="none"; els.main.style.display="flex"; loadLesson(0); }
+
+function loadLesson(i){
+  const lv=LESSONS[i]; doneGuard=false;
+  els.bTitle.textContent=T(lv.title); els.bInstr.innerHTML=T(lv.instr); els.bHint.textContent="💡 "+T(lv.hint);
+  updateProgress(); els.overlay.style.display="none"; stage.innerHTML="";
+  lv.render(stage,onDone);
+}
+function onDone(emoji,msg){
+  if(doneGuard) return; doneGuard=true;
+  els.bar.style.width=((INTRO.length+lidx+1)/totalSteps*100)+"%";
+  els.msg.textContent=msg?T(msg):praise(); els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex"; confetti(); chime();
+}
+function goNext(){ els.overlay.style.display="none"; lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function skipStep(){ if(phase==="intro"){ nextIntro(); return; } doneGuard=true;
+  lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:passwords2","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.final.style.display="none"; showIntro(); }
+
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+applyStatic();
+showIntro();
+</script>
+</body>
+</html>

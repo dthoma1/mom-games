@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 독과 앱 관리 배우기</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#6366f1; --accent2:#ec4899; --good:#22c55e;
+    --desk1:#5b8def; --desk2:#a06cd5;
+  }
+  *{box-sizing:border-box; -webkit-user-select:none; user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;
+    overscroll-behavior:none;touch-action:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1000px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;
+    border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:120;}
+
+  /* intro */
+  #introView{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(99,102,241,.12);padding:26px;text-align:center;overflow:auto;}
+  #introArt{font-size:70px;line-height:1.15;margin-bottom:10px;}
+  #introTitle{font-size:26px;font-weight:800;margin:4px 0;}
+  #introText{font-size:17px;line-height:1.7;max-width:680px;color:#374151;}
+  #introText b{color:var(--accent);}
+  .keycap{display:inline-block;min-width:26px;padding:2px 8px;margin:0 2px;border-radius:8px;
+    background:#f3f4f6;border:1px solid #d1d5db;border-bottom-width:3px;font-weight:800;color:#111827;}
+  .introBtns{margin-top:20px;display:flex;gap:10px;}
+
+  /* lesson */
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;}
+  #banner .t{font-size:18px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .i b{color:var(--accent);}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  /* fake desktop */
+  #desktop{position:relative;flex:1;min-height:0;border-radius:14px;overflow:hidden;
+    background:linear-gradient(160deg,var(--desk1),var(--desk2));
+    box-shadow:inset 0 0 60px rgba(0,0,0,.12), 0 18px 40px rgba(0,0,0,.18);}
+  #menubar{position:absolute;top:0;left:0;right:0;height:26px;background:rgba(255,255,255,.6);
+    backdrop-filter:blur(10px);display:flex;align-items:center;gap:2px;padding:0 8px;z-index:20;font-size:13px;}
+  .mbTitle{padding:2px 8px;border-radius:6px;font-weight:600;color:#111827;white-space:nowrap;}
+  .mbTitle.app{font-weight:800;}
+  #mbRight{margin-left:auto;display:flex;align-items:center;gap:6px;}
+  #clockBtn{font-size:12px;color:#111827;}
+
+  #deskHint{position:absolute;top:34%;left:0;right:0;text-align:center;color:rgba(255,255,255,.92);
+    font-size:15px;white-space:pre-line;text-shadow:0 1px 6px rgba(0,0,0,.35);pointer-events:none;padding:0 20px;}
+
+  /* app windows */
+  .appWin{position:absolute;background:#fff;border-radius:12px;box-shadow:0 22px 55px rgba(0,0,0,.4);
+    display:flex;flex-direction:column;overflow:hidden;z-index:30;width:min(300px,64%);height:130px;}
+  .appWin .tb{height:28px;background:#e9eaee;display:flex;align-items:center;gap:7px;padding:0 10px;}
+  .appWin .tb .traffic{display:flex;gap:7px;}
+  .appWin .tb .d{width:12px;height:12px;border-radius:50%;cursor:pointer;font-size:9px;line-height:12px;text-align:center;color:transparent;}
+  .appWin .tb .d.rd{background:#ff5f57;}
+  .appWin .tb .d.rd:hover{color:#7a0000;}
+  .appWin .tb .d.yl{background:#febc2e;} .appWin .tb .d.gr{background:#28c840;}
+  .appWin .tb .wtt{font-size:12px;color:#555;font-weight:600;margin-left:2px;}
+  .appWin .bd{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:#374151;}
+  .appWin .bd .big{font-size:44px;}
+  .appWin .bd .nm{font-size:14px;font-weight:600;}
+
+  /* dock */
+  #dock{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:flex;align-items:flex-end;gap:6px;
+    padding:6px 10px 5px;background:rgba(255,255,255,.32);backdrop-filter:blur(16px);border-radius:18px;
+    border:1px solid rgba(255,255,255,.45);box-shadow:0 12px 30px rgba(0,0,0,.28);z-index:40;}
+  .dockItem{position:relative;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform .12s;}
+  .dockItem:hover{transform:translateY(-8px) scale(1.15);}
+  .dockIco{font-size:38px;line-height:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.25));}
+  .lpIco{width:44px;height:44px;display:flex;align-items:center;justify-content:center;}
+  .lpIco svg{width:44px;height:44px;display:block;}
+  .dockItem.sep{width:1px;height:44px;background:rgba(255,255,255,.5);margin:0 3px;cursor:default;}
+  .dockItem.sep:hover{transform:none;}
+  .runDot{width:5px;height:5px;border-radius:50%;background:#333;margin-top:2px;opacity:0;}
+  .dockItem.running .runDot{opacity:.7;}
+  @keyframes bounce{0%,100%{transform:translateY(0);}30%{transform:translateY(-22px);}60%{transform:translateY(-4px);}}
+  .dockItem.bouncing .dockIco{animation:bounce .55s ease 2;}
+
+  /* launchpad */
+  #launchpad{position:absolute;inset:0;background:rgba(60,60,90,.55);backdrop-filter:blur(20px);
+    display:none;flex-direction:column;align-items:center;justify-content:center;z-index:50;padding:24px;}
+  #launchpad.open{display:flex;}
+  #lpGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px 24px;max-width:520px;width:100%;}
+  .lpItem{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;color:#fff;transition:transform .1s;}
+  .lpItem:hover{transform:scale(1.1);}
+  .lpItem .li{font-size:46px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));}
+  .lpItem .ll{font-size:12px;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,.4);}
+  #lpHint{position:absolute;top:18px;color:rgba(255,255,255,.85);font-size:14px;}
+
+  /* dock context menu */
+  #dockMenu{position:absolute;background:rgba(250,250,252,.97);border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.4);
+    padding:5px;display:none;z-index:80;min-width:130px;font-size:14px;}
+  #dockMenu.open{display:block;}
+  #dockMenu .mi{padding:7px 12px;border-radius:6px;cursor:pointer;}
+  #dockMenu .mi:hover{background:var(--accent);color:#fff;}
+  #dockMenu .mi.quit{font-weight:700;}
+  #dockMenu .mhead{padding:4px 12px;font-size:11px;color:#9ca3af;font-weight:700;}
+
+  #successOverlay{position:absolute;inset:0;background:rgba(255,255,255,.93);display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:6px;border-radius:14px;z-index:100;}
+  #successOverlay .be{font-size:76px;animation:pop .5s ease;}
+  #successOverlay .msg{font-size:24px;font-weight:800;color:var(--good);}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:130;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+  button.big.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+  .toast{position:absolute;bottom:78px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;
+    padding:9px 18px;border-radius:14px;font-size:14px;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;max-width:80%;text-align:center;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipStep()"></button>
+
+    <div id="introView" style="display:none;">
+      <div id="introArt">🚀</div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button class="big soft" id="introBack" onclick="prevIntro()"></button>
+        <button class="big" id="introNext" onclick="nextIntro()"></button>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+      </div>
+
+      <div id="desktop">
+        <div id="menubar">
+          <span class="mbTitle app" id="mbApp">Finder</span>
+          <span class="mbTitle">파일</span>
+          <span class="mbTitle">편집</span>
+          <span class="mbTitle">보기</span>
+          <span id="mbRight"><span>🔋</span><span>📶</span><span>🔍</span><span id="clockBtn"></span></span>
+        </div>
+
+        <div id="deskHint"></div>
+        <div id="windows"></div>
+
+        <div id="launchpad">
+          <div id="lpHint">앱을 누르면 열려요 · 빈 곳을 누르면 닫혀요</div>
+          <div id="lpGrid"></div>
+        </div>
+
+        <div id="dock"></div>
+        <div id="dockMenu"></div>
+        <div class="toast" id="toast"></div>
+      </div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div></div>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  title:{ko:"엄마의 독(Dock)과 앱 관리 배우기",en:"Learning the Dock and Apps"}, h1:{ko:"🚀 엄마의 독(Dock)과 앱 관리 배우기",en:"🚀 Learning the Dock and Apps"}, sub:{ko:"앱을 열고, 닫고, 왜 닫아야 하는지 하나씩 배워요.",en:"Learn how to open apps, close them, and why quitting matters."},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"}, back:{ko:"‹ 이전",en:"‹ Back"}, next:{ko:"다음 ▶",en:"Next ▶"}, start:{ko:"시작하기 ▶",en:"Start ▶"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"}, hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"앱 관리 달인!",en:"App management master!"}, finalMsg:{ko:"이제 앱을 열고, 찾고, 제대로 종료하는 법까지 다 알아요. 컴퓨터가 훨씬 가벼워질 거예요 💖",en:"Now you know how to open, find, and fully quit apps. Your computer will feel much lighter 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`}, finalStep:{ko:"완료! 🎊",en:"Done! 🎊"}, hintPrefix:{ko:"💡 ",en:"💡 "},
+  menu:{ko:["파일","편집","보기"],en:["File","Edit","View"]},
+  am:{ko:"오전",en:"AM"}, pm:{ko:"오후",en:"PM"}, lpHint:{ko:"앱을 누르면 열려요 · 빈 곳을 누르면 닫혀요",en:"Click an app to open it · click empty space to close"},
+  open:{ko:"열기",en:"Open"}, quit:{ko:"종료",en:"Quit"}, close:{ko:"닫기",en:"Close"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG; document.title=T(UI.title);
+  document.getElementById("h1").textContent=T(UI.h1); document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip); document.getElementById("introBack").textContent=T(UI.back);
+  document.getElementById("restartBtn").textContent=T(UI.restart); document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle); document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.getElementById("lpHint").textContent=T(UI.lpHint);
+  document.querySelectorAll("#menubar .mbTitle:not(.app)").forEach((e,i)=>e.textContent=(UI.menu[LANG]||UI.menu.ko)[i]||e.textContent);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(phase==="intro") showIntro(); else loadLesson(lidx);
+}
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+const clickSnd=()=>beep(520,.05);
+const quitSnd=()=>{beep(420,.1);setTimeout(()=>beep(300,.14),90);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+let toastT=null;
+function toast(msg,ms=2200){ const t=document.getElementById("toast"); t.innerHTML=T(msg); t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),ms); }
+
+/* ---------- apps ---------- */
+const APPS={
+  finder:{icon:"🗂️", name:{ko:"Finder",en:"Finder"}, inDock:true, permanent:true},
+  safari:{icon:"🧭", name:{ko:"Safari",en:"Safari"}, inDock:true},
+  mail:  {icon:"✉️", name:{ko:"Mail",en:"Mail"},   inDock:true},
+  photos:{icon:"🖼️", name:{ko:"사진",en:"Photos"},   inDock:true},
+  calc:  {icon:"🧮", name:{ko:"계산기",en:"Calculator"}, inDock:false},
+  notes: {icon:"📝", name:{ko:"메모",en:"Notes"},   inDock:false},
+  music: {icon:"🎵", name:{ko:"음악",en:"Music"},   inDock:false},
+  maps:  {icon:"🗺️", name:{ko:"지도",en:"Maps"},   inDock:false},
+};
+const DOCK_ORDER=["finder","safari","mail","photos"];
+const LP_ORDER=["safari","mail","photos","calc","notes","music","maps","finder"];
+
+let running=new Set(), frontApp="finder", winCount=0;
+const dockEl=document.getElementById("dock");
+const winWrap=document.getElementById("windows");
+const lp=document.getElementById("launchpad");
+const lpGrid=document.getElementById("lpGrid");
+const dockMenu=document.getElementById("dockMenu");
+
+let listener=null;
+const LAUNCHPAD_SVG=`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-label="런치패드">
+  <rect x="2" y="2" width="96" height="96" rx="22" fill="#fbfbfd"/>
+  <g>
+    <rect x="20" y="20" width="17" height="17" rx="5" fill="#63e6a0"/>
+    <rect x="41.5" y="20" width="17" height="17" rx="5" fill="#ffd24a"/>
+    <rect x="63" y="20" width="17" height="17" rx="5" fill="#ff9f43"/>
+    <rect x="20" y="41.5" width="17" height="17" rx="5" fill="#ff6b6b"/>
+    <rect x="41.5" y="41.5" width="17" height="17" rx="5" fill="#c8ccd2"/>
+    <rect x="63" y="41.5" width="17" height="17" rx="5" fill="#ff5fa8"/>
+    <rect x="20" y="63" width="17" height="17" rx="5" fill="#c69bff"/>
+    <rect x="41.5" y="63" width="17" height="17" rx="5" fill="#4db8ff"/>
+    <rect x="63" y="63" width="17" height="17" rx="5" fill="#5fe3c0"/>
+  </g>
+</svg>`;
+function notifyGame(type,payload){ if(listener) listener(type,payload); }
+const LP_MINI=`<svg viewBox="0 0 100 100" style="width:1em;height:1em;vertical-align:-0.15em;" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="96" height="96" rx="22" fill="#fbfbfd" stroke="#e2e4ea" stroke-width="2"/><rect x="20" y="20" width="17" height="17" rx="5" fill="#63e6a0"/><rect x="41.5" y="20" width="17" height="17" rx="5" fill="#ffd24a"/><rect x="63" y="20" width="17" height="17" rx="5" fill="#ff9f43"/><rect x="20" y="41.5" width="17" height="17" rx="5" fill="#ff6b6b"/><rect x="41.5" y="41.5" width="17" height="17" rx="5" fill="#c8ccd2"/><rect x="63" y="41.5" width="17" height="17" rx="5" fill="#ff5fa8"/><rect x="20" y="63" width="17" height="17" rx="5" fill="#c69bff"/><rect x="41.5" y="63" width="17" height="17" rx="5" fill="#4db8ff"/><rect x="63" y="63" width="17" height="17" rx="5" fill="#5fe3c0"/></svg>`;
+
+function resetDesktop(){
+  running=new Set(["finder"]); frontApp="finder"; winCount=0;
+  winWrap.innerHTML=""; lp.classList.remove("open"); dockMenu.classList.remove("open");
+  document.getElementById("mbApp").textContent=T({ko:"Finder",en:"Finder"});
+  renderDock(); renderLaunchpad();
+}
+function renderDock(){
+  dockEl.innerHTML="";
+  DOCK_ORDER.forEach(k=>dockEl.appendChild(dockItem(k)));
+  running.forEach(k=>{ if(!DOCK_ORDER.includes(k) && APPS[k]) dockEl.appendChild(dockItem(k)); });
+  const sep=document.createElement("div"); sep.className="dockItem sep"; dockEl.appendChild(sep);
+  const lpi=document.createElement("div"); lpi.className="dockItem"; lpi.id="dockLaunchpad";
+  lpi.innerHTML=`<div class="dockIco lpIco">${LAUNCHPAD_SVG}</div><div class="runDot"></div>`;
+  lpi.title=T({ko:"런치패드",en:"Launchpad"}); lpi.addEventListener("click",toggleLaunchpad);
+  dockEl.appendChild(lpi);
+}
+function dockItem(k){
+  const a=APPS[k]; const el=document.createElement("div");
+  el.className="dockItem"+(running.has(k)?" running":""); el.dataset.key=k; el.title=T(a.name);
+  el.innerHTML=`<div class="dockIco">${a.icon}</div><div class="runDot"></div>`;
+  el.addEventListener("click",()=>openApp(k));
+  el.addEventListener("contextmenu",e=>{e.preventDefault(); showDockMenu(k,el);});
+  return el;
+}
+function renderLaunchpad(){
+  lpGrid.innerHTML="";
+  LP_ORDER.forEach(k=>{ const a=APPS[k]; const el=document.createElement("div"); el.className="lpItem"; el.dataset.key=k;
+    el.innerHTML=`<div class="li">${a.icon}</div><div class="ll">${T(a.name)}</div>`;
+    el.addEventListener("click",e=>{e.stopPropagation(); toggleLaunchpad(false); openApp(k);});
+    lpGrid.appendChild(el); });
+}
+
+function toggleLaunchpad(force){
+  const open = (typeof force==="boolean")? force : !lp.classList.contains("open");
+  lp.classList.toggle("open",open); dockMenu.classList.remove("open");
+  if(open){ clickSnd(); notifyGame("open-launchpad",{}); }
+}
+lp.addEventListener("click",()=>toggleLaunchpad(false));
+
+function bounceDock(k){ const el=dockEl.querySelector(`.dockItem[data-key="${k}"]`); if(!el) return;
+  el.classList.add("bouncing"); setTimeout(()=>el.classList.remove("bouncing"),1200); }
+
+function openApp(k){
+  const a=APPS[k]; if(!a) return; dockMenu.classList.remove("open");
+  const already=running.has(k);
+  running.add(k); frontApp=k; setFront(k);
+  bounceDock(k); clickSnd();
+  if(!winWrap.querySelector(`.appWin[data-key="${k}"]`)){
+    const w=document.createElement("div"); w.className="appWin"; w.dataset.key=k;
+    const off=(winCount%4); winCount++;
+    w.style.left=(18+off*20)+"px"; w.style.top=(40+off*16)+"px";
+    w.innerHTML=`<div class="tb"><div class="traffic">
+        <span class="d rd" title="${T(UI.close)}">✕</span><span class="d yl"></span><span class="d gr"></span></div>
+        <span class="wtt">${T(a.name)}</span></div>
+      <div class="bd"><div class="big">${a.icon}</div><div class="nm">${T(a.name)}</div></div>`;
+    w.querySelector(".rd").addEventListener("click",e=>{e.stopPropagation(); closeWindow(k);});
+    w.addEventListener("mousedown",()=>setFront(k));
+    winWrap.appendChild(w);
+  }
+  renderDock();
+  if(!already) toast({ko:"‘"+T(a.name)+"’을(를) 열었어요 "+a.icon,en:"Opened ‘"+T(a.name)+"’ "+a.icon},1500);
+  notifyGame("open-app",{key:k});
+}
+function setFront(k){ frontApp=k; document.getElementById("mbApp").textContent=T(APPS[k].name);
+  winWrap.querySelectorAll(".appWin").forEach(w=>w.style.zIndex=(w.dataset.key===k)?35:30); }
+
+function closeWindow(k){
+  const w=winWrap.querySelector(`.appWin[data-key="${k}"]`); if(w) w.remove();
+  clickSnd();
+  const others=[...winWrap.querySelectorAll(".appWin")]; frontApp=others.length?others[others.length-1].dataset.key:"finder";
+  setFront(frontApp);
+  toast({ko:"창은 닫혔지만 <b>"+T(APPS[k].name)+"</b>은(는) 아직 켜져 있어요 (독의 점 ●)",en:"The window closed, but <b>"+T(APPS[k].name)+"</b> is still running (the Dock dot ●)."},3000);
+  notifyGame("close-window",{key:k});
+}
+function quitApp(k){
+  if(k==="finder"){ toast({ko:"Finder는 항상 켜져 있어요 🙂",en:"Finder is always running 🙂"}); return; }
+  running.delete(k); dockMenu.classList.remove("open");
+  const w=winWrap.querySelector(`.appWin[data-key="${k}"]`); if(w) w.remove();
+  const others=[...winWrap.querySelectorAll(".appWin")]; frontApp=others.length?others[others.length-1].dataset.key:"finder";
+  setFront(frontApp); renderDock(); quitSnd();
+  toast({ko:"‘"+T(APPS[k].name)+"’을(를) 완전히 종료했어요 ✅",en:"Fully quit ‘"+T(APPS[k].name)+"’ ✅"},1800);
+  notifyGame("quit-app",{key:k});
+}
+
+function showDockMenu(k,el){
+  const a=APPS[k]; const r=el.getBoundingClientRect(); const dr=document.getElementById("desktop").getBoundingClientRect();
+  dockMenu.innerHTML=`<div class="mhead">${T(a.name)}</div>`+
+    `<div class="mi" data-act="open">${T(UI.open)}</div>`+
+    (running.has(k)&&k!=="finder"?`<div class="mi quit" data-act="quit">${T(UI.quit)}</div>`:``);
+  dockMenu.style.left=Math.min(r.left-dr.left, dr.width-150)+"px";
+  dockMenu.classList.add("open");
+  const mh=dockMenu.offsetHeight;
+  dockMenu.style.top=(r.top-dr.top - mh - 6)+"px";
+  dockMenu.querySelectorAll(".mi").forEach(mi=>mi.addEventListener("click",e=>{
+    e.stopPropagation(); const act=mi.dataset.act; dockMenu.classList.remove("open");
+    if(act==="open") openApp(k); else if(act==="quit") quitApp(k);
+  }));
+  clickSnd();
+}
+document.getElementById("desktop").addEventListener("click",e=>{
+  if(!dockMenu.contains(e.target) && !e.target.closest(".dockItem")) dockMenu.classList.remove("open");
+});
+document.addEventListener("keydown",e=>{
+  if(e.metaKey && e.code==="KeyQ"){ e.preventDefault(); if(frontApp && frontApp!=="finder") quitApp(frontApp); }
+  else if(e.key==="Escape"){ toggleLaunchpad(false); dockMenu.classList.remove("open"); }
+});
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+
+/* clock */
+function tickClock(){ const d=new Date(); let h=d.getHours(); const m=String(d.getMinutes()).padStart(2,"0");
+  const ap=h<12?T(UI.am):T(UI.pm); h=h%12; if(h===0)h=12; document.getElementById("clockBtn").textContent=`${ap} ${h}:${m}`; }
+
+/* ---------- content ---------- */
+let introIdx=0, phase="intro";
+const INTRO=[
+  { art:"🚀", title:{ko:"‘앱’과 ‘독(Dock)’이 뭐예요?",en:"What are ‘apps’ and the Dock?"},
+    html:{ko:`<b>앱</b>은 컴퓨터로 하는 일 하나하나예요. 인터넷은 <b>Safari</b>, 편지는 <b>Mail</b>, 사진 보기는 <b>사진</b> 앱이죠.<br><br>
+    화면 <b>맨 아래에 나란히 있는 아이콘 줄</b>이 바로 <b>독(Dock)</b>이에요.<br>
+    자주 쓰는 앱을 <b>바로 열 수 있게 모아 둔 선반</b>이라고 생각하면 돼요.`,
+    en:`An <b>app</b> is each thing you do on the computer. Internet is <b>Safari</b>, mail is <b>Mail</b>, and photos use the <b>Photos</b> app.<br><br>
+    The <b>row of icons along the bottom</b> is the <b>Dock</b>.<br>
+    Think of it as a shelf that keeps favorite apps ready to open.`} },
+  { art:"🗂️", title:{ko:"모든 앱은 ‘런치패드’에",en:"All apps are in Launchpad"},
+    html:{ko:`독에 없는 앱은 어디 있을까요? <b>런치패드 ${LP_MINI}</b>에 모두 모여 있어요.<br><br>
+    런치패드는 <b>앱들의 큰 서랍</b>이에요. 열면 컴퓨터에 있는 앱이 <b>한 화면에 쫙</b> 나와요.<br>
+    거기서 원하는 앱을 누르면 열려요.`,
+    en:`Where are apps that are not in the Dock? They are all in <b>Launchpad ${LP_MINI}</b>.<br><br>
+    Launchpad is a <b>big drawer for apps</b>. Open it and the apps on your computer appear <b>all together</b>.<br>
+    Click the app you want to open.`} },
+  { art:"🧹", title:{ko:"왜 앱을 닫아야 할까요?",en:"Why should we quit apps?"},
+    html:{ko:`앱을 열면 컴퓨터가 그 앱을 위해 <b>힘(메모리)</b>을 써요.<br><br>
+    안 쓰는 앱을 <b>켜 둔 채로 많이 쌓이면</b> 컴퓨터가 느려지고 <b>배터리도 빨리 닳아요</b>.<br><br>
+    그래서 다 쓴 앱은 <b>완전히 종료</b>해 주는 게 좋아요. 그 방법도 배워볼게요!`,
+    en:`When you open an app, the computer uses <b>power (memory)</b> for it.<br><br>
+    If many unused apps are <b>left running</b>, the computer can slow down and <b>the battery drains faster</b>.<br><br>
+    So it is good to <b>fully quit</b> apps when you are done. Let's learn how!`} },
+  { art:"🔴", title:{ko:"빨간 버튼 ≠ 종료",en:"Red button ≠ Quit"},
+    html:{ko:`중요한 비밀 하나! 창 왼쪽 위 <b>빨간 버튼 🔴</b>은 <b>창만 닫을 뿐</b>, 앱은 <b>계속 켜져 있어요</b>.<br><br>
+    독 아이콘 아래 <b>작은 점 ●</b>이 있으면 “아직 켜져 있다”는 뜻이에요.<br>
+    완전히 끄려면 <b>독 아이콘을 오른쪽 클릭 → 종료</b>를 누르면 돼요.<br>
+    <span style="opacity:.7;font-size:14px;">(실제 맥북에서는 <b>⌘ + Q</b> 로도 종료할 수 있어요. 이 연습에서는 오른쪽 클릭으로 해볼게요.)</span>`,
+    en:`One important secret! The <b>red button 🔴</b> at the top left <b>only closes the window</b>; the app <b>keeps running</b>.<br><br>
+    A <b>small dot ●</b> under the Dock icon means “still running.”<br>
+    To turn it off completely, <b>right-click the Dock icon → Quit</b>.<br>
+    <span style="opacity:.7;font-size:14px;">(On a real MacBook, <b>⌘ + Q</b> also quits. In this practice, we'll right-click.)</span>`} },
+];
+
+const LESSONS=[
+  { title:{ko:"① 독에서 앱 열기",en:"① Open an app from the Dock"},
+    instr:{ko:"독에서 <b>Safari 🧭</b> 아이콘을 눌러서 여세요.",en:"Click the <b>Safari 🧭</b> icon in the Dock to open it."},
+    hint:{ko:"독의 아이콘을 한 번 클릭하면 앱이 통! 튀어오르며 열려요.",en:"Click a Dock icon once and the app bounces open."},
+    hintDesk:{ko:"↓ 아래 독에서 🧭 Safari 를 누르세요",en:"↓ Click 🧭 Safari in the Dock below"},
+    setup(done){ listener=(t,p)=>{ if(t==="open-app"&&p.key==="safari") done("🧭",{ko:"독에서 앱을 열었어요!",en:"You opened an app from the Dock!"}); }; } },
+  { title:{ko:"② 런치패드 열기",en:"② Open Launchpad"},
+    instr:{ko:"독 오른쪽의 <b>런치패드</b>(무지개 격자 모양 "+LP_MINI+")를 눌러, 앱 서랍을 여세요.",en:"Click <b>Launchpad</b> (the rainbow grid "+LP_MINI+") on the right side of the Dock to open the app drawer."},
+    hint:{ko:"런치패드를 열면 컴퓨터에 있는 모든 앱이 한눈에 보여요.",en:"Launchpad shows all the apps on your computer at a glance."},
+    hintDesk:{ko:"↓ 독에서 ‘무지개 격자’ 모양 런치패드 를 누르세요",en:"↓ Click the rainbow-grid Launchpad in the Dock"},
+    setup(done){ listener=(t,p)=>{ if(t==="open-launchpad") done("🚀",{ko:"런치패드를 열었어요!",en:"You opened Launchpad!"}); }; } },
+  { title:{ko:"③ 런치패드에서 앱 열기",en:"③ Open an app from Launchpad"},
+    instr:{ko:"런치패드에서 <b>계산기 🧮</b>를 찾아 눌러서 여세요.",en:"Find <b>Calculator 🧮</b> in Launchpad and click it to open."},
+    hint:{ko:"독에 없는 앱도 런치패드에서 찾아 열 수 있어요.",en:"Apps not in the Dock can be found and opened in Launchpad."}, hintDesk:"", openLaunchpad:true,
+    setup(done){ listener=(t,p)=>{ if(t==="open-app"&&p.key==="calc") done("🧮",{ko:"런치패드에서 앱을 열었어요!",en:"You opened an app from Launchpad!"}); }; } },
+  { title:{ko:"④ 빨간 버튼은 ‘창 닫기’일 뿐",en:"④ The red button only closes the window"},
+    instr:{ko:"Safari 창의 <b>왼쪽 위 빨간 버튼 🔴</b>을 눌러 창을 닫아 보세요.",en:"Click the <b>red button 🔴</b> at the top left of the Safari window to close the window."},
+    hint:{ko:"창은 사라지지만, 독 아래 점 ●을 보면 앱은 아직 켜져 있어요. 이게 핵심이에요!",en:"The window disappears, but the Dock dot ● shows the app is still running. This is the key!"},
+    hintDesk:{ko:"창의 왼쪽 위 🔴 빨간 버튼을 누르세요",en:"Click the red 🔴 button at the top left of the window"},
+    setup(done){ if(!running.has("safari")) openApp("safari"); listener=(t,p)=>{ if(t==="close-window"&&p.key==="safari") done("🔴",{ko:"창을 닫았어요! 앱은 아직 켜져 있죠?",en:"You closed the window! The app is still running, right?"}); }; } },
+  { title:{ko:"⑤ 앱 완전히 종료하기",en:"⑤ Fully quit an app"},
+    instr:{ko:"독의 <b>Safari 🧭</b> 아이콘을 <b>오른쪽 클릭</b>(두 손가락 클릭)한 뒤 <b>종료</b>를 누르세요.",en:"<b>Right-click</b> (two-finger click) the <b>Safari 🧭</b> icon in the Dock, then click <b>Quit</b>."},
+    hint:{ko:"오른쪽 클릭 메뉴의 ‘종료’를 누르면 독의 점 ●이 사라져요. 이제 완전히 꺼진 거예요. (실제 맥북에서는 ⌘+Q 로도 종료돼요.)",en:"Click ‘Quit’ in the right-click menu and the Dock dot ● disappears. Now it is fully off. (On a real MacBook, ⌘+Q also quits.)"},
+    hintDesk:{ko:"독의 🧭 Safari 를 오른쪽 클릭 → 종료",en:"Right-click 🧭 Safari in the Dock → Quit"},
+    setup(done){ if(!running.has("safari")) openApp("safari"); listener=(t,p)=>{ if(t==="quit-app"&&p.key==="safari") done("✅",{ko:"Safari를 완전히 종료했어요!",en:"You fully quit Safari!"}); }; } },
+  { title:{ko:"⑥ 나머지 앱도 정리하기",en:"⑥ Clean up the other app too"},
+    instr:{ko:"이번엔 <b>계산기 🧮</b>도 종료해 주세요. 독의 <b>계산기 🧮</b> 아이콘을 <b>오른쪽 클릭</b>한 뒤 <b>종료</b>를 누르세요.",en:"Now quit <b>Calculator 🧮</b> too. <b>Right-click</b> the <b>Calculator 🧮</b> icon in the Dock, then click <b>Quit</b>."},
+    hint:{ko:"다 쓴 앱을 종료하면 컴퓨터가 가벼워져요. 참 잘하고 있어요!",en:"Quitting apps you are done with keeps the computer lighter. You are doing so well!"},
+    hintDesk:{ko:"독의 🧮 계산기 를 오른쪽 클릭 → 종료",en:"Right-click 🧮 Calculator in the Dock → Quit"},
+    setup(done){ if(!running.has("calc")) openApp("calc"); listener=(t,p)=>{ if(t==="quit-app"&&p.key==="calc") done("🧹",{ko:"앱 정리 완료! 깔끔해요!",en:"App cleanup complete! Nice and tidy!"}); }; } },
+];
+
+/* ---------- engine ---------- */
+let lidx=0;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"), introArt:document.getElementById("introArt"),
+  introTitle:document.getElementById("introTitle"), introText:document.getElementById("introText"),
+  introBack:document.getElementById("introBack"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"), skip:document.getElementById("skipBtn"),
+  bTitle:document.getElementById("bTitle"), bInstr:document.getElementById("bInstr"), bHint:document.getElementById("bHint"),
+  deskHint:document.getElementById("deskHint") };
+const totalSteps=INTRO.length+LESSONS.length;
+function doneCount(){ return phase==="intro"?introIdx:INTRO.length+lidx; }
+function updateProgress(){ els.step.textContent=UI.step[LANG](doneCount()+1,totalSteps); els.bar.style.width=(doneCount()/totalSteps*100)+"%"; }
+
+function showIntro(){ phase="intro"; els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none";
+  const c=INTRO[introIdx]; els.introArt.textContent=c.art; els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
+  els.introBack.style.visibility=introIdx===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=introIdx===INTRO.length-1?T(UI.start):T(UI.next); updateProgress(); }
+function nextIntro(){ if(introIdx<INTRO.length-1){ introIdx++; showIntro(); } else startLessons(); }
+function prevIntro(){ if(introIdx>0){ introIdx--; showIntro(); } }
+function startLessons(){ phase="lessons"; lidx=0; els.intro.style.display="none"; els.main.style.display="flex"; resetDesktop(); loadLesson(0); }
+
+function loadLesson(i){
+  const lv=LESSONS[i];
+  els.bTitle.textContent=T(lv.title); els.bInstr.innerHTML=T(lv.instr); els.bHint.textContent=T(UI.hintPrefix)+T(lv.hint);
+  updateProgress(); listener=null; dockMenu.classList.remove("open");
+  els.deskHint.textContent=T(lv.hintDesk)||"";
+  if(lv.openLaunchpad) toggleLaunchpad(true); else toggleLaunchpad(false);
+  lv.setup(onDone);
+}
+function onDone(emoji,msg){
+  listener=null;
+  els.bar.style.width=((INTRO.length+lidx+1)/totalSteps*100)+"%";
+  els.msg.textContent=msg?T(msg):praise(); els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex"; confetti(); chime();
+  setTimeout(()=>{ els.overlay.style.display="none"; lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); },1600);
+}
+function skipStep(){ if(phase==="intro"){ nextIntro(); return; } listener=null;
+  lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:dock","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.final.style.display="none"; resetDesktop(); showIntro(); }
+
+tickClock(); setInterval(tickClock,10000);
+applyStatic();
+resetDesktop();
+showIntro();
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-const BASE="https://dthoma1.github.io/";
+const BASE="https://dthoma1.github.io/moms-arcade/games/";
 
 /* =====================================================================
    PHASE 0 CONFIG — paste your real URLs/IDs here to switch each piece on.

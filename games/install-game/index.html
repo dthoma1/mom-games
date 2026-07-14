@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 앱 설치 배우기</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#6366f1; --accent2:#ec4899; --good:#22c55e;
+    --desk1:#5b8def; --desk2:#a06cd5;
+  }
+  *{box-sizing:border-box; -webkit-user-select:none; user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;
+    overscroll-behavior:none;touch-action:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1000px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;
+    border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:120;}
+
+  /* intro */
+  #introView{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(99,102,241,.12);padding:26px;text-align:center;overflow:auto;}
+  #introArt{font-size:70px;line-height:1.15;margin-bottom:10px;}
+  #introTitle{font-size:26px;font-weight:800;margin:4px 0;}
+  #introText{font-size:17px;line-height:1.7;max-width:690px;color:#374151;}
+  #introText b{color:var(--accent);}
+  .introBtns{margin-top:20px;display:flex;gap:10px;}
+
+  /* lesson */
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;}
+  #banner .t{font-size:18px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .i b{color:var(--accent);}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  /* fake desktop */
+  #desktop{position:relative;flex:1;min-height:0;border-radius:14px;overflow:hidden;
+    background:linear-gradient(160deg,var(--desk1),var(--desk2));
+    box-shadow:inset 0 0 60px rgba(0,0,0,.12), 0 18px 40px rgba(0,0,0,.18);}
+  #menubar{position:absolute;top:0;left:0;right:0;height:26px;background:rgba(255,255,255,.6);
+    backdrop-filter:blur(10px);display:flex;align-items:center;gap:2px;padding:0 8px;z-index:20;font-size:13px;}
+  .mbTitle{padding:2px 8px;border-radius:6px;font-weight:600;color:#111827;white-space:nowrap;}
+  .mbTitle.app{font-weight:800;}
+  #mbRight{margin-left:auto;display:flex;align-items:center;gap:6px;}
+  #clockBtn{font-size:12px;color:#111827;}
+
+  #deskHint{position:absolute;top:40%;left:0;right:0;text-align:center;color:rgba(255,255,255,.92);
+    font-size:15px;white-space:pre-line;text-shadow:0 1px 6px rgba(0,0,0,.35);pointer-events:none;padding:0 20px;z-index:5;}
+
+  /* desktop icons */
+  .deskIcon{position:absolute;display:flex;flex-direction:column;align-items:center;gap:2px;width:88px;
+    cursor:pointer;z-index:15;padding:6px 4px;border-radius:10px;}
+  .deskIcon.sel{background:rgba(255,255,255,.25);}
+  .deskIcon .di{font-size:44px;line-height:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.3));pointer-events:none;}
+  .deskIcon .dl{font-size:12px;color:#fff;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.6);line-height:1.15;pointer-events:none;}
+  .deskIcon.dragging{z-index:200;opacity:.9;}
+
+  /* mounted disk w/ eject */
+  #mountedDisk{display:none;}
+  #ejectBtn{position:absolute;top:0;right:6px;background:rgba(255,255,255,.9);border-radius:50%;
+    width:22px;height:22px;font-size:13px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 5px rgba(0,0,0,.3);}
+  #ejectBtn:hover{background:#fff;}
+
+  #trash{right:16px;bottom:14px;left:auto;top:auto;position:absolute;width:80px;}
+  #trash.dropok .di{transform:scale(1.25);}
+  #trash .di{transition:transform .12s;}
+
+  /* browser window */
+  .win{position:absolute;background:#fff;border-radius:12px;box-shadow:0 22px 55px rgba(0,0,0,.4);
+    display:flex;flex-direction:column;overflow:hidden;z-index:30;}
+  .win .tb{height:30px;background:#e9eaee;display:flex;align-items:center;gap:7px;padding:0 10px;}
+  .win .tb .d{width:12px;height:12px;border-radius:50%;}
+  .rd{background:#ff5f57;} .yl{background:#febc2e;} .gr{background:#28c840;}
+  .win .tb .wtt{font-size:12px;color:#555;font-weight:600;margin-left:4px;}
+  #browserWin{top:44px;left:50%;transform:translateX(-50%);width:min(360px,80%);height:180px;display:none;}
+  #browserWin .addr{background:#f1f3f5;border-radius:8px;font-size:12px;color:#555;text-align:center;padding:4px;margin:8px 10px 0;}
+  #browserWin .body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;}
+  #browserWin .body .h{font-size:16px;font-weight:700;}
+  #dlBtn{font-size:15px;font-weight:700;color:#fff;background:linear-gradient(90deg,#22c55e,#16a34a);
+    border:none;border-radius:10px;padding:9px 20px;cursor:pointer;box-shadow:0 6px 16px rgba(34,197,94,.4);}
+
+  /* dmg installer window */
+  #dmgWin{top:46px;left:50%;transform:translateX(-50%);width:min(420px,88%);height:210px;display:none;}
+  #dmgWin .stage{flex:1;position:relative;background:linear-gradient(160deg,#dbeafe,#ede9fe);
+    display:flex;align-items:center;justify-content:space-around;padding:0 8px;}
+  #dmgWin .arrow{font-size:34px;color:#6366f1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.15));}
+  #dmgAppIcon{position:absolute;left:22px;top:52px;}
+  #appsFolder{position:absolute;right:22px;top:52px;width:88px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  #appsFolder .di{font-size:52px;line-height:1;transition:transform .12s;}
+  #appsFolder .dl{font-size:12px;font-weight:700;color:#4338ca;}
+  #appsFolder.dropok .di{transform:scale(1.2);}
+  #dmgWin .caption{position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:12px;color:#6b7280;}
+
+  #successOverlay{position:absolute;inset:0;background:rgba(255,255,255,.93);display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:6px;border-radius:14px;z-index:100;}
+  #successOverlay .be{font-size:76px;animation:pop .5s ease;}
+  #successOverlay .msg{font-size:24px;font-weight:800;color:var(--good);}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:130;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+  button.big.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+  .toast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;
+    padding:9px 18px;border-radius:14px;font-size:14px;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;max-width:82%;text-align:center;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipStep()"></button>
+
+    <div id="introView" style="display:none;">
+      <div id="introArt">📦</div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button class="big soft" id="introBack" onclick="prevIntro()"></button>
+        <button class="big" id="introNext" onclick="nextIntro()"></button>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+      </div>
+
+      <div id="desktop">
+        <div id="menubar">
+          <span class="mbTitle app" id="mbApp">Safari</span>
+          <span class="mbTitle">파일</span>
+          <span class="mbTitle">편집</span>
+          <span id="mbRight"><span>🔋</span><span>📶</span><span>🔍</span><span id="clockBtn"></span></span>
+        </div>
+
+        <div id="deskHint"></div>
+
+        <!-- browser (lesson 1) -->
+        <div id="browserWin" class="win">
+          <div class="tb"><span class="d rd"></span><span class="d yl"></span><span class="d gr"></span>
+            <span class="wtt">Safari</span></div>
+          <div class="addr">🔒 cool-app.com/download</div>
+          <div class="body"><div class="h">🎨 쿨앱 (CoolApp)</div>
+            <div style="font-size:13px;color:#666;">사진을 예쁘게 꾸며주는 앱</div>
+            <button id="dlBtn">⬇️ 다운로드</button></div>
+        </div>
+
+        <!-- .dmg file on desktop -->
+        <div class="deskIcon" id="dmgFile" style="left:20px;top:44px;display:none;">
+          <div class="di">📦</div><div class="dl">쿨앱_설치.dmg</div></div>
+
+        <!-- mounted disk on desktop -->
+        <div class="deskIcon" id="mountedDisk" style="right:18px;top:44px;left:auto;">
+          <div class="di"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="46" height="46"><rect x="8" y="13" width="48" height="38" rx="8" fill="#f6f8fc" stroke="#c3c9d4" stroke-width="2.5"/><rect x="15" y="39" width="34" height="6" rx="3" fill="#dde1ea"/><circle cx="45" cy="42" r="2.4" fill="#9aa2b1"/></svg></div><div class="dl">쿨앱</div><div id="ejectBtn">⏏︎</div></div>
+
+        <!-- installed app on desktop (Applications) -->
+        <div class="deskIcon" id="installedApp" style="left:20px;top:150px;display:none;">
+          <div class="di">🎨</div><div class="dl">쿨앱<br><span style="font-size:10px;opacity:.8;">(응용 프로그램)</span></div></div>
+
+        <!-- dmg installer window -->
+        <div id="dmgWin" class="win">
+          <div class="tb"><span class="d rd"></span><span class="d yl"></span><span class="d gr"></span>
+            <span class="wtt"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="14" height="14" style="vertical-align:-2px"><rect x="8" y="13" width="48" height="38" rx="8" fill="#f6f8fc" stroke="#c3c9d4" stroke-width="3"/><rect x="15" y="39" width="34" height="6" rx="3" fill="#dde1ea"/><circle cx="45" cy="42" r="2.6" fill="#9aa2b1"/></svg> 쿨앱</span></div>
+          <div class="stage">
+            <div class="deskIcon" id="dmgAppIcon"><div class="di">🎨</div><div class="dl" style="color:#3730a3;text-shadow:none;">쿨앱</div></div>
+            <div class="arrow">➡️</div>
+            <div id="appsFolder"><div class="di">📁</div><div class="dl">Applications</div></div>
+            <div class="caption">🎨 쿨앱을 📁 Applications 폴더로 끌어다 놓으세요</div>
+          </div>
+        </div>
+
+        <!-- trash -->
+        <div class="deskIcon" id="trash"><div class="di">🗑️</div><div class="dl">휴지통</div></div>
+
+        <div class="toast" id="toast"></div>
+      </div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div></div>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  title:{ko:"엄마의 앱 설치 배우기",en:"Learning App Installation"}, h1:{ko:"📦 엄마의 앱 설치 배우기",en:"📦 Learning App Installation"}, sub:{ko:"인터넷에서 앱을 내려받아 설치하는 과정을 하나씩 배워요.",en:"Learn each step of downloading and installing an app from the internet."},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"}, back:{ko:"‹ 이전",en:"‹ Back"}, next:{ko:"다음 ▶",en:"Next ▶"}, start:{ko:"시작하기 ▶",en:"Start ▶"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"}, hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"앱 설치 달인!",en:"App installation master!"}, finalMsg:{ko:"내려받고, 설치하고, 설치 파일까지 안전하게 정리했어요. 이제 어떤 앱이든 직접 설치할 수 있어요 💖",en:"You downloaded, installed, and safely cleaned up the installer. Now you can install apps yourself 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`}, finalStep:{ko:"완료! 🎊",en:"Done! 🎊"}, hintPrefix:{ko:"💡 ",en:"💡 "},
+  menu:{ko:["파일","편집","보기"],en:["File","Edit","View"]},
+  am:{ko:"오전",en:"AM"}, pm:{ko:"오후",en:"PM"}, cool:{ko:"쿨앱",en:"CoolApp"}, dmg:{ko:"쿨앱_설치.dmg",en:"CoolApp_Install.dmg"}, appKind:{ko:"(응용 프로그램)",en:"(Applications)"}, trash:{ko:"휴지통",en:"Trash"}, download:{ko:"⬇️ 다운로드",en:"⬇️ Download"},
+  coolDesc:{ko:"사진을 예쁘게 꾸며주는 앱",en:"An app that makes photos look beautiful"}, caption:{ko:"🎨 쿨앱을 📁 Applications 폴더로 끌어다 놓으세요",en:"Drag 🎨 CoolApp to the 📁 Applications folder"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG; document.title=T(UI.title);
+  document.getElementById("h1").textContent=T(UI.h1); document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip); document.getElementById("introBack").textContent=T(UI.back);
+  document.getElementById("restartBtn").textContent=T(UI.restart); document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle); document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.querySelectorAll("#menubar .mbTitle:not(.app)").forEach((e,i)=>e.textContent=(UI.menu[LANG]||UI.menu.ko)[i]||e.textContent);
+  document.querySelector("#browserWin .body .h").textContent="🎨 "+T(UI.cool)+" (CoolApp)";
+  document.querySelector("#browserWin .body div[style]").textContent=T(UI.coolDesc); document.getElementById("dlBtn").textContent=T(UI.download);
+  document.querySelector("#dmgFile .dl").textContent=T(UI.dmg); document.querySelector("#mountedDisk .dl").textContent=T(UI.cool);
+  document.querySelector("#installedApp .dl").innerHTML=T(UI.cool)+"<br><span style=\"font-size:10px;opacity:.8;\">"+T(UI.appKind)+"</span>";
+  document.querySelector("#dmgWin .wtt").lastChild.textContent=" "+T(UI.cool); document.querySelector("#dmgAppIcon .dl").textContent=T(UI.cool);
+  document.querySelector("#dmgWin .caption").textContent=T(UI.caption); document.querySelector("#trash .dl").textContent=T(UI.trash);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(phase==="intro") showIntro(); else loadLesson(lidx);
+}
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const DRIVE=`<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="17" height="17" style="vertical-align:-3px"><rect x="8" y="13" width="48" height="38" rx="8" fill="#f6f8fc" stroke="#c3c9d4" stroke-width="3"/><rect x="15" y="39" width="34" height="6" rx="3" fill="#dde1ea"/><circle cx="45" cy="42" r="2.6" fill="#9aa2b1"/></svg>`;
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+const clickSnd=()=>beep(520,.05);
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+let toastT=null;
+function toast(msg,ms=2600){ const t=document.getElementById("toast"); t.innerHTML=T(msg); t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),ms); }
+
+/* ---------- elements ---------- */
+const desktop=document.getElementById("desktop");
+const browserWin=document.getElementById("browserWin");
+const dmgFile=document.getElementById("dmgFile");
+const mountedDisk=document.getElementById("mountedDisk");
+const installedApp=document.getElementById("installedApp");
+const dmgWin=document.getElementById("dmgWin");
+const dmgAppIcon=document.getElementById("dmgAppIcon");
+const appsFolder=document.getElementById("appsFolder");
+const trash=document.getElementById("trash");
+
+let listener=null;
+function notifyGame(type,payload){ if(listener) listener(type,payload); }
+let dmgMode=null;   // 'open' | 'drag' | null
+
+function resetStage(){
+  browserWin.style.display="none"; dmgFile.style.display="none";
+  mountedDisk.style.display="none"; installedApp.style.display="none";
+  dmgWin.style.display="none"; dmgMode=null;
+  dmgFile.style.left="20px"; dmgFile.style.top="44px";
+  dmgAppIcon.style.left="22px"; dmgAppIcon.style.top="52px";
+  dmgFile.classList.remove("sel"); document.getElementById("mbApp").textContent=T({ko:"Safari",en:"Safari"});
+}
+
+/* ---------- generic pointer drag ---------- */
+function makeDrag(el, homeLeft, homeTop, getTarget, onHit, canStart){
+  let dragging=false, ox=0, oy=0, pid=null;
+  el.addEventListener("pointerdown",e=>{
+    if(canStart && !canStart()) return;
+    dragging=true; pid=e.pointerId; try{el.setPointerCapture(pid);}catch(_){}
+    const r=el.getBoundingClientRect(); ox=e.clientX-r.left; oy=e.clientY-r.top;
+    el.classList.add("dragging"); e.preventDefault();
+  });
+  el.addEventListener("pointermove",e=>{
+    if(!dragging) return;
+    const host=el.offsetParent.getBoundingClientRect();
+    el.style.left=(e.clientX-host.left-ox)+"px";
+    el.style.top=(e.clientY-host.top-oy)+"px";
+    const tgt=getTarget(); if(tgt){ const tr=tgt.getBoundingClientRect();
+      const over=e.clientX>=tr.left&&e.clientX<=tr.right&&e.clientY>=tr.top&&e.clientY<=tr.bottom;
+      tgt.classList.toggle("dropok",over); }
+  });
+  const end=e=>{
+    if(!dragging) return; dragging=false; el.classList.remove("dragging");
+    try{el.releasePointerCapture(pid);}catch(_){}
+    const tgt=getTarget(); let hit=false;
+    if(tgt){ const tr=tgt.getBoundingClientRect();
+      hit=e.clientX>=tr.left&&e.clientX<=tr.right&&e.clientY>=tr.top&&e.clientY<=tr.bottom;
+      tgt.classList.remove("dropok"); }
+    if(hit){ onHit(); }
+    else { el.style.left=homeLeft; el.style.top=homeTop; }  // snap back
+  };
+  el.addEventListener("pointerup",end);
+  el.addEventListener("pointercancel",end);
+}
+
+/* ---------- actions ---------- */
+function downloadDmg(){ browserWin.style.display="none"; dmgFile.style.display="flex"; clickSnd();
+  toast({ko:"📦 쿨앱_설치.dmg 파일을 내려받았어요",en:"📦 Downloaded the CoolApp_Install.dmg file"},1800); notifyGame("downloaded",{}); }
+function openDmg(){ if(dmgFile.style.display==="none") dmgFile.style.display="flex";
+  mountedDisk.style.display="flex"; dmgWin.style.display="flex"; document.getElementById("mbApp").textContent=T(UI.cool);
+  chime(); notifyGame("opened-dmg",{}); }
+function installApp(){ dmgAppIcon.style.transition="all .3s"; dmgAppIcon.style.opacity="0";
+  installedApp.style.display="flex"; clickSnd();
+  toast({ko:"🎨 쿨앱이 Applications(응용 프로그램)에 <b>복사(설치)</b>됐어요",en:"🎨 CoolApp was <b>copied (installed)</b> into Applications"},2600); notifyGame("installed",{}); }
+function ejectDisk(){ mountedDisk.style.display="none"; dmgWin.style.display="none";
+  document.getElementById("mbApp").textContent=T({ko:"Finder",en:"Finder"}); clickSnd();
+  toast({ko:DRIVE+" 디스크를 꺼냈어요 (USB를 안전하게 뽑는 것과 같아요)",en:DRIVE+" disk was ejected (like safely unplugging a USB drive)"},2600); notifyGame("ejected",{}); }
+function trashDmg(){ dmgFile.style.display="none"; clickSnd();
+  toast({ko:"🗑️ 설치 파일을 버렸어요 — 앱은 그대로 있으니 안심하세요!",en:"🗑️ You threw away the installer — the app stays, so don't worry!"},2800); notifyGame("trashed",{}); }
+function launchInstalled(){ chime();
+  toast({ko:"🎨 쿨앱이 잘 실행돼요! 설치 파일을 지워도 앱은 멀쩡하죠?",en:"🎨 CoolApp opens nicely! Even after deleting the installer, the app is fine."},3000); notifyGame("launched",{}); }
+
+/* wire handlers */
+document.getElementById("dlBtn").addEventListener("click",downloadDmg);
+dmgFile.addEventListener("dblclick",()=>{ if(dmgMode==="open") openDmg(); });
+dmgFile.addEventListener("click",()=>{ dmgFile.classList.add("sel"); });
+document.getElementById("ejectBtn").addEventListener("click",e=>{ e.stopPropagation(); ejectDisk(); });
+installedApp.addEventListener("dblclick",launchInstalled);
+document.getElementById("mountedDisk").addEventListener("dblclick",openDmg);
+
+makeDrag(dmgAppIcon,"22px","52px",()=>appsFolder,installApp,()=>dmgWin.style.display!=="none");
+makeDrag(dmgFile,"20px","44px",()=>trash,trashDmg,()=>dmgMode==="drag");
+
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+function tickClock(){ const d=new Date(); let h=d.getHours(); const m=String(d.getMinutes()).padStart(2,"0");
+  const ap=h<12?T(UI.am):T(UI.pm); h=h%12; if(h===0)h=12; document.getElementById("clockBtn").textContent=`${ap} ${h}:${m}`; }
+
+/* ---------- content ---------- */
+let introIdx=0, phase="intro";
+const INTRO=[
+  { art:"🛠️", title:{ko:"‘응용 프로그램(앱)’이 뭐예요?",en:"What is an application (app)?"},
+    html:{ko:`아이폰에서 쓰던 <b>앱</b>, 맥북에도 똑같이 있어요! 이미 익숙한 거예요 😊<br><br>
+    지난번에 배운 걸 떠올려 볼까요? <b>파일</b>은 <b>물건(내용물)</b>이에요 — 사진 한 장, 편지 한 통, 노래 한 곡처럼요.
+    <b>폴더</b>는 그 물건을 정리해 담는 <b>상자</b>고요.<br><br>
+    그럼 <b>앱</b>은? 그 물건을 <b>다루는 도구</b>예요.
+    사진은 ‘사진’ 앱으로 보고, 편지는 글쓰기 앱으로 쓰고, 노래는 음악 앱으로 들어요.<br><br>
+    한마디로 <b>파일 = 내용물</b>, <b>폴더 = 정리함</b>, <b>앱 = 그걸 열고·만들고·고치는 도구</b>랍니다.`,
+    en:`The <b>apps</b> you used on iPhone exist on the MacBook too! This is already familiar 😊<br><br>
+    Remember what we learned? A <b>file</b> is a <b>thing (content)</b> — one photo, one letter, one song. A <b>folder</b> is a <b>box</b> that organizes those things.<br><br>
+    Then an <b>app</b> is the <b>tool</b> that handles those things. Photos are viewed in Photos, letters are written in a writing app, and songs are played in Music.<br><br>
+    In short: <b>file = content</b>, <b>folder = organizer</b>, <b>app = the tool that opens, creates, and edits it</b>.`} },
+  { art:"⬇️", title:{ko:"앱은 어떻게 구할까요?",en:"How do we get apps?"},
+    html:{ko:`아이폰은 <b>App Store</b> 한 곳에서 앱을 받았죠. 맥북은 방법이 <b>두 가지</b>예요.<br><br>
+    ① <b>App Store</b> 📱 — 아이폰처럼 버튼 한 번이면 알아서 설치돼요. 가장 쉽고 안전해요.<br>
+    ② <b>웹사이트에서 내려받기</b> — 만든 회사 홈페이지에서 <b>설치 파일</b>을 내려받아요.<br><br>
+    맥북에만 있는 두 번째 방법, <b>직접 내려받아 설치하는 법</b>을 오늘 연습해요.`,
+    en:`On iPhone, you got apps from one place: the <b>App Store</b>. On MacBook there are <b>two ways</b>.<br><br>
+    ① <b>App Store</b> 📱 — one button installs it for you, like iPhone. Easiest and safest.<br>
+    ② <b>Download from a website</b> — download an <b>installer file</b> from the company website.<br><br>
+    Today we practice the second Mac-only way: <b>downloading and installing yourself</b>.`} },
+  { art:"🛡️", title:{ko:"안전이 제일 중요해요",en:"Safety matters most"},
+    html:{ko:`앱은 컴퓨터 <b>속으로 들어오는 손님</b>이에요. 그래서 <b>믿을 수 있는 곳</b>에서만 받아야 해요.<br><br>
+    ✅ <b>App Store</b> — 애플이 미리 검사해서 가장 안전해요.<br>
+    ✅ <b>잘 아는 회사의 공식 홈페이지</b> — 예: 카카오, 네이버, 마이크로소프트.<br><br>
+    ❌ <b>모르는 사이트</b>, 광고 팝업의 <b>‘다운로드’ 버튼</b>, 이메일·문자로 온 <b>낯선 링크</b>는 절대 누르지 마세요.<br><br>
+    조금이라도 <b>이상하면 멈추고</b> 가족에게 물어보세요. 그게 가장 똑똑한 방법이에요 💛`,
+    en:`An app is a <b>guest entering your computer</b>, so only get apps from <b>places you trust</b>.<br><br>
+    ✅ <b>App Store</b> — Apple checks it first, so it is safest.<br>
+    ✅ <b>The official website of a company you know</b> — for example Kakao, Naver, Microsoft.<br><br>
+    ❌ Never click <b>unknown sites</b>, ad pop-up <b>Download</b> buttons, or <b>strange links</b> from email or messages.<br><br>
+    If anything feels <b>strange, stop</b> and ask family. That is the smartest choice 💛`} },
+  { art:"📦", title:{ko:"‘DMG 파일’이 뭐예요?",en:"What is a DMG file?"},
+    html:{ko:`내려받으면 이름 끝이 <b>.dmg</b> 인 파일이 생겨요. 이게 <b>디스크 이미지</b>예요.<br><br>
+    쉽게 말해 <b>앱이 담겨 배송된 택배 상자</b> 📦 예요.<br>
+    두 번 클릭하면 상자가 <b>‘탁’ 열리면서</b>, 마치 <b>USB를 꽂은 것처럼</b> 흰색 외장 디스크 ${DRIVE} 가 나타나요.<br>
+    그 안에 들어 있는 <b>앱</b>을 꺼내 <b>Applications 폴더</b>로 옮기면 설치 완료!`,
+    en:`After downloading, a file ending in <b>.dmg</b> appears. This is a <b>disk image</b>.<br><br>
+    Think of it as a <b>delivery box containing the app</b> 📦.<br>
+    Double-click it and the box <b>opens</b>; a white external disk ${DRIVE} appears, like plugging in a USB drive.<br>
+    Move the <b>app</b> inside to the <b>Applications folder</b>, and installation is done!`} },
+  { art:"🗑️", title:{ko:"설치 후 DMG는 지워도 돼요",en:"After installing, you can delete the DMG"},
+    html:{ko:`설치는 사실 <b>상자 속 앱을 컴퓨터로 복사</b>하는 거예요.<br><br>
+    복사가 끝나면 <b>상자(.dmg)는 빈 포장지</b>일 뿐이에요. 그대로 두면 <b>공간만 차지</b>해요.<br><br>
+    그래서 설치가 끝나면 <b>.dmg 파일은 휴지통에 버려도 안전</b>해요.
+    이미 <b>복사해 둔 앱은 지워지지 않아요!</b> 오늘 직접 확인해 볼게요.`,
+    en:`Installing really means <b>copying the app from the box to the computer</b>.<br><br>
+    Once copied, the <b>box (.dmg) is just empty packaging</b>. Keeping it only <b>takes up space</b>.<br><br>
+    So after installing, it is safe to <b>put the .dmg file in the Trash</b>. The app you already <b>copied will not be deleted!</b> We'll check that today.`} },
+];
+
+const LESSONS=[
+  { title:{ko:"① 앱 내려받기",en:"① Download the app"},
+    instr:{ko:"홈페이지의 <b>⬇️ 다운로드</b> 버튼을 눌러 설치 파일을 내려받으세요.",en:"Click the website's <b>⬇️ Download</b> button to download the installer file."},
+    hint:{ko:"믿을 수 있는 공식 홈페이지(주소창에 🔒)에서만 받으세요. 버튼을 누르면 설치 파일(.dmg)이 내려와요.",en:"Only download from a trusted official website (look for 🔒 in the address bar). The button downloads an installer file (.dmg)."}, hintDesk:"",
+    setup(done){ resetStage(); browserWin.style.display="flex"; listener=(t)=>{ if(t==="downloaded") done("⬇️",{ko:"설치 파일을 내려받았어요!",en:"You downloaded the installer file!"}); }; } },
+  { title:{ko:"② DMG 파일 열기",en:"② Open the DMG file"},
+    instr:{ko:"바탕화면의 <b>📦 쿨앱_설치.dmg</b>를 <b>두 번 클릭</b>해서 상자를 여세요.",en:"<b>Double-click</b> <b>📦 CoolApp_Install.dmg</b> on the desktop to open the box."},
+    hint:{ko:"두 번 빠르게 톡톡! 그러면 흰색 디스크가 열리고 설치 창이 나와요.",en:"Click twice quickly. A white disk opens and the installer window appears."},
+    hintDesk:{ko:"📦 .dmg 파일을 두 번 클릭하세요",en:"Double-click the 📦 .dmg file"},
+    setup(done){ browserWin.style.display="none"; dmgFile.style.display="flex"; dmgMode="open"; mountedDisk.style.display="none"; dmgWin.style.display="none"; listener=(t)=>{ if(t==="opened-dmg") done("📦",{ko:"상자를 열었어요! 안에 앱이 보이죠?",en:"You opened the box! See the app inside?"}); }; } },
+  { title:{ko:"③ Applications로 끌어 설치",en:"③ Drag to Applications to install"},
+    instr:{ko:"열린 창에서 <b>🎨 쿨앱</b>을 <b>📁 Applications</b> 폴더로 <b>끌어다 놓으세요</b>.",en:"In the open window, <b>drag 🎨 CoolApp</b> to the <b>📁 Applications</b> folder."},
+    hint:{ko:"아이콘을 손가락으로 누른 채 폴더 위로 옮겨 놓으면, 앱이 컴퓨터에 복사돼요.",en:"Hold the icon, move it over the folder, and let go. The app is copied to the computer."},
+    hintDesk:{ko:"🎨 쿨앱 → 📁 Applications 로 드래그",en:"Drag 🎨 CoolApp → 📁 Applications"},
+    setup(done){ dmgMode=null; dmgFile.style.display="flex"; openDmgSilently(); dmgAppIcon.style.opacity="1"; installedApp.style.display="none"; listener=(t)=>{ if(t==="installed") done("🎨",{ko:"앱을 Applications에 설치했어요!",en:"You installed the app in Applications!"}); }; } },
+  { title:{ko:"④ 디스크 꺼내기(추출)",en:"④ Eject the disk"},
+    instr:{ko:"설치가 끝났으니 <b>"+DRIVE+" 쿨앱 디스크</b>의 <b>⏏︎ 꺼내기</b> 버튼을 눌러 디스크를 빼세요.",en:"Installation is done, so click the <b>⏏︎ eject</b> button on the <b>"+DRIVE+" CoolApp disk</b>."},
+    hint:{ko:"USB를 안전하게 뽑듯이, 다 쓴 디스크는 꺼내 줘요.",en:"Like safely unplugging a USB drive, eject a disk when you are done."},
+    hintDesk:{ko:"쿨앱 디스크의 ⏏︎ 버튼을 누르세요",en:"Click the ⏏︎ button on the CoolApp disk"},
+    setup(done){ dmgMode=null; dmgFile.style.display="flex"; installedApp.style.display="flex"; openDmgSilently(); listener=(t)=>{ if(t==="ejected") done("⏏️",{ko:"디스크를 안전하게 꺼냈어요!",en:"You safely ejected the disk!"}); }; } },
+  { title:{ko:"⑤ 설치 파일(.dmg) 버리기",en:"⑤ Throw away the installer (.dmg)"},
+    instr:{ko:"이제 필요 없는 <b>📦 쿨앱_설치.dmg</b>를 <b>🗑️ 휴지통</b>으로 끌어다 버리세요.",en:"Now drag the unneeded <b>📦 CoolApp_Install.dmg</b> to the <b>🗑️ Trash</b>."},
+    hint:{ko:"설치가 끝난 .dmg는 빈 상자예요. 버려도 앱은 그대로 있어요!",en:"After installation, the .dmg is an empty box. Throwing it away does not remove the app!"},
+    hintDesk:{ko:"📦 .dmg 를 🗑️ 휴지통으로 드래그",en:"Drag 📦 .dmg to 🗑️ Trash"},
+    setup(done){ mountedDisk.style.display="none"; dmgWin.style.display="none"; dmgFile.style.display="flex"; installedApp.style.display="flex"; dmgMode="drag"; document.getElementById("mbApp").textContent=T({ko:"Finder",en:"Finder"}); listener=(t)=>{ if(t==="trashed") done("🗑️",{ko:"설치 파일을 깔끔하게 버렸어요!",en:"You neatly threw away the installer!"}); }; } },
+  { title:{ko:"⑥ 앱은 그대로! 확인하기",en:"⑥ The app remains — check it"},
+    instr:{ko:"설치 파일을 버렸어도 앱은 멀쩡해요. <b>🎨 쿨앱</b>(응용 프로그램)을 <b>두 번 클릭</b>해 열어 보세요.",en:"Even after throwing away the installer, the app is fine. <b>Double-click 🎨 CoolApp</b> (Applications) to open it."},
+    hint:{ko:"상자를 버려도 복사해 둔 앱은 잘 열려요. 이게 오늘의 핵심이에요!",en:"Even if you throw away the box, the copied app opens fine. This is today's key point!"},
+    hintDesk:{ko:"🎨 쿨앱(응용 프로그램)을 두 번 클릭",en:"Double-click 🎨 CoolApp (Applications)"},
+    setup(done){ dmgFile.style.display="none"; mountedDisk.style.display="none"; dmgWin.style.display="none"; installedApp.style.display="flex"; listener=(t)=>{ if(t==="launched") done("🎉",{ko:"앱이 잘 열려요! 완벽하게 이해했어요!",en:"The app opens well! You understood perfectly!"}); }; } },
+];
+
+function openDmgSilently(){ mountedDisk.style.display="flex"; dmgWin.style.display="flex";
+  document.getElementById("mbApp").textContent=T(UI.cool); }
+
+/* ---------- engine ---------- */
+let lidx=0;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"), introArt:document.getElementById("introArt"),
+  introTitle:document.getElementById("introTitle"), introText:document.getElementById("introText"),
+  introBack:document.getElementById("introBack"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"), skip:document.getElementById("skipBtn"),
+  bTitle:document.getElementById("bTitle"), bInstr:document.getElementById("bInstr"), bHint:document.getElementById("bHint"),
+  deskHint:document.getElementById("deskHint") };
+const totalSteps=INTRO.length+LESSONS.length;
+function doneCount(){ return phase==="intro"?introIdx:INTRO.length+lidx; }
+function updateProgress(){ els.step.textContent=UI.step[LANG](doneCount()+1,totalSteps); els.bar.style.width=(doneCount()/totalSteps*100)+"%"; }
+
+function showIntro(){ phase="intro"; els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none";
+  const c=INTRO[introIdx]; els.introArt.textContent=c.art; els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
+  els.introBack.style.visibility=introIdx===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=introIdx===INTRO.length-1?T(UI.start):T(UI.next); updateProgress(); }
+function nextIntro(){ if(introIdx<INTRO.length-1){ introIdx++; showIntro(); } else startLessons(); }
+function prevIntro(){ if(introIdx>0){ introIdx--; showIntro(); } }
+function startLessons(){ phase="lessons"; lidx=0; els.intro.style.display="none"; els.main.style.display="flex"; resetStage(); loadLesson(0); }
+
+function loadLesson(i){
+  const lv=LESSONS[i];
+  els.bTitle.textContent=T(lv.title); els.bInstr.innerHTML=T(lv.instr); els.bHint.textContent=T(UI.hintPrefix)+T(lv.hint);
+  updateProgress(); listener=null;
+  els.deskHint.textContent=T(lv.hintDesk)||"";
+  lv.setup(onDone);
+}
+function onDone(emoji,msg){
+  listener=null; els.deskHint.textContent="";
+  els.bar.style.width=((INTRO.length+lidx+1)/totalSteps*100)+"%";
+  els.msg.textContent=msg?T(msg):praise(); els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex"; confetti(); chime();
+  setTimeout(()=>{ els.overlay.style.display="none"; lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); },1600);
+}
+function skipStep(){ if(phase==="intro"){ nextIntro(); return; } listener=null;
+  lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:install","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.final.style.display="none"; resetStage(); showIntro(); }
+
+tickClock(); setInterval(tickClock,10000);
+applyStatic();
+resetStage();
+showIntro();
+</script>
+</body>
+</html>

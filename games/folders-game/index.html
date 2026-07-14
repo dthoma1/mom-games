@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 특별한 폴더 배우기</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#6366f1; --accent2:#ec4899; --good:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+  }
+  *{box-sizing:border-box; -webkit-user-select:none; user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;
+    overscroll-behavior:none;touch-action:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1000px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;
+    border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:120;}
+
+  /* intro */
+  #introView{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(99,102,241,.12);padding:26px;text-align:center;overflow:auto;}
+  #introArt{font-size:70px;line-height:1.15;margin-bottom:10px;}
+  #introTitle{font-size:26px;font-weight:800;margin:4px 0;}
+  #introText{font-size:17px;line-height:1.7;max-width:700px;color:#374151;}
+  #introText b{color:var(--accent);}
+  .introBtns{margin-top:20px;display:flex;gap:10px;}
+
+  .rooms{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:6px auto 12px;}
+  .room{background:#f8fafc;border:2px solid #e2e8f0;border-radius:14px;padding:12px 14px;min-width:120px;}
+  .room .big{font-size:38px;} .room .lab{font-size:13px;font-weight:700;margin-top:4px;}
+  .room .job{font-size:12px;color:var(--soft);margin-top:2px;line-height:1.4;}
+
+  /* lesson */
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;}
+  #banner .t{font-size:18px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .i b{color:var(--accent);}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  #stage{position:relative;flex:1;min-height:0;border-radius:16px;overflow:auto;
+    background:#fff;box-shadow:0 14px 34px rgba(99,102,241,.14);
+    display:flex;align-items:center;justify-content:center;padding:18px;}
+  .panel{width:100%;max-width:660px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;}
+  .kbtn{font-size:16px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border:none;border-radius:999px;padding:12px 22px;cursor:pointer;box-shadow:0 6px 16px rgba(99,102,241,.3);}
+  .kbtn:active{transform:translateY(1px);} .kbtn:disabled{opacity:.5;cursor:default;}
+  .kbtn.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);box-shadow:none;}
+  .kbtn.danger{background:linear-gradient(90deg,#ef4444,#f97316);}
+  .note{font-size:15px;line-height:1.6;color:#374151;background:#eef2ff;border-radius:12px;padding:12px 16px;max-width:600px;}
+  .note b{color:var(--accent);}
+  .note.good{background:#ecfdf5;} .note.good b{color:var(--good);}
+  .note.bad{background:#fef2f2;} .note.bad b{color:var(--bad);}
+  .note.warn{background:#fffbeb;} .note.warn b{color:var(--warn);}
+
+  /* finder-ish sidebar of special folders */
+  .fbar{display:flex;flex-direction:column;gap:8px;width:210px;}
+  .fitem{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:12px;background:#f8fafc;
+    border:2px solid #e2e8f0;cursor:pointer;font-size:15px;font-weight:700;transition:transform .1s, border-color .15s;}
+  .fitem:hover{transform:translateX(2px);} .fitem:active{transform:translateX(0);}
+  .fitem .ic{font-size:24px;}
+  .fitem.sel{border-color:var(--accent);background:#eef2ff;}
+  .fitem.correct{border-color:var(--good);background:#f2fdf6;}
+  .fitem.pulse{animation:pulse 1.3s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.0);}50%{box-shadow:0 0 0 6px rgba(99,102,241,.25);}}
+
+  .browserRow{display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap;width:100%;}
+  .contentBox{width:250px;min-height:150px;background:#fff;border:2px dashed #d1d5db;border-radius:14px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:14px;}
+  .fileIcon{font-size:46px;} .fileName{font-size:13px;font-weight:700;}
+  .emptyMsg{font-size:13px;color:#9ca3af;}
+
+  /* desktop screen mock */
+  .screen{width:300px;height:180px;border-radius:14px;border:6px solid #334155;
+    background:linear-gradient(135deg,#60a5fa,#a78bfa);position:relative;box-shadow:0 10px 24px rgba(0,0,0,.2);overflow:hidden;}
+  .screen .menubar{position:absolute;top:0;left:0;right:0;height:16px;background:rgba(255,255,255,.5);font-size:9px;
+    display:flex;align-items:center;padding:0 6px;color:#1f2937;}
+  .screen .desktopIcon{position:absolute;right:14px;top:34px;display:none;flex-direction:column;align-items:center;
+    font-size:11px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4);}
+  .screen .desktopIcon .di{font-size:34px;}
+  .screen.has .desktopIcon{display:flex;animation:pop .4s ease;}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:100;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:130;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);overflow:auto;}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  #finalScreen .recap{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0 4px;}
+  #finalScreen .rc{background:#f8fafc;border:1px solid #eef0f4;border-radius:12px;padding:8px 12px;font-size:13px;min-width:130px;}
+  #finalScreen .rc b{display:block;font-size:15px;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+  button.big.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipStep()"></button>
+
+    <div id="introView" style="display:none;">
+      <div id="introArt">📂</div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button class="big soft" id="introBack" onclick="prevIntro()"></button>
+        <button class="big" id="introNext" onclick="nextIntro()"></button>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+      </div>
+      <div id="stage"></div>
+      <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div class="recap" id="finalRecap"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  title:{ko:"엄마의 특별한 폴더 배우기",en:"Mom's Special Folders Lesson"},
+  h1:{ko:"📂 엄마의 특별한 폴더 배우기",en:"📂 Learning Special Folders"},
+  sub:{ko:"다운로드 · 데스크탑 · 문서 · 휴지통 — 각 폴더가 하는 일",en:"Downloads · Desktop · Documents · Trash — what each folder does"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  introBack:{ko:"‹ 이전",en:"‹ Back"},
+  introNext:{ko:"다음 ▶",en:"Next ▶"},
+  introStart:{ko:"시작하기 ▶",en:"Start ▶"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"특별한 폴더 박사님!",en:"Special folders expert!"},
+  finalRecap:{ko:`
+        <div class="rc"><b>⬇️ 다운로드</b>인터넷에서 받은 것</div>
+        <div class="rc"><b>🖥️ 데스크탑</b>화면에 바로 보이는 것</div>
+        <div class="rc"><b>📄 문서</b>내가 만든 파일 보관</div>
+        <div class="rc"><b>🗑️ 휴지통</b>버린 것 (되돌릴 수 있음!)</div>`,
+    en:`
+        <div class="rc"><b>⬇️ Downloads</b>Things from the internet</div>
+        <div class="rc"><b>🖥️ Desktop</b>Things shown right on the screen</div>
+        <div class="rc"><b>📄 Documents</b>Files I made and saved</div>
+        <div class="rc"><b>🗑️ Trash</b>Deleted things (can be restored!)</div>`},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  next:{ko:"다음 ›",en:"Next ›"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.title=T(UI.title);
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("introBack").textContent=T(UI.introBack);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalRecap").innerHTML=T(UI.finalRecap);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final && els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(phase==="intro"){ showIntro(); }
+  else if(!doneGuard){ loadLesson(lidx); }
+}
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+const clickSnd=()=>beep(520,.05);
+const buzz=()=>{beep(200,.18);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* sidebar helper: builds a list of special folders; onPick(key,el) */
+function makeSidebar(onPick, opts){
+  opts=opts||{};
+  const FOLDERS=[
+    {key:"downloads", ic:"⬇️", name:{ko:"다운로드",en:"Downloads"}},
+    {key:"desktop",   ic:"🖥️", name:{ko:"데스크탑",en:"Desktop"}},
+    {key:"documents", ic:"📄", name:{ko:"문서",en:"Documents"}},
+    {key:"trash",     ic:"🗑️", name:{ko:"휴지통",en:"Trash"}},
+  ];
+  const bar=document.createElement("div"); bar.className="fbar";
+  FOLDERS.forEach(f=>{
+    if(opts.only && !opts.only.includes(f.key)) return;
+    const el=document.createElement("div"); el.className="fitem"; el.dataset.key=f.key;
+    if(opts.pulse===f.key) el.classList.add("pulse");
+    el.innerHTML=`<span class="ic">${f.ic}</span><span>${T(f.name)}</span>`;
+    el.addEventListener("click",()=>onPick(f.key,el));
+    bar.appendChild(el);
+  });
+  return bar;
+}
+
+/* ---------- intro ---------- */
+let introIdx=0, phase="intro";
+const INTRO=[
+  { art:"🏠", title:{ko:"집에 방마다 역할이 있듯이…",en:"Just like every room at home has a job…"},
+    html:{ko:`집에는 <b>부엌</b>(요리하는 곳), <b>침실</b>(자는 곳)처럼 방마다 <b>하는 일</b>이 정해져 있죠.<br><br>
+    맥북에도 <b>미리 만들어진 특별한 폴더</b>들이 있어요. 각 폴더마다 <b>맡은 일</b>이 달라요!<br><br>
+    엄마가 만들지 않아도 <b>처음부터 있어요</b>. 어디에 뭐가 들어가는지만 알면 훨씬 편해져요. 😊`,
+    en:`At home, each room has its own <b>job</b>, like the <b>kitchen</b> for cooking and the <b>bedroom</b> for sleeping.<br><br>
+    Your MacBook also has <b>special folders already made for you</b>. Each folder has a different <b>job</b>!<br><br>
+    You don't have to make them — <b>they are there from the start</b>. Once you know what goes where, it gets much easier. 😊`} },
+  { art:"📂", title:{ko:"맥북의 특별한 폴더 4가지",en:"Four special folders on your MacBook"},
+    html:{ko:`<div class="rooms">
+      <div class="room"><div class="big">⬇️</div><div class="lab">다운로드</div><div class="job">인터넷에서<br>받은 것</div></div>
+      <div class="room"><div class="big">🖥️</div><div class="lab">데스크탑</div><div class="job">화면에<br>바로 보이는 것</div></div>
+      <div class="room"><div class="big">📄</div><div class="lab">문서</div><div class="job">내가 만든<br>파일 보관</div></div>
+      <div class="room"><div class="big">🗑️</div><div class="lab">휴지통</div><div class="job">버린 것<br>(되돌리기 가능)</div></div>
+    </div>
+    이 넷을 하나씩 눌러 보며 익혀 볼게요. 어렵지 않아요! ✨`,
+    en:`<div class="rooms">
+      <div class="room"><div class="big">⬇️</div><div class="lab">Downloads</div><div class="job">Things from<br>the internet</div></div>
+      <div class="room"><div class="big">🖥️</div><div class="lab">Desktop</div><div class="job">Things shown<br>on the screen</div></div>
+      <div class="room"><div class="big">📄</div><div class="lab">Documents</div><div class="job">Save files<br>I made</div></div>
+      <div class="room"><div class="big">🗑️</div><div class="lab">Trash</div><div class="job">Deleted things<br>(can restore)</div></div>
+    </div>
+    We'll tap each one and learn it together. It's not hard! ✨`} },
+]
+
+/* ---------- lessons ---------- */
+const stage=document.getElementById("stage");
+let doneGuard=false;
+
+const LESSONS=[
+  { title:{ko:"① 다운로드 — 인터넷에서 받은 것",en:"① Downloads — things from the internet"},
+    instr:{ko:"브라우저에서 <b>고양이 사진</b>을 내려받았어요. 사진은 자동으로 어느 폴더에 들어갔을까요? 왼쪽에서 눌러 찾아보세요.",
+           en:"You downloaded a <b>cat photo</b> from the browser. Which folder did it go into automatically? Tap on the left to find it."},
+    hint:{ko:"인터넷·브라우저에서 받은 파일은 거의 다 ‘다운로드’ 폴더로 들어가요.",
+          en:"Files from the internet or browser usually go into the ‘Downloads’ folder."},
+    render(stage,done){
+      const wrap=document.createElement("div"); wrap.className="panel";
+      const note=document.createElement("div"); note.className="note";
+      note.innerHTML=T({ko:"🐱 방금 받은 <b>고양이.jpg</b> — 어디 있을까요? 왼쪽 폴더를 눌러 보세요.",
+                        en:"🐱 The <b>cat.jpg</b> you just downloaded — where is it? Tap a folder on the left."});
+      const row=document.createElement("div"); row.className="browserRow";
+      const content=document.createElement("div"); content.className="contentBox";
+      content.innerHTML=`<div class="emptyMsg">${T({ko:"폴더를 눌러 열어 보세요",en:"Tap a folder to open it"})}</div>`;
+      const bar=makeSidebar((key,el)=>{
+        if(doneGuard) return; clickSnd();
+        bar.querySelectorAll(".fitem").forEach(x=>x.classList.remove("sel"));
+        el.classList.add("sel");
+        if(key==="downloads"){ el.classList.add("correct"); chime();
+          content.innerHTML=`<div class="fileIcon">🐱</div><div class="fileName">${T({ko:"고양이.jpg",en:"cat.jpg"})}</div>`;
+          note.className="note good"; note.innerHTML=T({ko:"<b>찾았어요!</b> 인터넷에서 받은 건 ‘다운로드’ 폴더에 있어요 🎉",en:"<b>You found it!</b> Things from the internet are in Downloads 🎉"});
+          setTimeout(()=>done("⬇️",{ko:"다운로드 폴더를 찾았어요!",en:"You found the Downloads folder!"}),1000);
+        } else { buzz(); content.innerHTML=`<div class="emptyMsg">${T({ko:"여기엔 사진이 없네요…",en:"The photo isn't here…"})}</div>`;
+          note.className="note warn"; note.innerHTML=T({ko:"여긴 아니에요. <b>인터넷에서 받은 건 ‘다운로드’</b>에 있어요. 다시 찾아볼까요?",en:"Not this one. <b>Things from the internet are in Downloads</b>. Let's try again."}); }
+      });
+      row.appendChild(bar); row.appendChild(content);
+      wrap.appendChild(note); wrap.appendChild(row); stage.appendChild(wrap);
+    }},
+
+  { title:{ko:"② 데스크탑 — 화면에 바로 보이는 곳",en:"② Desktop — right on the screen"},
+    instr:{ko:"<b>데스크탑</b> 폴더에 넣은 것은 <b>화면 배경(바탕화면)</b>에 바로 보여요. 파일을 데스크탑에 놓아 확인해 보세요.",
+           en:"Things put in the <b>Desktop</b> folder show up right on the <b>desktop screen</b>. Put a file there and see."},
+    hint:{ko:"자주 쓰는 걸 잠깐 두기 좋지만, 너무 많이 쌓으면 화면이 지저분해져요.",
+          en:"It's handy for things you use often, but too many files can make the screen messy."},
+    render(stage,done){
+      const wrap=document.createElement("div"); wrap.className="panel";
+      const note=document.createElement("div"); note.className="note";
+      note.innerHTML=T({ko:"아래 <b>‘데스크탑에 놓기’</b>를 눌러, 파일이 화면에 나타나는 걸 확인해 보세요.",en:"Tap <b>‘Put on Desktop’</b> below and watch the file appear on the screen."});
+      const screen=document.createElement("div"); screen.className="screen";
+      screen.innerHTML=`<div class="menubar">  🍎  ${T({ko:"파일",en:"File"})}  ${T({ko:"편집",en:"Edit"})}</div>`+
+        `<div class="desktopIcon"><span class="di">📝</span><span>${T({ko:"메모.txt",en:"Memo.txt"})}</span></div>`;
+      const btn=document.createElement("button"); btn.className="kbtn"; btn.textContent=T({ko:"🖥️ 데스크탑에 놓기",en:"🖥️ Put on Desktop"});
+      btn.addEventListener("click",()=>{ if(doneGuard) return; clickSnd(); btn.disabled=true;
+        screen.classList.add("has"); chime();
+        note.className="note good"; note.innerHTML=T({ko:"보이죠? <b>데스크탑에 둔 파일은 화면에 바로</b> 나타나요 🎉",en:"See? <b>Files on the Desktop appear right on the screen</b> 🎉"});
+        setTimeout(()=>done("🖥️",{ko:"데스크탑은 화면에 바로 보여요!",en:"The Desktop shows files right on the screen!"}),1100);
+      });
+      wrap.appendChild(note); wrap.appendChild(screen); wrap.appendChild(btn); stage.appendChild(wrap);
+    }},
+
+  { title:{ko:"③ 문서 — 내가 만든 파일 보관함",en:"③ Documents — storage for files I make"},
+    instr:{ko:"직접 쓴 <b>편지</b>를 잘 보관하려면 <b>문서</b> 폴더에 넣어요. 편지를 문서 폴더로 옮겨 보세요.",
+           en:"To keep a <b>letter</b> you wrote, put it in <b>Documents</b>. Move the letter to the Documents folder."},
+    hint:{ko:"내가 만든 문서·사진 같은 건 ‘문서’ 폴더에 두면 나중에 찾기 쉬워요.",
+          en:"Files you make, like documents or photos, are easier to find later in Documents."},
+    render(stage,done){
+      const wrap=document.createElement("div"); wrap.className="panel";
+      const note=document.createElement("div"); note.className="note";
+      note.innerHTML=T({ko:"📄 내가 쓴 <b>편지.txt</b> 예요. 아래에서 <b>보관할 폴더</b>를 눌러 옮겨 주세요.",en:"📄 This is the <b>letter.txt</b> you wrote. Tap the <b>folder to keep it in</b>."});
+      const content=document.createElement("div"); content.className="contentBox"; content.style.minHeight="120px";
+      content.innerHTML=`<div class="fileIcon">💌</div><div class="fileName">${T({ko:"편지.txt",en:"letter.txt"})}</div>`;
+      const row=document.createElement("div"); row.className="browserRow";
+      const bar=makeSidebar((key,el)=>{
+        if(doneGuard) return; clickSnd();
+        bar.querySelectorAll(".fitem").forEach(x=>x.classList.remove("sel"));
+        el.classList.add("sel");
+        if(key==="documents"){ el.classList.add("correct"); chime();
+          content.innerHTML=`<div class="fileIcon">📄</div><div class="fileName">${T({ko:"편지.txt 저장됨 ✅",en:"letter.txt saved ✅"})}</div>`;
+          note.className="note good"; note.innerHTML=T({ko:"<b>문서 폴더에 잘 보관했어요!</b> 내가 만든 파일은 여기 두면 찾기 쉬워요 🎉",en:"<b>Nicely saved in Documents!</b> Files you make are easy to find here 🎉"});
+          setTimeout(()=>done("📄",{ko:"문서 폴더에 보관했어요!",en:"You saved it in Documents!"}),1000);
+        } else { buzz();
+          note.className="note warn"; note.innerHTML=T({ko:"음… 내가 <b>직접 만든 파일</b>은 ‘문서’ 폴더가 딱이에요. 다시 골라볼까요?",en:"Hmm… <b>files you make yourself</b> belong in Documents. Try again."}); }
+      }, {only:["downloads","documents","desktop"]});
+      row.appendChild(content); row.appendChild(bar);
+      wrap.appendChild(note); wrap.appendChild(row); stage.appendChild(wrap);
+    }},
+
+  { title:{ko:"④ 휴지통 — 버려도 되돌릴 수 있어요",en:"④ Trash — deleted things can come back"},
+    instr:{ko:"필요 없는 파일을 <b>휴지통</b>에 버려 보세요. 버린 뒤에도 <b>되돌릴 수 있다</b>는 걸 확인해요.",
+           en:"Put an unneeded file in the <b>Trash</b>. Then see that you can still <b>restore it</b>."},
+    hint:{ko:"휴지통은 안전망이에요. ‘휴지통 비우기’를 하기 전까진 언제든 되돌릴 수 있어요.",
+          en:"Trash is a safety net. Until you ‘Empty Trash,’ you can restore things anytime."},
+    render(stage,done){
+      const wrap=document.createElement("div"); wrap.className="panel";
+      const note=document.createElement("div"); note.className="note";
+      note.innerHTML=T({ko:"🧾 <b>안쓰는메모.txt</b> — 이제 필요 없어요. 아래 <b>‘휴지통에 버리기’</b>를 눌러요.",en:"🧾 <b>Old memo.txt</b> — you don't need it now. Tap <b>‘Move to Trash’</b> below."});
+      const content=document.createElement("div"); content.className="contentBox"; content.style.minHeight="120px";
+      content.innerHTML=`<div class="fileIcon">🧾</div><div class="fileName">${T({ko:"안쓰는메모.txt",en:"Old memo.txt"})}</div>`;
+      const btns=document.createElement("div"); btns.style.display="flex"; btns.style.gap="10px"; btns.style.flexWrap="wrap"; btns.style.justifyContent="center";
+      const toss=document.createElement("button"); toss.className="kbtn"; toss.textContent=T({ko:"🗑️ 휴지통에 버리기",en:"🗑️ Move to Trash"});
+      btns.appendChild(toss);
+
+      toss.addEventListener("click",()=>{ clickSnd(); toss.remove();
+        content.innerHTML=`<div class="fileIcon" style="opacity:.4">🗑️</div><div class="fileName">${T({ko:"휴지통 안에 있어요",en:"It's in the Trash"})}</div>`;
+        note.className="note warn";
+        note.innerHTML=T({ko:"휴지통에 들어갔어요. 하지만 <b>아직 완전히 사라진 게 아니에요!</b> 잘못 버렸다면 <b>되돌리기</b>를 눌러 보세요.",en:"It's in the Trash. But <b>it is not gone forever yet!</b> If that was a mistake, tap <b>Restore</b>."});
+        const restore=document.createElement("button"); restore.className="kbtn soft"; restore.textContent=T({ko:"↩️ 되돌리기",en:"↩️ Restore"});
+        const empty=document.createElement("button"); empty.className="kbtn danger"; empty.textContent=T({ko:"🔥 휴지통 비우기",en:"🔥 Empty Trash"});
+        btns.appendChild(restore); btns.appendChild(empty);
+
+        restore.addEventListener("click",()=>{ if(doneGuard) return; clickSnd(); chime();
+          content.innerHTML=`<div class="fileIcon">🧾</div><div class="fileName">${T({ko:"안쓰는메모.txt 복원됨 ✅",en:"Old memo.txt restored ✅"})}</div>`;
+          note.className="note good";
+          note.innerHTML=T({ko:"<b>되돌렸어요!</b> 이렇게 휴지통은 <b>안전망</b>이에요. ‘비우기’ 전까진 언제든 살릴 수 있어요 🎉",en:"<b>You restored it!</b> Trash is a <b>safety net</b>. Before emptying, you can bring things back 🎉"});
+          setTimeout(()=>done("♻️",{ko:"휴지통은 되돌릴 수 있는 안전망이에요!",en:"Trash is a safety net you can restore from!"}),1200);
+        });
+        empty.addEventListener("click",()=>{ if(doneGuard) return; buzz();
+          content.innerHTML=`<div class="emptyMsg">${T({ko:"💨 완전히 사라졌어요",en:"💨 It's gone for good"})}</div>`;
+          note.className="note bad";
+          note.innerHTML=T({ko:"이게 <b>‘휴지통 비우기’</b>예요 — 이제 <b>되돌릴 수 없어요!</b> 그래서 비우기 전엔 꼭 확인해요. (되돌리기가 더 안전했죠?)",en:"This is <b>‘Empty Trash’</b> — now <b>you can't restore it!</b> Always check first. (Restore was safer, right?)"});
+          setTimeout(()=>done("🗑️",{ko:"휴지통 비우기는 되돌릴 수 없어요 — 조심!",en:"Empty Trash cannot be undone — be careful!"}),1600);
+        });
+      });
+
+      wrap.appendChild(note); wrap.appendChild(content); wrap.appendChild(btns); stage.appendChild(wrap);
+    }},
+]
+
+/* ---------- engine ---------- */
+let lidx=0;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"), introArt:document.getElementById("introArt"),
+  introTitle:document.getElementById("introTitle"), introText:document.getElementById("introText"),
+  introBack:document.getElementById("introBack"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"), skip:document.getElementById("skipBtn"),
+  bTitle:document.getElementById("bTitle"), bInstr:document.getElementById("bInstr"), bHint:document.getElementById("bHint") };
+const totalSteps=INTRO.length+LESSONS.length;
+function doneCount(){ return phase==="intro"?introIdx:INTRO.length+lidx; }
+function updateProgress(){ els.step.textContent=UI.step[LANG](doneCount()+1,totalSteps); els.bar.style.width=(doneCount()/totalSteps*100)+"%"; }
+
+function showIntro(){ phase="intro"; els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none";
+  const c=INTRO[introIdx]; els.introArt.textContent=c.art; els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
+  els.introBack.style.visibility=introIdx===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=introIdx===INTRO.length-1?T(UI.introStart):T(UI.introNext); updateProgress(); }
+function nextIntro(){ if(introIdx<INTRO.length-1){ introIdx++; showIntro(); } else startLessons(); }
+function prevIntro(){ if(introIdx>0){ introIdx--; showIntro(); } }
+function startLessons(){ phase="lessons"; lidx=0; els.intro.style.display="none"; els.main.style.display="flex"; loadLesson(0); }
+
+function loadLesson(i){
+  const lv=LESSONS[i]; doneGuard=false;
+  els.bTitle.textContent=T(lv.title); els.bInstr.innerHTML=T(lv.instr); els.bHint.textContent="💡 "+T(lv.hint);
+  updateProgress(); els.overlay.style.display="none"; stage.innerHTML="";
+  lv.render(stage,onDone);
+}
+function onDone(emoji,msg){
+  if(doneGuard) return; doneGuard=true;
+  els.bar.style.width=((INTRO.length+lidx+1)/totalSteps*100)+"%";
+  els.msg.textContent=msg?T(msg):praise(); els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex"; confetti(); chime();
+}
+function goNext(){ els.overlay.style.display="none"; lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function skipStep(){ if(phase==="intro"){ nextIntro(); return; } doneGuard=true;
+  lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:folders","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.final.style.display="none"; showIntro(); }
+
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+applyStatic(); showIntro();
+</script>
+</body>
+</html>

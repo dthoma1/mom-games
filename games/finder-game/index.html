@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 파인더 연습</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#6366f1; --accent2:#ec4899; --good:#22c55e;
+    --win:#ffffff; --sidebar:#f3f4f6; --toolbar:#e9eaee; --sel:#dbeafe; --selBorder:#3b82f6;
+  }
+  *{box-sizing:border-box; -webkit-user-select:none; user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;color:var(--ink);
+    background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden; overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:14px;max-width:960px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  h1{font-size:23px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;background:transparent;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+
+  /* Lesson banner */
+  #banner{background:#fff;border-radius:18px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:12px 16px;text-align:center;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  /* Finder window */
+  #finder{flex:1;min-height:0;background:var(--win);border-radius:14px;overflow:hidden;
+    box-shadow:0 18px 40px rgba(0,0,0,.18);display:flex;flex-direction:column;border:1px solid #d1d5db;}
+  #toolbar{height:46px;background:var(--toolbar);display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid #d8dade;}
+  .dots{display:flex;gap:7px;margin-right:6px;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dot.r{background:#ff5f57;} .dot.y{background:#febc2e;} .dot.g{background:#28c840;}
+  .navBtn{width:30px;height:26px;border-radius:7px;border:1px solid #cfd2d8;background:#fff;font-size:15px;cursor:pointer;color:#374151;display:flex;align-items:center;justify-content:center;}
+  .navBtn:disabled{opacity:.4;cursor:default;}
+  #crumb{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;}
+  #toolbar .spacer{flex:1;}
+  #newFolderBtn{border:1px solid #cfd2d8;background:#fff;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+
+  #body{flex:1;min-height:0;display:flex;}
+  #sidebar{width:190px;background:var(--sidebar);border-right:1px solid #e2e4e9;padding:10px 8px;overflow-y:auto;}
+  .sbLabel{font-size:11px;color:#9ca3af;font-weight:700;padding:6px 8px 3px;}
+  .sbItem{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:7px;font-size:14px;cursor:pointer;color:#374151;}
+  .sbItem:hover{background:#e5e7eb;}
+  .sbItem.active{background:#d5d9e6;font-weight:700;}
+
+  #content{flex:1;min-height:0;overflow-y:auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fill,92px);grid-auto-rows:104px;gap:10px;align-content:start;position:relative;}
+  .item{width:92px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;border-radius:10px;cursor:pointer;}
+  .item .ic{font-size:46px;line-height:1;pointer-events:none;}
+  .item .nm{font-size:12px;text-align:center;word-break:break-word;max-width:88px;padding:1px 4px;border-radius:4px;}
+  .item.selected{background:var(--sel);}
+  .item.selected .nm{background:var(--selBorder);color:#fff;}
+  .item.dropok{outline:3px solid var(--good);outline-offset:2px;border-radius:12px;}
+  .item .nm input{font-size:12px;width:80px;text-align:center;border:1px solid var(--selBorder);border-radius:3px;}
+  #emptyHint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#c3c6cf;font-size:14px;pointer-events:none;}
+
+  /* Dock with trash */
+  #dock{display:flex;justify-content:center;}
+  #dockInner{background:rgba(255,255,255,.6);backdrop-filter:blur(8px);border:1px solid #e5e7eb;border-radius:16px;padding:8px 16px;display:flex;gap:14px;align-items:flex-end;}
+  #trash{font-size:44px;cursor:pointer;transition:transform .12s;}
+  #trash.dropok{transform:scale(1.25);}
+  .dockLabel{font-size:11px;color:var(--soft);text-align:center;}
+
+  /* drag ghost */
+  #ghost{position:fixed;pointer-events:none;font-size:46px;z-index:60;opacity:.85;transform:translate(-50%,-50%);display:none;}
+
+  button.ghostBtn{position:absolute;right:6px;top:-2px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:60;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:70;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+      </div>
+
+      <div id="finder">
+        <div id="toolbar">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <button class="navBtn" id="backBtn">◁</button>
+          <button class="navBtn" id="fwdBtn">▷</button>
+          <div id="crumb"></div>
+          <div class="spacer"></div>
+          <button id="newFolderBtn"></button>
+        </div>
+        <div id="body">
+          <div id="sidebar"></div>
+          <div id="content"></div>
+        </div>
+      </div>
+
+      <div id="dock">
+        <div id="dockInner">
+          <div style="text-align:center;">
+            <div id="trash">🗑️</div>
+            <div class="dockLabel" id="trashLabel"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+  </div>
+</div>
+<div id="ghost"></div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  pageTitle:{ko:"엄마의 파인더 연습",en:"Mom's Finder Practice"},
+  h1:{ko:"🗂️ 엄마의 파인더 연습",en:"🗂️ Mom's Finder Practice"},
+  sub:{ko:"파인더(Finder)로 파일과 폴더를 다루는 법을 하나씩 배워요.",en:"Learn one step at a time how to handle files and folders in Finder."},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  back:{ko:"뒤로",en:"Back"},
+  forward:{ko:"앞으로",en:"Forward"},
+  newFolder:{ko:"🆕 새로운 폴더",en:"🆕 New Folder"},
+  trash:{ko:"휴지통",en:"Trash"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"파인더 마스터!",en:"Finder master!"},
+  finalMsg:{ko:"이제 파일과 폴더를 자유롭게 다룰 수 있어요. 정말 잘하셨어요! 💖",en:"Now you can handle files and folders with confidence. You did wonderfully! 💖"},
+  next:{ko:"다음 ›",en:"Next ›"},
+  favorites:{ko:"즐겨찾기",en:"Favorites"},
+  empty:{ko:"이 폴더는 비어 있어요",en:"This folder is empty"},
+  fileOpened:{ko:n=>`${n} 파일을 열었어요`,en:n=>`Opened the file ${n}`},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  names:{
+    "데스크탑":{ko:"데스크탑",en:"Desktop"},"사진":{ko:"사진",en:"Photos"},"제주도.jpg":{ko:"제주도.jpg",en:"Jeju.jpg"},"강아지.jpg":{ko:"강아지.jpg",en:"Dog.jpg"},
+    "서류":{ko:"서류",en:"Documents"},"이력서.txt":{ko:"이력서.txt",en:"Resume.txt"},"가족사진.jpg":{ko:"가족사진.jpg",en:"Family Photo.jpg"},"좋아하는노래.mp3":{ko:"좋아하는노래.mp3",en:"Favorite Song.mp3"},
+    "다운로드":{ko:"다운로드",en:"Downloads"},"설명서.pdf":{ko:"설명서.pdf",en:"Manual.pdf"},"지도.png":{ko:"지도.png",en:"Map.png"},"문서":{ko:"문서",en:"Documents"},
+    "가계부":{ko:"가계부",en:"Budget"},"메모.txt":{ko:"메모.txt",en:"Memo.txt"},"응용 프로그램":{ko:"응용 프로그램",en:"Applications"},"메일":{ko:"메일",en:"Mail"},"음악":{ko:"음악",en:"Music"},
+    "제목 없는 폴더":{ko:"제목 없는 폴더",en:"Untitled Folder"}
+  }
+};
+function N(name){ return T(UI.names[name]||name); }
+function applyStatic(){
+  document.documentElement.lang=LANG; document.title=T(UI.pageTitle);
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("backBtn").title=T(UI.back);
+  document.getElementById("fwdBtn").title=T(UI.forward);
+  document.getElementById("newFolderBtn").textContent=T(UI.newFolder);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.getElementById("trashLabel").textContent=T(UI.trash);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els&&els.finalScreen&&els.finalScreen.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(typeof current!=="undefined"&&!doneLock){ render(); loadLevel(current); }
+}
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ---------- simulated file system ---------- */
+let uid=1; const nid=()=>"n"+(uid++);
+function folder(name,children){return{id:nid(),type:"folder",name,ic:"📁",children:children||[]};}
+function file(name,ic){return{id:nid(),type:"file",name,ic};}
+
+function buildFS(){
+  return {
+    "데스크탑":[
+      folder("사진",[file("제주도.jpg","🖼️"),file("강아지.jpg","🖼️")]),
+      folder("서류",[file("이력서.txt","📄")]),
+      file("가족사진.jpg","🖼️"),
+      file("좋아하는노래.mp3","🎵"),
+    ],
+    "다운로드":[ file("설명서.pdf","📕"), file("지도.png","🗺️") ],
+    "문서":[ folder("가계부",[]), file("메모.txt","📄") ],
+    "응용 프로그램":[ file("Safari","🧭"), file("메일","✉️"), file("사진","🌄"), file("음악","🎧") ],
+  };
+}
+const SIDEBAR=[
+  {name:"데스크탑",ic:"🖥️"},
+  {name:"다운로드",ic:"📥"},
+  {name:"문서",ic:"📄"},
+  {name:"응용 프로그램",ic:"📱"},
+];
+
+let FS, state;
+function resetWorld(){
+  FS=buildFS();
+  state={root:"데스크탑", path:[], history:[], future:[], selected:null};
+}
+// current children array based on root + path (path = array of folder ids)
+function currentChildren(){
+  let arr=FS[state.root];
+  for(const id of state.path){ const f=arr.find(n=>n.id===id); if(!f) break; arr=f.children; }
+  return arr;
+}
+function crumbText(){
+  let parts=[N(state.root)]; let arr=FS[state.root];
+  for(const id of state.path){ const f=arr.find(n=>n.id===id); if(!f)break; parts.push(N(f.name)); arr=f.children; }
+  return parts;
+}
+
+/* ---------- rendering ---------- */
+const content=document.getElementById("content");
+const sidebar=document.getElementById("sidebar");
+const crumb=document.getElementById("crumb");
+const backBtn=document.getElementById("backBtn");
+const fwdBtn=document.getElementById("fwdBtn");
+
+function renderSidebar(){
+  sidebar.innerHTML=`<div class="sbLabel">${T(UI.favorites)}</div>`;
+  SIDEBAR.forEach(s=>{
+    const el=document.createElement("div");
+    el.className="sbItem"+(state.root===s.name&&state.path.length===0?" active":"");
+    el.innerHTML=`<span>${s.ic}</span><span>${N(s.name)}</span>`;
+    el.onclick=()=>{ pushHistory(); state.root=s.name; state.path=[]; state.selected=null; render(); notify("sidebar",{name:s.name}); };
+    sidebar.appendChild(el);
+  });
+}
+function renderCrumb(){
+  const parts=crumbText();
+  crumb.innerHTML=parts.map((p,i)=>`<span>${i>0?"›&nbsp;":""}${p}</span>`).join("&nbsp;");
+  backBtn.disabled = state.history.length===0;
+  fwdBtn.disabled = state.future.length===0;
+}
+function renderContent(){
+  content.innerHTML="";
+  const items=currentChildren();
+  if(items.length===0){ content.innerHTML=`<div id="emptyHint">${T(UI.empty)}</div>`; return; }
+  items.forEach(node=>{
+    const el=document.createElement("div");
+    el.className="item"+(state.selected===node.id?" selected":"");
+    el.dataset.id=node.id;
+    el.innerHTML=`<div class="ic">${node.ic}</div><div class="nm">${N(node.name)}</div>`;
+    // single click selects
+    el.addEventListener("click",e=>{ selectNode(node); });
+    // double click opens folders
+    el.addEventListener("dblclick",e=>{ openNode(node); });
+    // drag (for move / trash)
+    el.addEventListener("mousedown",e=>startDrag(e,node,el));
+    content.appendChild(el);
+  });
+}
+function render(){ renderSidebar(); renderCrumb(); renderContent(); }
+
+/* ---------- actions ---------- */
+function pushHistory(){ state.history.push({root:state.root,path:[...state.path]}); state.future=[]; }
+function selectNode(node){ state.selected=node.id; render(); notify("select",{node}); }
+function openNode(node){
+  if(node.type==="folder"){
+    pushHistory();
+    state.path=[...state.path,node.id]; state.selected=null; render();
+    notify("open",{node});
+  } else {
+    // opening a file: little bounce + toast-like feedback
+    beep(720,.1); notify("openfile",{node});
+    flash(T(UI.fileOpened)(N(node.name)));
+  }
+}
+function goBack(){
+  if(!state.history.length) return;
+  state.future.push({root:state.root,path:[...state.path]});
+  const prev=state.history.pop(); state.root=prev.root; state.path=prev.path; state.selected=null; render(); notify("back",{});
+}
+function goForward(){
+  if(!state.future.length) return;
+  state.history.push({root:state.root,path:[...state.path]});
+  const nx=state.future.pop(); state.root=nx.root; state.path=nx.path; state.selected=null; render(); notify("forward",{});
+}
+backBtn.onclick=goBack; fwdBtn.onclick=goForward;
+
+function newFolder(){
+  const arr=currentChildren();
+  const f=folder("제목 없는 폴더",[]);
+  arr.push(f); state.selected=f.id; render(); notify("newfolder",{node:f});
+  startRename(f);
+}
+document.getElementById("newFolderBtn").onclick=newFolder;
+
+function startRename(node){
+  const el=[...content.children].find(c=>c.dataset&&c.dataset.id===node.id);
+  if(!el) return;
+  const nm=el.querySelector(".nm");
+  nm.innerHTML=`<input value="${N(node.name)}" />`;
+  const inp=nm.querySelector("input");
+  inp.focus(); inp.select();
+  const commit=()=>{
+    const v=(inp.value||"").trim();
+    const old=node.name;
+    if(v){ node.name=v; }
+    render();
+    if(v && v!==old) notify("rename",{node,oldName:old,newName:v});
+  };
+  inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); commit(); } });
+  inp.addEventListener("blur",commit);
+  // Return key from a selected item also triggers rename (real Finder behavior) handled globally
+}
+// Return key renames the selected item
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    const active=document.activeElement;
+    if(active && active.tagName==="INPUT") return;
+    if(state.selected){ const node=currentChildren().find(n=>n.id===state.selected); if(node){ e.preventDefault(); startRename(node); } }
+  }
+});
+
+function flash(msg){
+  const f=document.createElement("div");
+  f.textContent="👁️ "+msg;
+  f.style.cssText="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:8px 16px;border-radius:999px;font-size:13px;z-index:45;opacity:0;transition:opacity .2s;";
+  document.getElementById("finder").appendChild(f);
+  requestAnimationFrame(()=>f.style.opacity="1");
+  setTimeout(()=>{f.style.opacity="0";setTimeout(()=>f.remove(),250);},1200);
+}
+
+/* ---------- drag & drop (move into folder / trash) ---------- */
+const ghost=document.getElementById("ghost");
+const trash=document.getElementById("trash");
+let drag=null;
+function startDrag(e,node,el){
+  e.preventDefault();
+  drag={node,el,startX:e.clientX,startY:e.clientY,active:false};
+  window.addEventListener("mousemove",onDragMove);
+  window.addEventListener("mouseup",onDragEnd);
+}
+function onDragMove(e){
+  if(!drag) return;
+  if(!drag.active){
+    if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)<6) return;
+    drag.active=true; ghost.textContent=drag.node.ic; ghost.style.display="block"; drag.el.style.opacity=".35";
+  }
+  ghost.style.left=e.clientX+"px"; ghost.style.top=e.clientY+"px";
+  // highlight drop target
+  clearDropHighlight();
+  const t=dropTargetAt(e.clientX,e.clientY);
+  if(t==="trash") trash.classList.add("dropok");
+  else if(t&&t.el) t.el.classList.add("dropok");
+}
+function clearDropHighlight(){ trash.classList.remove("dropok"); [...content.children].forEach(c=>c.classList&&c.classList.remove("dropok")); }
+function dropTargetAt(x,y){
+  const tr=trash.getBoundingClientRect();
+  if(x>=tr.left&&x<=tr.right&&y>=tr.top&&y<=tr.bottom) return "trash";
+  const under=document.elementFromPoint(x,y);
+  const itemEl=under&&under.closest?under.closest(".item"):null;
+  if(itemEl && itemEl!==drag.el){
+    const node=currentChildren().find(n=>n.id===itemEl.dataset.id);
+    if(node&&node.type==="folder") return {el:itemEl,node};
+  }
+  return null;
+}
+function onDragEnd(e){
+  window.removeEventListener("mousemove",onDragMove);
+  window.removeEventListener("mouseup",onDragEnd);
+  if(!drag){return;}
+  const wasActive=drag.active;
+  ghost.style.display="none";
+  const t=wasActive?dropTargetAt(e.clientX,e.clientY):null;
+  const node=drag.node;
+  clearDropHighlight();
+  if(drag.el) drag.el.style.opacity="";
+  const d=drag; drag=null;
+  if(!wasActive){ return; }
+  if(t==="trash"){
+    const arr=currentChildren(); const i=arr.findIndex(n=>n.id===node.id); if(i>=0)arr.splice(i,1);
+    state.selected=null; render(); beep(420,.14); notify("trash",{node});
+  } else if(t&&t.node){
+    const arr=currentChildren(); const i=arr.findIndex(n=>n.id===node.id); if(i>=0)arr.splice(i,1);
+    t.node.children.push(node); state.selected=null; render(); beep(700,.12); notify("move",{node,into:t.node});
+  } else {
+    render();
+  }
+}
+
+/* ---------- level engine ---------- */
+let listener=null;
+function notify(type,payload){ if(listener) listener(type,payload); }
+
+const levels=[
+  {
+    title:{ko:"1. 파일과 폴더",en:"1. Files and folders"},
+    instr:{ko:"‘파일’ 하나를 클릭해서 선택해 보세요. (예: 가족사진.jpg)",en:"Click one file to select it. (For example: Family Photo.jpg)"},
+    hint:{ko:"📁 폴더는 물건을 담는 ‘상자’, 📄 파일은 사진·문서 같은 ‘내용물’이에요. 한 번 클릭하면 파란색으로 ‘선택’돼요.",en:"📁 A folder is a ‘box’ that holds things. 📄 A file is the ‘thing inside,’ like a photo or document. One click selects it in blue."},
+    setup(done){
+      listener=(t,p)=>{ if(t==="select"&&p.node.type==="file"){ done("📄",{ko:"파일을 선택했어요!",en:"You selected a file!"}); } };
+    }
+  },
+  {
+    title:{ko:"2. 폴더 열기",en:"2. Open a folder"},
+    instr:{ko:"‘사진’ 폴더를 두 번 클릭(더블 클릭)해서 안을 열어 보세요.",en:"Double-click the Photos folder to open it."},
+    hint:{ko:"폴더를 빠르게 두 번 누르면 그 안으로 들어가요. 안에 사진들이 들어 있어요.",en:"Click a folder twice quickly to go inside. There are photos in there."},
+    setup(done){
+      listener=(t,p)=>{ if(t==="open"&&p.node.type==="folder"){ done("📂",{ko:"폴더를 열었어요!",en:"You opened the folder!"}); } };
+    }
+  },
+  {
+    title:{ko:"3. 뒤로 가기",en:"3. Go back"},
+    instr:{ko:"왼쪽 위 ◁ (뒤로) 버튼을 눌러 이전 폴더로 돌아가세요.",en:"Press the ◁ Back button at the top left to return to the previous folder."},
+    hint:{ko:"폴더 안으로 너무 깊이 들어갔을 때, ◁ 버튼으로 왔던 길을 되돌아올 수 있어요.",en:"If you go too deep into folders, the ◁ button takes you back the way you came."},
+    setup(done){
+      listener=(t,p)=>{ if(t==="back"){ done("↩️",{ko:"잘 돌아왔어요!",en:"You came back nicely!"}); } };
+    }
+  },
+  {
+    title:{ko:"4. 사이드바로 이동하기",en:"4. Move with the sidebar"},
+    instr:{ko:"왼쪽 사이드바에서 ‘다운로드’를 클릭하세요.",en:"Click Downloads in the left sidebar."},
+    hint:{ko:"사이드바는 자주 쓰는 폴더로 가는 ‘지름길’ 모음이에요. 인터넷에서 받은 파일은 보통 다운로드에 있어요.",en:"The sidebar is a set of shortcuts to folders you use often. Files from the internet usually go to Downloads."},
+    setup(done){
+      listener=(t,p)=>{ if(t==="sidebar"&&p.name==="다운로드"){ done("📥",{ko:"다운로드로 이동했어요!",en:"You moved to Downloads!"}); } };
+    }
+  },
+  {
+    title:{ko:"5. 새 폴더 만들기",en:"5. Make a new folder"},
+    instr:{ko:"오른쪽 위 ‘🆕 새로운 폴더’ 버튼을 눌러 폴더를 하나 만드세요.",en:"Press the 🆕 New Folder button at the top right to make a folder."},
+    hint:{ko:"폴더를 만들면 파일을 종류별로 깔끔하게 정리할 수 있어요.",en:"Folders help you neatly organize files by kind."},
+    setup(done){
+      listener=(t,p)=>{ if(t==="newfolder"){ done("📁",{ko:"새 폴더가 생겼어요!",en:"A new folder appeared!"}); } };
+    }
+  },
+  {
+    title:{ko:"6. 이름 바꾸기",en:"6. Rename it"},
+    instr:{ko:"방금 만든 폴더에 이름을 입력하고 Return(엔터) 키를 누르세요.",en:"Type a name for the folder you just made, then press Return (Enter)."},
+    hint:{ko:"이름을 알아보기 쉽게 지으면 나중에 찾기 편해요. 예: ‘여행 사진’. (이미 글자가 선택돼 있으니 그냥 입력하면 돼요.)",en:"A clear name makes it easy to find later. For example: ‘Travel Photos.’ The text is already selected, so just type."},
+    setup(done){
+      // ensure there is a folder to rename; if user skipped step 5, make one
+      let f=currentChildren().find(n=>n.name==="제목 없는 폴더");
+      if(!f){ f=folder("제목 없는 폴더",[]); currentChildren().push(f); }
+      state.selected=f.id; render(); startRename(f);
+      listener=(t,p)=>{ if(t==="rename"){ done("✏️",{ko:"이름을 바꿨어요!",en:"You renamed it!"}); } };
+    }
+  },
+  {
+    title:{ko:"7. 파일 옮기기 (드래그)",en:"7. Move a file (drag)"},
+    instr:{ko:"‘설명서.pdf’ 파일을 방금 만든 폴더 위로 드래그해서 넣어 보세요.",en:"Drag Manual.pdf onto the folder you just made."},
+    hint:{ko:"파일을 꾹 누른 채로 폴더 위로 끌고 가면, 폴더가 초록색으로 변할 때 손을 떼세요. 파일이 폴더 안으로 들어가요.",en:"Hold the file and drag it over the folder. When the folder turns green, let go. The file goes inside."},
+    setup(done){
+      listener=(t,p)=>{ if(t==="move"){ done("📦",{ko:"파일을 폴더에 넣었어요!",en:"You put the file in the folder!"}); } };
+    }
+  },
+  {
+    title:{ko:"8. 휴지통에 버리기",en:"8. Put it in the Trash"},
+    instr:{ko:"필요 없는 파일(예: 지도.png)을 아래 🗑️ 휴지통으로 드래그하세요.",en:"Drag an unneeded file (for example, Map.png) to the 🗑️ Trash below."},
+    hint:{ko:"지운 파일은 휴지통에 잠시 보관돼요. 실수로 지워도 휴지통에서 되살릴 수 있어 안전해요.",en:"Deleted files stay in the Trash for a while. If you made a mistake, you can restore them, so it is safe."},
+    setup(done){
+      listener=(t,p)=>{ if(t==="trash"){ done("🗑️",{ko:"깔끔하게 정리했어요!",en:"Nicely cleaned up!"}); } };
+    }
+  },
+];
+
+let current=0,doneLock=false;
+const els={
+  bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  bTitle:document.getElementById("bTitle"), bInstr:document.getElementById("bInstr"), bHint:document.getElementById("bHint"),
+  overlay:document.getElementById("successOverlay"), successMsg:document.getElementById("successMsg"),
+  mainView:document.getElementById("mainView"), finalScreen:document.getElementById("finalScreen"), skip:document.getElementById("skipBtn"),
+};
+
+function loadLevel(i){
+  const lv=levels[i];
+  els.bTitle.textContent=T(lv.title);
+  els.bInstr.textContent=T(lv.instr);
+  els.bHint.textContent="💡 "+T(lv.hint);
+  els.step.textContent=T(UI.step)(i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  document.getElementById("dock").style.display = (i>=7) ? "flex" : "none";
+  listener=null;
+  lv.setup(onDone);
+}
+function onDone(emoji,msg){
+  if(doneLock) return; doneLock=true;
+  listener=null;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  els.successMsg.textContent=msg?T(msg):praise();
+  els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex"; confetti(); chime();
+}
+function goNext(){
+  els.overlay.style.display="none"; doneLock=false; current++;
+  if(current>=levels.length) showFinal(); else loadLevel(current);
+}
+function skipLevel(){ if(doneLock) return; listener=null; current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){
+  els.mainView.style.display="none"; els.skip.style.display="none"; els.finalScreen.style.display="block";
+  try{localStorage.setItem("momHub:done:finder","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep);
+  confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime();
+}
+function restart(){ current=0; doneLock=false; resetWorld(); render(); els.mainView.style.display="block"; els.skip.style.display="block"; els.finalScreen.style.display="none"; loadLevel(0); }
+
+applyStatic(); resetWorld(); render(); loadLevel(0);
+</script>
+</body>
+</html>

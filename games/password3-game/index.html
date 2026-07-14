@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 패스키 배우기 (비밀번호 3편)</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#6366f1; --accent2:#ec4899; --good:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+  }
+  *{box-sizing:border-box; -webkit-user-select:none; user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;
+    overscroll-behavior:none;touch-action:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1000px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:140;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;
+    border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:120;}
+
+  /* intro */
+  #introView{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(99,102,241,.12);padding:26px;text-align:center;overflow:auto;}
+  #introArt{font-size:70px;line-height:1.15;margin-bottom:10px;}
+  #introTitle{font-size:26px;font-weight:800;margin:4px 0;}
+  #introText{font-size:17px;line-height:1.7;max-width:700px;color:#374151;}
+  #introText b{color:var(--accent);}
+  .introBtns{margin-top:20px;display:flex;gap:10px;}
+
+  /* illustrated scenes */
+  .scene{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:2px auto 12px;}
+  .scene .fig{font-size:42px;line-height:1;}
+  .scene .arw{font-size:26px;color:#c7cad1;}
+  .lockPile{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;max-width:360px;margin:2px auto 12px;}
+  .lockPile .li{font-size:34px;}
+  .lockPile .li .cap{display:block;font-size:11px;color:var(--soft);}
+  .vsRow{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:6px auto 12px;}
+  .vsCard{background:#f8fafc;border:2px solid #e2e8f0;border-radius:14px;padding:12px 16px;min-width:180px;}
+  .vsCard.old{border-color:#fde68a;background:#fffbeb;}
+  .vsCard.new{border-color:#bbf7d0;background:#ecfdf5;}
+  .vsCard .big{font-size:38px;} .vsCard .lab{font-size:13px;color:var(--soft);margin-top:4px;line-height:1.5;}
+  .vsCard .lab b{color:var(--accent);}
+
+  /* lesson */
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;}
+  #banner .t{font-size:18px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .i b{color:var(--accent);}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  #stage{position:relative;flex:1;min-height:0;border-radius:16px;overflow:auto;
+    background:#fff;box-shadow:0 14px 34px rgba(99,102,241,.14);
+    display:flex;align-items:center;justify-content:center;padding:18px;}
+  .panel{width:100%;max-width:640px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;}
+  .kbtn{font-size:17px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border:none;border-radius:999px;padding:13px 26px;cursor:pointer;box-shadow:0 6px 16px rgba(99,102,241,.3);}
+  .kbtn:active{transform:translateY(1px);} .kbtn:disabled{opacity:.5;cursor:default;}
+  .note{font-size:15px;line-height:1.6;color:#374151;background:#eef2ff;border-radius:12px;padding:12px 16px;max-width:580px;}
+  .note b{color:var(--accent);}
+  .note.good{background:#ecfdf5;} .note.good b{color:var(--good);}
+  .note.bad{background:#fef2f2;} .note.bad b{color:var(--bad);}
+  .note.warn{background:#fffbeb;} .note.warn b{color:var(--warn);}
+
+  .loginBox{width:280px;background:#f8fafc;border:2px solid #e2e8f0;border-radius:16px;padding:16px;text-align:center;}
+  .loginBox .step{font-size:13px;margin:6px 0;}
+  .loginBox .step .ok{color:var(--good);font-weight:700;}
+
+  /* fingerprint */
+  .fpBtn{width:120px;height:120px;border-radius:50%;border:3px solid #c7d2fe;background:#eef2ff;font-size:56px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:background .2s;}
+  .fpBtn:active{background:#e0e7ff;}
+  .fpBtn.scanning{animation:fpScan 1s ease-out;}
+  @keyframes fpScan{0%{box-shadow:0 0 0 0 rgba(99,102,241,.5);}100%{box-shadow:0 0 0 26px rgba(99,102,241,0);}}
+
+  /* browser bar (phishing) */
+  .browser{width:320px;background:#fff;border:2px solid #e2e8f0;border-radius:14px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.08);}
+  .browser .bar{display:flex;align-items:center;gap:6px;background:#f1f5f9;padding:8px 10px;font-family:"SF Mono",Menlo,monospace;font-size:13px;}
+  .browser .bar.fake{background:#fef2f2;}
+  .browser .body{padding:16px;text-align:center;}
+  .browser .body .site{font-weight:800;font-size:15px;margin-bottom:10px;}
+
+  /* new phone */
+  .phone{width:150px;background:#0f172a;border-radius:22px;padding:14px 12px 18px;color:#fff;text-align:center;box-shadow:0 12px 26px rgba(0,0,0,.3);}
+  .phone .top{font-size:11px;color:#94a3b8;margin-bottom:8px;}
+  .phone .scr{font-size:34px;margin:6px 0;}
+  .phone .lab{font-size:12px;color:#cbd5e1;}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:100;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:130;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);overflow:auto;}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+  button.big.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipStep()"></button>
+
+    <div id="introView" style="display:none;">
+      <div id="introArt">🪄</div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button class="big soft" id="introBack" onclick="prevIntro()"></button>
+        <button class="big" id="introNext" onclick="nextIntro()"></button>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+      </div>
+      <div id="stage"></div>
+      <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:16px;margin-top:8px;line-height:1.7;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  title:{ko:"엄마의 패스키 배우기 (비밀번호 3편)",en:"Mom's Passkey Lesson (Password Part 3)"},
+  h1:{ko:'🪄 엄마의 패스키 배우기 <span style="font-size:14px;color:#6b7280;">(비밀번호 3편)</span>',en:'🪄 Learning Passkeys <span style="font-size:14px;color:#6b7280;">(Password Part 3)</span>'},
+  sub:{ko:"패스키란? · 지문/얼굴로 로그인 · 가짜 사이트 차단 · 새 기기에도 그대로",en:"What is a passkey? · Log in with fingerprint/face · Block fake sites · Move to new devices"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  prev:{ko:"‹ 이전",en:"‹ Back"},
+  introNext:{ko:"다음 ▶",en:"Next ▶"},
+  start:{ko:"시작하기 ▶",en:"Start ▶"},
+  next:{ko:"다음 ›",en:"Next ›"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"패스키 마스터!",en:"Passkey master!"},
+  finalMsg:{ko:"이제 엄마는 알아요 —<br><b>패스키</b>는 비밀번호 없이 <b>지문·얼굴</b>로 바로 로그인해요.<br>외울 것도, 타이핑할 것도, 훔쳐 갈 것도 없고,<br><b>가짜 사이트엔 안 속고</b> 새 기기에도 그대로 따라와요 💖",en:"Now you know —<br>a <b>passkey</b> logs you in with your <b>fingerprint or face</b>, no password needed.<br>Nothing to memorize, type, or steal,<br>and it <b>won't be fooled by fake sites</b>. It follows you to a new device too 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG; document.title=T(UI.title);
+  document.getElementById("h1").innerHTML=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  els.skip.textContent=T(UI.skip); els.introBack.textContent=T(UI.prev);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").innerHTML=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(phase==="intro") showIntro(); else if(!doneGuard) loadLesson(lidx);
+}
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+const clickSnd=()=>beep(520,.05);
+const buzz=()=>{beep(200,.18);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ---------- intro (the story) ---------- */
+let introIdx=0, phase="intro";
+const INTRO=[
+  { art:"😵", title:{ko:"너무 많은 비밀번호!",en:"So many passwords!"},
+    html:{ko:`<div class="lockPile">
+      <span class="li">🏦<span class="cap">은행</span></span>
+      <span class="li">🛒<span class="cap">쇼핑</span></span>
+      <span class="li">📧<span class="cap">이메일</span></span>
+      <span class="li">📺<span class="cap">넷플릭스</span></span>
+      <span class="li">💊<span class="cap">병원</span></span>
+      <span class="li">➕<span class="cap">그리고 더!</span></span>
+    </div>
+    요즘 사람은 <b>은행, 온라인 쇼핑, 이메일</b>… 정말 많은 곳의 비밀번호를 기억해야 해요!<br><br>
+    다 다르게, 길고 복잡하게 만들라니… 머리가 아프죠. 😵‍💫`, en:`<div class="lockPile">
+      <span class="li">🏦<span class="cap">Bank</span></span>
+      <span class="li">🛒<span class="cap">Shopping</span></span>
+      <span class="li">📧<span class="cap">Email</span></span>
+      <span class="li">📺<span class="cap">Netflix</span></span>
+      <span class="li">💊<span class="cap">Clinic</span></span>
+      <span class="li">➕<span class="cap">And more!</span></span>
+    </div>
+    These days we have to remember passwords for <b>banking, online shopping, email</b>… so many places!<br><br>
+    Each one should be different, long, and complicated… what a headache. 😵‍💫`} },
+  { art:"🪄", title:{ko:"그래서 나온 것 — 패스키",en:"That's why passkeys were made"},
+    html:{ko:`그걸 <b>더 쉽게</b> 만들면 어떨까요? 그래서 <b>패스키(passkey)</b>가 나왔어요!<br><br>
+    패스키는 <b>비밀번호를 아예 없애는</b> 새로운 방법이에요.
+    외울 것도, 타이핑할 것도 없어요.<br><br>
+    엄마의 <b>지문이나 얼굴</b>로 톡 — 바로 로그인! ✨`, en:`What if signing in could be <b>much easier</b>? That's why <b>passkeys</b> exist!<br><br>
+    A passkey is a new way to <b>get rid of passwords</b>.
+    There's nothing to memorize or type.<br><br>
+    Just use your <b>fingerprint or face</b> — tap, and you're in! ✨`} },
+  { art:"🔐", title:{ko:"패스키는 왜 안전할까요?",en:"Why are passkeys safe?"},
+    html:{ko:`<div class="vsRow">
+      <div class="vsCard old"><div class="big">🔑😰</div><div class="lab"><b>예전 비밀번호</b><br>외우고·타이핑하고<br>새어 나갈 수 있어요</div></div>
+      <div class="vsCard new"><div class="big">🪄😊</div><div class="lab"><b>패스키</b><br>지문·얼굴로 톡<br>훔칠 게 없어요</div></div>
+    </div>
+    패스키는 열쇠의 <b>비밀 반쪽</b>이 <b>엄마 기기 안에만</b> 있어요. 절대 밖으로 나가지 않아요.<br><br>
+    그래서 사이트가 해킹당해도, 엄마 반쪽은 <b>휴대폰 안에 안전</b>! 이제 하나씩 해볼까요? 😊`, en:`<div class="vsRow">
+      <div class="vsCard old"><div class="big">🔑😰</div><div class="lab"><b>Old passwords</b><br>Memorize and type<br>They can leak</div></div>
+      <div class="vsCard new"><div class="big">🪄😊</div><div class="lab"><b>Passkeys</b><br>Tap with finger or face<br>Nothing to steal</div></div>
+    </div>
+    With a passkey, the <b>secret half of the key</b> stays <b>only on your device</b>. It never leaves.<br><br>
+    So even if a website is hacked, your half stays <b>safe inside your phone</b>! Let's try it step by step. 😊`} },
+];
+
+/* ---------- lessons ---------- */
+const stage=document.getElementById("stage");
+let doneGuard=false;
+
+const LESSONS=[
+  { title:{ko:"① 패스키 만들기",en:"① Create a passkey"},
+    instr:{ko:"쇼핑 계정을 만들 때, 비밀번호 대신 <b>패스키 만들기</b>를 누르고 엄마 지문으로 확인해요.",en:"When making a shopping account, tap <b>Create passkey</b> instead of making a password, then confirm with your fingerprint."},
+    hint:{ko:"한 번 만들어 두면, 다음부턴 지문·얼굴로 바로 들어가요. 비밀번호를 정할 필요가 없어요.",en:"Once it's made, you can sign in with your fingerprint or face next time. No password to choose."},
+    render(stage,done){
+      stage.innerHTML=`<div class="panel">
+        <div class="loginBox">
+          <div style="font-weight:800;margin-bottom:8px;">${T({ko:"🛒 쇼핑 · 계정 만들기",en:"🛒 Shopping · Create account"})}</div>
+          <div class="step">${T({ko:"이메일",en:"Email"})} <span class="ok">${T({ko:"✅ 입력됨",en:"✅ Entered"})}</span></div>
+          <div class="step" style="color:#6b7280;">${T({ko:"비밀번호 대신 —",en:"Instead of a password —"})}</div>
+          <button class="kbtn" id="mkBtn" style="margin-top:6px;">${T({ko:"🪄 패스키 만들기",en:"🪄 Create passkey"})}</button>
+        </div>
+        <button class="fpBtn" id="fp" style="display:none;">👆</button>
+        <div class="note" id="nt">${T({ko:"먼저 <b>패스키 만들기</b>를 눌러 보세요.",en:"First tap <b>Create passkey</b>."})}</div>
+      </div>`;
+      const mk=stage.querySelector("#mkBtn"), fp=stage.querySelector("#fp"), nt=stage.querySelector("#nt");
+      mk.onclick=()=>{ clickSnd(); mk.disabled=true; fp.style.display="flex";
+        nt.innerHTML=T({ko:"이제 <b>지문 단추</b>를 눌러 엄마 패스키를 만들어요.",en:"Now tap the <b>fingerprint button</b> to create your passkey."}); };
+      fp.onclick=()=>{ fp.disabled=true; fp.classList.add("scanning"); clickSnd(); nt.textContent=T({ko:"만드는 중…",en:"Creating…"});
+        setTimeout(()=>{ fp.textContent="✅"; chime(); nt.className="note good";
+          nt.innerHTML=T({ko:"<b>패스키가 만들어졌어요!</b> 이 기기에 안전하게 저장됐어요 🎉",en:"<b>Your passkey was created!</b> It's saved safely on this device 🎉"});
+          setTimeout(()=>done("🪄",{ko:"패스키를 만들었어요!",en:"You created a passkey!"}),900);
+        },1000);
+      };
+    }},
+  { title:{ko:"② 패스키로 로그인",en:"② Log in with a passkey"},
+    instr:{ko:"이제 로그인할 때 <b>비밀번호를 타이핑하지 않아요</b>. 지문 한 번이면 끝! 눌러서 들어가 보세요.",en:"Now you <b>don't type a password</b> to log in. One fingerprint is enough! Tap to go in."},
+    hint:{ko:"예전엔 길고 복잡한 비밀번호를 한 글자씩 쳤죠. 패스키는 톡 한 번이면 로그인이에요.",en:"Before, you typed a long complicated password letter by letter. With a passkey, one tap signs you in."},
+    render(stage,done){
+      stage.innerHTML=`<div class="panel">
+        <div class="loginBox">
+          <div style="font-weight:800;margin-bottom:8px;">${T({ko:"🛒 쇼핑 · 로그인",en:"🛒 Shopping · Login"})}</div>
+          <div class="step" style="color:#6b7280;">${T({ko:"비밀번호 칸이 없어요 🙂",en:"There is no password box 🙂"})}</div>
+        </div>
+        <button class="fpBtn" id="fp">👆</button>
+        <div class="note" id="nt">${T({ko:"지문 단추를 <b>한 번 꾹</b> 눌러 로그인하세요.",en:"Press the fingerprint button <b>once</b> to log in."})}</div>
+      </div>`;
+      const fp=stage.querySelector("#fp"), nt=stage.querySelector("#nt");
+      fp.onclick=()=>{ fp.disabled=true; fp.classList.add("scanning"); clickSnd(); nt.textContent=T({ko:"확인 중…",en:"Checking…"});
+        setTimeout(()=>{ fp.textContent="✅"; chime(); nt.className="note good";
+          nt.innerHTML=T({ko:"<b>로그인 성공!</b> 타이핑 없이 톡 한 번으로 들어왔어요 🎉",en:"<b>Login successful!</b> You got in with one tap and no typing 🎉"});
+          setTimeout(()=>done("⚡",{ko:"지문 한 번으로 로그인했어요!",en:"You logged in with one fingerprint!"}),900);
+        },1000);
+      };
+    }},
+  { title:{ko:"③ 가짜 사이트는 못 속여요",en:"③ Fake sites can't fool it"},
+    instr:{ko:"해커가 진짜랑 <b>똑같이 생긴 가짜 사이트</b>를 만들었어요. 여기서 <b>패스키로 로그인</b>을 눌러 보세요.",en:"A hacker made a <b>fake site that looks real</b>. Try tapping <b>Log in with passkey</b> here."},
+    hint:{ko:"비밀번호는 속아서 가짜 사이트에 칠 수 있지만, 패스키는 주소가 다르면 아예 작동하지 않아요.",en:"You might type a password into a fake site by mistake, but a passkey won't work if the address is wrong."},
+    render(stage,done){
+      stage.innerHTML=`<div class="panel">
+        <div class="note bad">${T({ko:"⚠️ 주소를 잘 보세요. 진짜는 <b>mybank.com</b> 인데, 이건 <b>mybank-login.co</b> 예요!",en:"⚠️ Look closely at the address. The real one is <b>mybank.com</b>, but this is <b>mybank-login.co</b>!"})}</div>
+        <div class="browser">
+          <div class="bar fake">🔓 mybank-login.<b>co</b> &nbsp;⚠️</div>
+          <div class="body">
+            <div class="site">${T({ko:"🏦 은행 (가짜)",en:"🏦 Bank (fake)"})}</div>
+            <button class="kbtn" id="tryBtn">${T({ko:"🪄 패스키로 로그인",en:"🪄 Log in with passkey"})}</button>
+          </div>
+        </div>
+        <div class="note" id="nt" style="display:none;"></div>
+      </div>`;
+      const nt=stage.querySelector("#nt");
+      stage.querySelector("#tryBtn").onclick=()=>{ chime(); nt.style.display="block"; nt.className="note good";
+        nt.innerHTML=T({ko:"🛡️ <b>패스키가 막았어요!</b> “이 주소는 등록된 곳이 아니에요.” 가짜 사이트에선 패스키가 아예 작동하지 않아요.",en:"🛡️ <b>The passkey blocked it!</b> “This address is not the registered site.” Passkeys simply won't work on fake sites."});
+        setTimeout(()=>done("🛡️",{ko:"패스키가 가짜 사이트를 막았어요!",en:"The passkey blocked the fake site!"}),1100);
+      };
+    }},
+  { title:{ko:"④ 새 기기에도 그대로",en:"④ Still works on a new device"},
+    instr:{ko:"엄마가 <b>새 휴대폰</b>을 샀어요. 비밀번호를 다시 안 만들어도 돼요! 지문으로 패스키를 가져와 보세요.",en:"You got a <b>new phone</b>. You don't need to make passwords again! Bring your passkey over with your fingerprint."},
+    hint:{ko:"패스키는 엄마 계정(아이클라우드·구글)에 안전하게 저장돼서, 새 기기에도 자동으로 따라와요.",en:"Passkeys are saved safely with your account (iCloud or Google), so they follow you to a new device automatically."},
+    render(stage,done){
+      stage.innerHTML=`<div class="panel">
+        <div class="scene"><span class="fig">📱</span><span class="arw">➜</span><span class="fig">☁️</span><span class="arw">➜</span><span class="fig">📱✨</span></div>
+        <div class="phone"><div class="top">${T({ko:"📱 새 휴대폰",en:"📱 New phone"})}</div><div class="scr">🪄</div><div class="lab">${T({ko:"패스키 준비 중…",en:"Passkey getting ready…"})}</div></div>
+        <button class="fpBtn" id="fp">👆</button>
+        <div class="note" id="nt">${T({ko:"지문 단추를 눌러 새 휴대폰에 패스키를 가져오세요.",en:"Tap the fingerprint button to bring the passkey to the new phone."})}</div>
+      </div>`;
+      const fp=stage.querySelector("#fp"), nt=stage.querySelector("#nt");
+      fp.onclick=()=>{ fp.disabled=true; fp.classList.add("scanning"); clickSnd(); nt.textContent=T({ko:"가져오는 중…",en:"Bringing it over…"});
+        setTimeout(()=>{ fp.textContent="✅"; chime(); nt.className="note good";
+          nt.innerHTML=T({ko:"<b>새 휴대폰에도 준비 끝!</b> 비밀번호를 다시 만들 필요가 없어요 🎉",en:"<b>Ready on the new phone!</b> No need to make passwords again 🎉"});
+          setTimeout(()=>done("☁️",{ko:"패스키가 새 기기에도 따라왔어요!",en:"The passkey followed you to the new device!"}),900);
+        },1000);
+      };
+    }},
+];
+
+/* ---------- engine ---------- */
+let lidx=0;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"), introArt:document.getElementById("introArt"),
+  introTitle:document.getElementById("introTitle"), introText:document.getElementById("introText"),
+  introBack:document.getElementById("introBack"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"), skip:document.getElementById("skipBtn"),
+  bTitle:document.getElementById("bTitle"), bInstr:document.getElementById("bInstr"), bHint:document.getElementById("bHint") };
+const totalSteps=INTRO.length+LESSONS.length;
+function doneCount(){ return phase==="intro"?introIdx:INTRO.length+lidx; }
+function updateProgress(){ els.step.textContent=UI.step[LANG](doneCount()+1,totalSteps); els.bar.style.width=(doneCount()/totalSteps*100)+"%"; }
+
+function showIntro(){ phase="intro"; els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none";
+  const c=INTRO[introIdx]; els.introArt.textContent=c.art; els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
+  els.introBack.style.visibility=introIdx===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=introIdx===INTRO.length-1?T(UI.start):T(UI.introNext); updateProgress(); }
+function nextIntro(){ if(introIdx<INTRO.length-1){ introIdx++; showIntro(); } else startLessons(); }
+function prevIntro(){ if(introIdx>0){ introIdx--; showIntro(); } }
+function startLessons(){ phase="lessons"; lidx=0; els.intro.style.display="none"; els.main.style.display="flex"; loadLesson(0); }
+
+function loadLesson(i){
+  const lv=LESSONS[i]; doneGuard=false;
+  els.bTitle.textContent=T(lv.title); els.bInstr.innerHTML=T(lv.instr); els.bHint.textContent="💡 "+T(lv.hint);
+  updateProgress(); els.overlay.style.display="none"; stage.innerHTML="";
+  lv.render(stage,onDone);
+}
+function onDone(emoji,msg){
+  if(doneGuard) return; doneGuard=true;
+  els.bar.style.width=((INTRO.length+lidx+1)/totalSteps*100)+"%";
+  els.msg.textContent=msg?T(msg):praise(); els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex"; confetti(); chime();
+}
+function goNext(){
+  els.overlay.style.display="none"; lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx);
+}
+function skipStep(){ if(phase==="intro"){ nextIntro(); return; } doneGuard=true;
+  lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:passwords3","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.final.style.display="none"; showIntro(); }
+
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+applyStatic(); showIntro();
+</script>
+</body>
+</html>

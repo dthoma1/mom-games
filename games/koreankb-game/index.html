@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>한국어 키보드 추가하기</title>
+<style>
+  :root{--bg1:#eef2ff;--bg2:#fdf2f8;--ink:#1f2937;--soft:#6b7280;--accent:#6366f1;--accent2:#ec4899;
+    --good:#22c55e;--macblue:#0a63ff;--desk1:#2b6cff;--desk2:#8a5cf6;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+  #banner .extra{margin-top:8px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;}
+  #replayBtn{font-size:14px;font-weight:700;color:var(--accent);background:#eef2ff;border:1px solid #dfe4ff;
+    border-radius:999px;padding:7px 16px;cursor:pointer;display:none;}
+  #stage{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;
+    background:linear-gradient(135deg,var(--desk1),var(--desk2));display:flex;align-items:center;justify-content:center;padding:18px;}
+
+  .bwin{background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.30);width:min(580px,96%);overflow:hidden;
+    display:flex;flex-direction:column;}
+  .btool{height:46px;background:linear-gradient(#f6f6f7,#e9e9eb);display:flex;align-items:center;gap:8px;padding:0 12px;
+    border-bottom:1px solid #e1e1e4;}
+  .dots{display:flex;gap:7px;margin-right:4px;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dot.r{background:#ff5f57;}.dot.y{background:#febc2e;}.dot.g{background:#28c840;}
+  .closeDot{cursor:pointer;}
+  .macCard.redClose .dots .dot{width:15px;height:15px;}
+  .macCard.redClose .closeDot{box-shadow:0 0 0 4px rgba(255,95,87,.30);}
+  .navbtn{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5b6270;
+    font-size:17px;cursor:pointer;flex:0 0 auto;}
+  .navbtn:hover{background:rgba(0,0,0,.06);}
+  .navbtn.off{opacity:.32;pointer-events:none;}
+  .addrbar{flex:1;height:32px;background:#fff;border:1px solid #d5d5da;border-radius:8px;display:flex;align-items:center;
+    padding:0 10px;gap:7px;font-size:14px;color:#374151;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);min-width:0;}
+  .addrbar .lock{font-size:11px;color:#9ca3af;}
+  .addrbar input{border:none;outline:none;flex:1;font-size:14px;background:transparent;min-width:0;color:#374151;}
+  .addrbar.focusRing{border-color:var(--macblue);box-shadow:0 0 0 3px rgba(10,99,255,.25);}
+  .tabstrip{height:34px;background:#e6e6e9;display:flex;align-items:flex-end;gap:2px;padding:0 8px;}
+  .tab{height:29px;background:#d3d3d8;border-radius:8px 8px 0 0;padding:0 12px;display:flex;align-items:center;gap:8px;
+    font-size:13px;color:#4b5563;max-width:170px;white-space:nowrap;overflow:hidden;}
+  .tab.active{background:#fff;color:#1f2937;}
+  .tabx{font-size:13px;color:#9ca3af;cursor:pointer;border-radius:4px;padding:0 3px;}
+  .tabx:hover{background:rgba(0,0,0,.1);}
+  .bcontent{background:#fff;flex:1;min-height:150px;padding:24px;text-align:center;overflow:hidden;transition:font-size .2s;}
+  .bcontent h2{margin:6px 0;}
+  .bcontent p{color:#6b7280;line-height:1.5;margin:8px 0;}
+  .fav{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+  .favIcon{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;
+    box-shadow:0 3px 8px rgba(0,0,0,.12);}
+
+  @keyframes tpulse{0%,100%{box-shadow:0 0 0 0 rgba(10,99,255,.55);}50%{box-shadow:0 0 0 7px rgba(10,99,255,0);}}
+  .target{animation:tpulse 1.4s infinite;border-radius:8px;position:relative;z-index:5;}
+  .miniToast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(43,47,54,.92);color:#fff;
+    font-size:13px;font-weight:600;padding:8px 15px;border-radius:999px;z-index:35;box-shadow:0 6px 16px rgba(0,0,0,.3);transition:opacity .2s;}
+
+  .demoCursor{position:absolute;width:26px;height:26px;z-index:40;pointer-events:none;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));transition:left .5s ease,top .5s ease,opacity .2s;}
+  .demoCursor.click{animation:clickPulse .35s ease;}
+  @keyframes clickPulse{0%{transform:scale(1);}50%{transform:scale(.8);}100%{transform:scale(1);}}
+  .clickRipple{position:absolute;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
+    z-index:39;pointer-events:none;animation:ripple .5s ease-out forwards;}
+  @keyframes ripple{from{transform:scale(.3);opacity:.85;}to{transform:scale(2.4);opacity:0;}}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:60;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:95;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+
+
+  /* ===== scam-game macOS desktop stage ===== */
+  #stage.scamStage{background:
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,.38), transparent 28%),
+    radial-gradient(circle at 82% 22%, rgba(255,255,255,.22), transparent 24%),
+    linear-gradient(135deg,#8ec5ff 0%,#c6a7ff 48%,#ffd1e8 100%);}
+  .desktop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;}
+  .softDock{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:10px;background:rgba(255,255,255,.35);
+    border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(12px);padding:9px 14px;border-radius:22px;box-shadow:0 10px 24px rgba(0,0,0,.12);}
+  .dockIcon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.78);font-size:20px;}
+  .macCard{background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.8);border-radius:18px;box-shadow:0 22px 60px rgba(31,41,55,.24);overflow:hidden;}
+  .macTitlebar{height:34px;background:linear-gradient(#fbfbfc,#ececf0);display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid #dedee4;}
+  .macTitlebar .ttl{font-size:13px;font-weight:800;color:#4b5563;margin-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .macBody{padding:24px;text-align:center;}
+  .alertBox{width:min(470px,95%);}
+  .alertIcon{font-size:48px;margin-bottom:8px;}
+  .alertTitle{font-size:22px;font-weight:900;margin-bottom:8px;}
+  .alertMsg{font-size:16px;line-height:1.45;color:#4b5563;margin:0 auto 18px;max-width:390px;}
+  .btnRow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  .safeBtn,.plainBtn,.trapBtn,.linkTrap{border:none;border-radius:999px;padding:10px 20px;font-size:15px;font-weight:800;cursor:pointer;}
+  .safeBtn{background:#e8f0ff;color:var(--macblue);border:1px solid #cfe0ff;}
+  .plainBtn{background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;}
+  .trapBtn{background:linear-gradient(90deg,#ef4444,#f97316);color:#fff;box-shadow:0 6px 14px rgba(239,68,68,.25);}
+  .linkTrap{background:#fff1f2;color:#dc2626;border:1px solid #fecdd3;text-decoration:underline;}
+  .emailCard{width:min(520px,96%);}
+  .emailHead{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #eef2f7;padding:14px 18px;background:#fff;}
+  .emailFrom{font-size:13px;color:#6b7280;}.emailSubject{font-size:18px;font-weight:900;}
+  .chatWrap{width:min(520px,96%);display:flex;flex-direction:column;gap:12px;}
+  .bubble{align-self:flex-start;background:#fff;border-radius:18px 18px 18px 6px;padding:15px 17px;box-shadow:0 8px 22px rgba(0,0,0,.13);font-size:17px;line-height:1.45;max-width:430px;}
+  .passwordRow{background:rgba(255,255,255,.92);border-radius:18px;padding:14px;display:flex;gap:9px;align-items:center;box-shadow:0 10px 25px rgba(0,0,0,.14);flex-wrap:wrap;justify-content:center;}
+  .passwordRow input{height:40px;border:1px solid #d1d5db;border-radius:10px;padding:0 12px;font-size:16px;min-width:190px;}
+  .choiceGrid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:18px;width:min(760px,96%);}
+  .choiceCard{cursor:pointer;text-align:left;transition:transform .15s ease, box-shadow .15s ease;}
+  .choiceCard:hover{transform:translateY(-2px);box-shadow:0 24px 62px rgba(31,41,55,.28);}
+  .choiceBody{padding:22px;min-height:180px;}
+  .choiceLabel{font-size:12px;font-weight:900;color:#6b7280;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;}
+  .calmIcon{font-size:36px;}.fakeFlash{font-size:42px;animation:flashSoft 1.2s infinite;}
+  @keyframes flashSoft{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.06);opacity:.82;}}
+  .recap{width:min(650px,96%);text-align:center;padding:30px;}
+  .recapIcon{font-size:68px;margin-bottom:10px;}
+  .recapText{font-size:20px;line-height:1.55;font-weight:800;color:#374151;}
+  @media (max-width:720px){.choiceGrid{grid-template-columns:1fr}.macBody{padding:20px}.btnRow{flex-direction:column}.safeBtn,.plainBtn,.trapBtn,.linkTrap{width:100%;}}
+
+  /* ===== System Settings simulation ===== */
+  .menuBar{position:absolute;top:0;left:0;right:0;height:26px;background:rgba(255,255,255,.55);backdrop-filter:blur(10px);
+    display:flex;align-items:center;gap:14px;padding:0 12px;font-size:13px;font-weight:600;color:#1f2937;z-index:8;border-bottom:1px solid rgba(0,0,0,.06);}
+  .menuBar .apple{font-size:14px;}
+  .menuBar .spacer{flex:1;}
+  .menuBar .mbItem{display:flex;align-items:center;gap:5px;}
+  .inputMenuBtn{display:flex;align-items:center;gap:4px;padding:2px 7px;border-radius:6px;cursor:pointer;font-weight:800;}
+  .inputMenuBtn:hover{background:rgba(0,0,0,.08);}
+  .inputMenuPop{position:absolute;top:26px;right:8px;background:#fff;border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.28);
+    padding:6px;min-width:180px;z-index:20;border:1px solid #e5e7eb;}
+  .inputMenuPop .imRow{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;cursor:pointer;font-size:14px;}
+  .inputMenuPop .imRow:hover{background:#eef2ff;}
+  .inputMenuPop .imRow.sel{background:#e8f0ff;font-weight:800;}
+  .inputMenuPop .imRow .ck{margin-left:auto;color:var(--macblue);font-weight:900;}
+
+  .setWin{width:min(680px,97%);max-height:100%;display:flex;flex-direction:column;}
+  .setBody{display:flex;min-height:270px;background:#fff;}
+  .setSidebar{width:180px;background:#f4f4f6;border-right:1px solid #e6e6ea;padding:10px 8px;overflow:auto;}
+  .setSearch{height:26px;background:#ececef;border-radius:7px;display:flex;align-items:center;padding:0 8px;color:#9ca3af;font-size:12px;margin-bottom:8px;}
+  .setRow{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;font-size:13px;color:#1f2937;cursor:pointer;white-space:nowrap;}
+  .setRow:hover{background:#e7e7ec;}
+  .setRow.active{background:var(--macblue);color:#fff;}
+  .setRow .ic{font-size:15px;}
+  .setMain{flex:1;padding:20px 22px;overflow:auto;text-align:left;}
+  .setMain h3{margin:0 0 14px;font-size:17px;}
+  .setSection{font-size:12px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px;}
+  .setCard{background:#f7f7f9;border:1px solid #ececef;border-radius:12px;padding:4px 14px;}
+  .setItem{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 2px;font-size:14px;}
+  .setItem + .setItem{border-top:1px solid #eaeaee;}
+  .setItem .lbl{color:#374151;}
+  .setItem .sub{font-size:12px;color:#9ca3af;}
+  .miniBtn{border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;color:#1f2937;cursor:pointer;}
+  .miniBtn.blue{background:var(--macblue);color:#fff;border-color:var(--macblue);}
+  .miniBtn:disabled{opacity:.45;cursor:default;}
+  .srcChip{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #e2e2e7;border-radius:8px;padding:6px 11px;font-size:13px;margin:3px 6px 3px 0;}
+
+  .sheet{width:min(560px,96%);}
+  .sheetBody{display:flex;height:230px;}
+  .langList{width:46%;border-right:1px solid #ececef;overflow:auto;padding:6px;}
+  .layoutList{flex:1;overflow:auto;padding:6px;}
+  .llRow{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:7px;font-size:14px;cursor:pointer;white-space:nowrap;}
+  .llRow:hover{background:#eef2ff;}
+  .llRow.sel{background:var(--macblue);color:#fff;font-weight:800;}
+  .plusBtn{width:30px;height:28px;border:1px solid #d1d5db;background:#fff;border-radius:8px;font-size:18px;font-weight:700;
+    color:#374151;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+  .sheetFoot{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid #ececef;background:#fafafb;}
+  .keycap{display:inline-block;min-width:26px;text-align:center;background:#fff;border:1px solid #cfcfd6;border-bottom-width:2px;
+    border-radius:6px;padding:3px 8px;font-size:13px;font-weight:800;color:#374151;box-shadow:0 1px 0 rgba(0,0,0,.05);}
+  @media (max-width:720px){.setSidebar{width:140px}.langList{width:50%}}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+        <div class="extra"><button id="replayBtn" onclick="replayDemo()"></button></div>
+      </div>
+      <div id="stage"></div>
+    </div>
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+  </div>
+</div>
+
+<script>
+/* ===== language ===== */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"⌨️ 한국어 키보드 추가하기", en:"⌨️ Add the Korean Keyboard"},
+  sub:{ko:"영어 키보드로도 한국어를 칠 수 있어요. 같이 하나씩 설정해 봐요 😊", en:"You can type Korean even on an English keyboard. Let's set it up together, step by step 😊"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  replay:{ko:"👀 다시 보여주기",en:"👀 Show me again"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"이제 한국어를 칠 수 있어요!", en:"You can type in Korean now!"},
+  finalMsg:{ko:"메뉴 막대의 국기를 눌러 한국어와 영어를 언제든 바꿀 수 있어요 💖", en:"Click the flag in the menu bar to switch between Korean and English anytime 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  next:{ko:"다음 ›",en:"Next ›"}
+}
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("replayBtn").textContent=T(UI.replay);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(!doneLock){ loadLevel(current); } }
+
+/* ===== praise + sound + confetti ===== */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ===== cursors ===== */
+const SVG_ARROW=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 3 L5 20 L9.5 15.8 L12.6 22 L15.2 20.8 L12.1 14.8 L18 14.8 Z" fill="#111" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const SVG_IBEAM=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g><g fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g></svg>`;
+function makeCursor(kind){ const c=document.createElement("div"); c.className="demoCursor";
+  c.innerHTML=kind==="ibeam"?SVG_IBEAM:SVG_ARROW; return c; }
+
+/* ===== state + helpers ===== */
+const stage=document.getElementById("stage");
+let locked=false,currentDemo=null;
+function clearStage(){ stage.innerHTML=""; }
+function stageXY(el){ const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect();
+  return {x:r.left-s.left+r.width/2,y:r.top-s.top+r.height/2}; }
+function ripple(x,y){ const r=document.createElement("div"); r.className="clickRipple";
+  r.style.left=(x-13)+"px"; r.style.top=(y-13)+"px"; stage.appendChild(r); setTimeout(()=>r.remove(),520); }
+function markTarget(el){ if(el) el.classList.add("target"); }
+function showToast(msg){ let t=stage.querySelector(".miniToast");
+  if(!t){ t=document.createElement("div"); t.className="miniToast"; stage.appendChild(t); }
+  t.textContent=msg; t.style.opacity="1"; clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>{ t.style.opacity="0"; },1800); }
+
+/* ===== scam desktop builders ===== */
+function desk(){
+  stage.classList.add("scamStage");
+  const d=document.createElement("div"); d.className="desktop";
+  d.innerHTML=`<div class="softDock"><div class="dockIcon">🧭</div><div class="dockIcon">✉️</div><div class="dockIcon">🛡️</div><div class="dockIcon">💬</div></div>`;
+  stage.appendChild(d); return d;
+}
+function dotsHTML(){ return `<div class="dots"><span class="dot r closeDot"></span><span class="dot y"></span><span class="dot g"></span></div>`; }
+function macAlert(opts){
+  const d=desk(); const card=document.createElement("div"); card.className="macCard alertBox";
+  card.innerHTML=`<div class="macTitlebar">${dotsHTML()}<div class="ttl">${T(opts.app||{ko:"알림",en:"Alert"})}</div></div>
+    <div class="macBody"><div class="alertIcon">${opts.icon||"⚠️"}</div><div class="alertTitle">${T(opts.title)}</div>
+    <p class="alertMsg">${T(opts.msg)}</p><div class="btnRow"></div></div>`;
+  d.appendChild(card); return card;
+}
+function addButton(row,cls,label,fn){ const b=document.createElement("button"); b.className=cls; b.textContent=T(label); b.addEventListener("click",fn); row.appendChild(b); return b; }
+function gentle(msg){ showToast(T(msg)); beep(360,.08); }
+/* ===== demos ===== */
+function replayDemo(){ if(currentDemo) currentDemo(); }
+function showReplay(on){ document.getElementById("replayBtn").style.display=on?"inline-flex":"none"; }
+function autoDemo(fn,delay){ currentDemo=fn; showReplay(!!fn); if(fn) setTimeout(()=>{ if(!locked) fn(); },delay||800); }
+function demoTap(getTarget,atClick,reset,holdMs,kind){
+  return function run(){ if(locked) return; locked=true;
+    const target=getTarget(); if(!target){ locked=false; return; }
+    const cur=makeCursor(kind); stage.appendChild(cur);
+    const {x,y}=stageXY(target);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+34)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-4)+"px"; cur.style.top=(kind==="ibeam"?y-13:y-2)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(560,.05); if(atClick)atClick(target); },760);
+    setTimeout(()=>{ if(reset)reset(target); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },760+(holdMs||900));
+  };
+}
+function demoType(getInput,word,holdMs){
+  return function run(){ if(locked) return; locked=true;
+    const f=getInput(); if(!f){ locked=false; return; }
+    const bar=f.closest(".addrbar"); const {x,y}=stageXY(f);
+    const cur=makeCursor("ibeam"); stage.appendChild(cur);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+28)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-6)+"px"; cur.style.top=(y-13)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(540,.05); if(bar)bar.classList.add("focusRing"); f.value="";
+      let i=0; const iv=setInterval(()=>{ f.value=word.slice(0,++i); beep(700,.03); if(i>=word.length) clearInterval(iv); },170);
+    },780);
+    setTimeout(()=>{ f.value=""; if(bar)bar.classList.remove("focusRing"); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },780+(holdMs||1600));
+  };
+}
+
+/* ===== levels ===== */
+/* ===== System Settings simulation builders ===== */
+function sdesk(opts){
+  opts=opts||{};
+  stage.classList.add("scamStage");
+  const d=document.createElement("div"); d.className="desktop";
+  const now=new Date(); let h=now.getHours()%12||12; const clock=h+":"+String(now.getMinutes()).padStart(2,"0");
+  const flag = opts.flag ? `<div class="inputMenuBtn" id="inputMenu">🇺🇸 <span style="font-size:12px">A</span></div>` : "";
+  d.innerHTML=`<div class="menuBar"><span class="apple">🍎</span><span class="mbItem"><b>${opts.app?T(opts.app):"Finder"}</b></span><span class="spacer"></span>${flag}<span class="mbItem">🔋</span><span class="mbItem">🔎</span><span class="mbItem">${clock}</span></div>`;
+  if(opts.dock){ const dk=document.createElement("div"); dk.className="softDock";
+    dk.innerHTML=`<div class="dockIcon">🧭</div><div class="dockIcon">✉️</div><div class="dockIcon">📝</div><div class="dockIcon" id="settingsIcon">⚙️</div><div class="dockIcon">🗑️</div>`;
+    d.appendChild(dk); }
+  stage.appendChild(d); return d;
+}
+function setWin(d, activeKey){
+  const rows=[
+    {k:"wifi", ic:"📶", ko:"Wi‑Fi", en:"Wi‑Fi"},
+    {k:"general", ic:"⚙️", ko:"일반", en:"General"},
+    {k:"appear", ic:"🎨", ko:"외관", en:"Appearance"},
+    {k:"keyboard", ic:"⌨️", ko:"키보드", en:"Keyboard"},
+    {k:"trackpad", ic:"🖐️", ko:"트랙패드", en:"Trackpad"},
+  ];
+  const win=document.createElement("div"); win.className="macCard setWin";
+  win.innerHTML=`<div class="macTitlebar">${dotsHTML()}<div class="ttl">${T({ko:"시스템 설정",en:"System Settings"})}</div></div>
+    <div class="setBody">
+      <div class="setSidebar"><div class="setSearch">🔍 ${T({ko:"검색",en:"Search"})}</div>
+        ${rows.map(r=>`<div class="setRow${r.k===activeKey?" active":""}" data-k="${r.k}"><span class="ic">${r.ic}</span>${T({ko:r.ko,en:r.en})}</div>`).join("")}
+      </div>
+      <div class="setMain"></div>
+    </div>`;
+  d.appendChild(win);
+  return { win, main:win.querySelector(".setMain"), row:k=>win.querySelector(`.setRow[data-k="${k}"]`) };
+}
+/* ===== levels ===== */
+const levels=[
+  { title:{ko:"영어 키보드로 한국어를?",en:"Korean on an English keyboard?"},
+    instr:{ko:"먼저, 어떻게 이런 일이 가능한지 알아봐요.",en:"First, let's see how this is even possible."},
+    hint:{ko:"읽고 ‘알겠어요’를 누르세요.",en:"Read it and click ‘Got it’."},
+    build(done){
+      const d=sdesk({}); const card=document.createElement("div"); card.className="macCard recap";
+      card.innerHTML=`<div class="recapIcon">🌏</div><div class="recapText">${T({
+        ko:"엄마 키보드에는 <b>영어 글자</b>가 적혀 있죠? 그래도 걱정 마세요 — 맥은 <b>같은 키로 한국어도</b> 칠 수 있어요!<br><br>딱 한 번 <b>‘한국어 키보드’를 추가</b>해 두면, 언제든 영어 ↔ 한국어를 <b>바꿔가며</b> 쓸 수 있어요. 키는 그대로예요. 그저 맥에게 <b>‘지금은 한국어예요’</b> 라고 알려주는 거예요.",
+        en:"Your keyboard has <b>English letters</b> printed on it, right? Don't worry — your Mac can type <b>Korean with the very same keys</b>!<br><br>You just <b>add the ‘Korean keyboard’ once</b>, then <b>switch</b> between English ↔ Korean anytime. The keys stay the same — you're simply telling the Mac <b>‘I'm typing Korean now.’</b>"})}</div><button class="big gotBtn">${T({ko:"알겠어요",en:"Got it"})}</button>`;
+      d.appendChild(card); card.querySelector(".gotBtn").addEventListener("click",()=>{ if(!locked) done("🌏",{ko:"같은 키로 한국어도 칠 수 있어요!",en:"The same keys can type Korean too!"}); });
+      autoDemo(null);
+    } },
+  { title:{ko:"무엇을 할 거예요",en:"What we'll do"},
+    instr:{ko:"천천히 같이, 순서대로 해봐요.",en:"Let's go slowly, step by step, together."},
+    hint:{ko:"읽고 ‘알겠어요’를 누르세요.",en:"Read it and click ‘Got it’."},
+    build(done){
+      const d=sdesk({}); const card=document.createElement("div"); card.className="macCard recap";
+      card.innerHTML=`<div class="recapIcon">🗺️</div><div class="recapText" style="text-align:left;font-size:18px;">${T({
+        ko:"순서는 이래요:<br><br>① <b>시스템 설정</b> 열기 ⚙️<br>② <b>키보드</b> 누르기 ⌨️<br>③ 입력 소스 <b>편집…</b> ✏️<br>④ <b>한국어</b> 추가하기 🇰🇷<br>⑤ 메뉴 막대에서 <b>전환</b>하기 🔄<br><br>하나씩 짚어드릴게요. 천천히 해요 😊",
+        en:"Here's the path:<br><br>① Open <b>System Settings</b> ⚙️<br>② Click <b>Keyboard</b> ⌨️<br>③ <b>Edit…</b> the input sources ✏️<br>④ Add <b>Korean</b> 🇰🇷<br>⑤ <b>Switch</b> from the menu bar 🔄<br><br>I'll point out each step. Take your time 😊"})}</div><button class="big gotBtn">${T({ko:"알겠어요",en:"Got it"})}</button>`;
+      d.appendChild(card); card.querySelector(".gotBtn").addEventListener("click",()=>{ if(!locked) done("🗺️",{ko:"좋아요, 시작해요!",en:"Great, let's begin!"}); });
+      autoDemo(null);
+    } },
+  { title:{ko:"① 시스템 설정 열기",en:"① Open System Settings"},
+    instr:{ko:"독(맨 아래 줄)에서 <b>⚙️ 시스템 설정</b>을 눌러 여세요.",en:"Click <b>⚙️ System Settings</b> in the Dock (the row at the bottom)."},
+    hint:{ko:"톱니바퀴 모양 ⚙️ 이에요.",en:"It looks like a gear ⚙️."},
+    build(done){
+      const d=sdesk({dock:true, app:{ko:"파인더",en:"Finder"}});
+      const icon=d.querySelector("#settingsIcon");
+      icon.addEventListener("click",()=>{ if(locked)return; done("⚙️",{ko:"시스템 설정을 열었어요!",en:"You opened System Settings!"}); });
+      markTarget(icon); autoDemo(demoTap(()=>icon),1000);
+    } },
+  { title:{ko:"② 키보드 열기",en:"② Open Keyboard"},
+    instr:{ko:"왼쪽 목록에서 <b>키보드</b>를 누르세요.",en:"Click <b>Keyboard</b> in the left sidebar."},
+    hint:{ko:"왼쪽에 여러 메뉴가 있어요. ⌨️ 키보드를 찾아 누르세요.",en:"There's a list on the left. Find and click ⌨️ Keyboard."},
+    build(done){
+      const d=sdesk({app:{ko:"시스템 설정",en:"System Settings"}});
+      const s=setWin(d,"general");
+      s.main.innerHTML=`<h3>${T({ko:"일반",en:"General"})}</h3><p style="color:#9ca3af;">${T({ko:"왼쪽에서 ‘키보드 ⌨️’를 선택하세요.",en:"Choose ‘Keyboard ⌨️’ on the left."})}</p>`;
+      const kb=s.row("keyboard");
+      kb.addEventListener("click",()=>{ if(locked)return; done("⌨️",{ko:"키보드 설정을 열었어요!",en:"You opened Keyboard settings!"}); });
+      markTarget(kb); autoDemo(demoTap(()=>kb),1000);
+    } },
+  { title:{ko:"③ 입력 소스 편집",en:"③ Edit Input Sources"},
+    instr:{ko:"<b>텍스트 입력</b> 칸의 <b>편집…</b> 단추를 누르세요.",en:"Click the <b>Edit…</b> button in the <b>Text Input</b> section."},
+    hint:{ko:"‘입력 소스’ 오른쪽의 <b>편집…</b> 이에요.",en:"It's the <b>Edit…</b> to the right of ‘Input Sources’."},
+    build(done){
+      const d=sdesk({app:{ko:"시스템 설정",en:"System Settings"}});
+      const s=setWin(d,"keyboard");
+      s.main.innerHTML=`<h3>${T({ko:"키보드",en:"Keyboard"})}</h3>
+        <div class="setSection">${T({ko:"텍스트 입력",en:"Text Input"})}</div>
+        <div class="setCard"><div class="setItem"><div><div class="lbl">${T({ko:"입력 소스",en:"Input Sources"})}</div><div class="sub">🇺🇸 ${T({ko:"ABC · 미국",en:"ABC · U.S."})}</div></div><button class="miniBtn editBtn">${T({ko:"편집…",en:"Edit…"})}</button></div></div>`;
+      const edit=s.main.querySelector(".editBtn");
+      edit.addEventListener("click",()=>{ if(locked)return; done("✏️",{ko:"편집 창을 열었어요!",en:"You opened the edit window!"}); });
+      markTarget(edit); autoDemo(demoTap(()=>edit),1000);
+    } },
+  { title:{ko:"④ 더하기(＋) 누르기",en:"④ Click the Add (＋) button"},
+    instr:{ko:"왼쪽 아래 <b>＋</b> 단추를 눌러 언어를 추가하세요.",en:"Click the <b>＋</b> button at the bottom-left to add a language."},
+    hint:{ko:"＋ 는 ‘더하기’예요. 새 키보드를 추가할 때 눌러요.",en:"＋ means ‘add’. Click it to add a new keyboard."},
+    build(done){
+      const d=sdesk({app:{ko:"시스템 설정",en:"System Settings"}});
+      const win=document.createElement("div"); win.className="macCard sheet";
+      win.innerHTML=`<div class="macTitlebar">${dotsHTML()}<div class="ttl">${T({ko:"입력 소스",en:"Input Sources"})}</div></div>
+        <div style="padding:16px 18px;text-align:left;background:#fff;min-height:150px;">
+          <div class="srcChip">🇺🇸 ABC</div>
+          <p style="color:#9ca3af;font-size:13px;margin-top:16px;">${T({ko:"아래 ＋ 를 눌러 한국어를 추가하세요.",en:"Click ＋ below to add Korean."})}</p>
+        </div>
+        <div class="sheetFoot"><button class="plusBtn plusA">＋</button><button class="plusBtn">－</button><span style="flex:1"></span><button class="miniBtn">${T({ko:"완료",en:"Done"})}</button></div>`;
+      d.appendChild(win);
+      const plus=win.querySelector(".plusA");
+      plus.addEventListener("click",()=>{ if(locked)return; done("➕",{ko:"언어를 고르는 창이 열렸어요!",en:"The language picker opened!"}); });
+      markTarget(plus); autoDemo(demoTap(()=>plus),1000);
+    } },
+  { title:{ko:"⑤ 한국어 추가하기",en:"⑤ Add Korean"},
+    instr:{ko:"왼쪽에서 <b>한국어</b>를 고른 뒤, <b>추가</b>를 누르세요.",en:"Pick <b>Korean</b> on the left, then click <b>Add</b>."},
+    hint:{ko:"① 한국어 누르기 → ② 2벌식 확인 → ③ 추가 누르기.",en:"① Click Korean → ② 2-Set is selected → ③ click Add."},
+    build(done){
+      const d=sdesk({app:{ko:"시스템 설정",en:"System Settings"}});
+      const win=document.createElement("div"); win.className="macCard sheet";
+      win.innerHTML=`<div class="macTitlebar">${dotsHTML()}<div class="ttl">${T({ko:"추가할 언어 선택",en:"Choose a language to add"})}</div></div>
+        <div class="sheetBody">
+          <div class="langList">
+            <div class="llRow" data-l="en">🇺🇸 English</div>
+            <div class="llRow" data-l="fr">🇫🇷 Français</div>
+            <div class="llRow" data-l="ko">🇰🇷 ${T({ko:"한국어",en:"Korean"})}</div>
+            <div class="llRow" data-l="ja">🇯🇵 ${T({ko:"일본어",en:"Japanese"})}</div>
+          </div>
+          <div class="layoutList"><p style="color:#9ca3af;font-size:13px;padding:8px;">${T({ko:"← 왼쪽에서 언어를 고르세요.",en:"← Choose a language on the left."})}</p></div>
+        </div>
+        <div class="sheetFoot"><span style="flex:1"></span><button class="miniBtn">${T({ko:"취소",en:"Cancel"})}</button><button class="miniBtn blue addBtn" disabled>${T({ko:"추가",en:"Add"})}</button></div>`;
+      d.appendChild(win);
+      const koRow=win.querySelector('.llRow[data-l="ko"]');
+      const layout=win.querySelector(".layoutList");
+      const addBtn=win.querySelector(".addBtn");
+      let picked=false;
+      koRow.addEventListener("click",()=>{ if(locked)return;
+        win.querySelectorAll(".langList .llRow").forEach(r=>r.classList.remove("sel"));
+        koRow.classList.add("sel"); koRow.classList.remove("target"); picked=true; addBtn.disabled=false;
+        layout.innerHTML=`<div class="llRow sel" data-y="2">${T({ko:"2벌식",en:"2-Set Korean"})}</div>
+          <div class="llRow" data-y="3">${T({ko:"3벌식",en:"3-Set Korean"})}</div>
+          <div class="llRow" data-y="r">${T({ko:"로마자 입력",en:"Romaja"})}</div>`;
+        layout.querySelectorAll(".llRow").forEach(r=>r.addEventListener("click",()=>{ layout.querySelectorAll(".llRow").forEach(x=>x.classList.remove("sel")); r.classList.add("sel"); }));
+        markTarget(addBtn); autoDemo(demoTap(()=>addBtn),900);
+      });
+      addBtn.addEventListener("click",()=>{ if(locked)return; if(!picked){ gentle({ko:"먼저 왼쪽에서 한국어를 고르세요.",en:"First pick Korean on the left."}); return; }
+        done("🇰🇷",{ko:"한국어 키보드를 추가했어요! 🎉",en:"You added the Korean keyboard! 🎉"}); });
+      markTarget(koRow); autoDemo(demoTap(()=>koRow),1100);
+    } },
+  { title:{ko:"국기가 나타났어요",en:"A flag appeared"},
+    instr:{ko:"이제 화면 위쪽에 언어 전환 단추가 생겼어요.",en:"Now there's a language-switch button at the top."},
+    hint:{ko:"읽고 ‘알겠어요’를 누르세요.",en:"Read it and click ‘Got it’."},
+    build(done){
+      const d=sdesk({flag:true, app:{ko:"시스템 설정",en:"System Settings"}});
+      const card=document.createElement("div"); card.className="macCard recap";
+      card.innerHTML=`<div class="recapIcon">🎉</div><div class="recapText">${T({
+        ko:"잘했어요! 이제 화면 <b>오른쪽 위 메뉴 막대</b>에 작은 <b>국기 🇺🇸</b> (또는 A/한 글자)가 생겼어요.<br><br>이게 바로 <b>언어 전환 단추</b>예요. 이걸 누르면 영어와 한국어를 <b>골라서</b> 쓸 수 있어요. 다음 단계에서 직접 눌러봐요!",
+        en:"Well done! Now there's a little <b>flag 🇺🇸</b> (or an A/한 letter) at the <b>top-right menu bar</b>.<br><br>That's your <b>language-switch button</b>. Click it to <b>choose</b> English or Korean. Let's try it next!"})}</div><button class="big gotBtn">${T({ko:"알겠어요",en:"Got it"})}</button>`;
+      d.appendChild(card); card.querySelector(".gotBtn").addEventListener("click",()=>{ if(!locked) done("🎉",{ko:"전환 단추가 생겼어요!",en:"The switch button is here!"}); });
+      autoDemo(null);
+    } },
+  { title:{ko:"⑥ 한국어로 바꾸기",en:"⑥ Switch to Korean"},
+    instr:{ko:"오른쪽 위 <b>🇺🇸 국기</b>를 누르고, <b>한국어</b>를 고르세요.",en:"Click the <b>🇺🇸 flag</b> at the top-right, then choose <b>Korean</b>."},
+    hint:{ko:"국기를 누르면 목록이 떠요. 거기서 ‘한국어 2벌식’을 고르세요.",en:"Clicking the flag opens a list. Choose ‘Korean 2-Set’ there."},
+    build(done){
+      const d=sdesk({flag:true, app:{ko:"메모",en:"Notes"}});
+      const btn=d.querySelector("#inputMenu");
+      let popEl=null;
+      function openPop(){ if(popEl)return;
+        popEl=document.createElement("div"); popEl.className="inputMenuPop";
+        popEl.innerHTML=`<div class="imRow sel" data-s="en">🇺🇸 ${T({ko:"ABC · 영어",en:"ABC · English"})}<span class="ck">✓</span></div>
+          <div class="imRow" data-s="ko">🇰🇷 ${T({ko:"한국어 · 2벌식",en:"Korean · 2-Set"})}</div>`;
+        d.appendChild(popEl);
+        const koRow=popEl.querySelector('.imRow[data-s="ko"]'); markTarget(koRow);
+        koRow.addEventListener("click",()=>{ if(locked)return; done("🇰🇷",{ko:"한국어로 바꿨어요! 이제 한글이 입력돼요.",en:"You switched to Korean! Now you can type Hangul."}); });
+      }
+      btn.addEventListener("click",()=>{ if(locked)return; openPop(); });
+      markTarget(btn); autoDemo(demoTap(()=>btn,()=>openPop()),1200);
+    } },
+  { title:{ko:"언제든 바꾸는 법",en:"Switching anytime"},
+    instr:{ko:"이제 언제든 언어를 바꿀 수 있어요. 마지막으로 정리해요.",en:"You can switch anytime now. One last recap."},
+    hint:{ko:"읽고 ‘알겠어요’를 누르세요.",en:"Read it and click ‘Got it’."},
+    build(done){
+      const d=sdesk({flag:true}); const card=document.createElement("div"); card.className="macCard recap";
+      card.innerHTML=`<div class="recapIcon">💡</div><div class="recapText">${T({
+        ko:"다 배웠어요! 🎉<br><br>글을 쓸 때 언어를 바꾸려면, <b>오른쪽 위 국기 🇰🇷/🇺🇸 를 누르고</b> 원하는 언어를 고르면 돼요. 아주 쉬워요!<br><br>💡 <b>더 빠른 방법</b>: 키보드 <b>맨 왼쪽 아래 모서리</b>에 있는 <span class='keycap'>🌐</span> <b>지구본(fn) 키</b>를 누르면 한국어 ↔ 영어가 바로 바뀌어요. 편한 방법을 쓰면 돼요 💖",
+        en:"You learned it all! 🎉<br><br>To change language while typing, just <b>click the flag 🇰🇷/🇺🇸 at the top-right</b> and pick the language. So easy!<br><br>💡 <b>Even faster</b>: press the <span class='keycap'>🌐</span> <b>Globe (fn) key</b> in the <b>bottom-left corner</b> of your keyboard to flip Korean ↔ English instantly. Use whichever feels comfy 💖"})}</div><button class="big gotBtn">${T({ko:"알겠어요",en:"Got it"})}</button>`;
+      d.appendChild(card); card.querySelector(".gotBtn").addEventListener("click",()=>{ if(!locked) done("🎓",{ko:"이제 한국어를 자유롭게 칠 수 있어요!",en:"Now you can type Korean freely!"}); });
+      autoDemo(null);
+    } }
+];
+
+/* ===== engine ===== */
+let current=0,doneLock=false;
+const els={ bar:document.getElementById("progressBar"),step:document.getElementById("stepText"),
+  main:document.getElementById("mainView"),final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"),msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+function wireGotAdvance(){
+  const gb=stage.querySelector(".gotBtn"); if(!gb) return;
+  const fresh=gb.cloneNode(true); gb.parentNode.replaceChild(fresh,gb);
+  fresh.addEventListener("click",()=>{ if(locked||doneLock) return; doneLock=true; locked=true;
+    chime(); confetti(); els.bar.style.width=((current+1)/levels.length*100)+"%";
+    setTimeout(()=>{ doneLock=false; current++; if(current>=levels.length) showFinal(); else loadLevel(current); },240);
+  });
+}
+function loadLevel(i){
+  clearStage(); locked=false; currentDemo=null; showReplay(false);
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.innerHTML=T(lv.instr); banner.h.innerHTML="💡 "+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  requestAnimationFrame(()=>{ lv.build(onLevelDone); wireGotAdvance(); });
+}
+function onLevelDone(emoji,msg){
+  if(doneLock) return; doneLock=true; locked=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(()=>{
+    els.msg.textContent=msg?T(msg):praise();
+    els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime();
+  },650);
+}
+function goNext(){
+  els.overlay.style.display="none"; doneLock=false;
+  current++; if(current>=levels.length) showFinal(); else loadLevel(current);
+}
+function skipLevel(){ if(doneLock) return; current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block"; try{localStorage.setItem("momHub:done:koreankb","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ current=0; doneLock=false; els.main.style.display="flex"; els.skip.style.display="block";
+  els.final.style.display="none"; loadLevel(0); }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+applyStatic(); loadLevel(0);
+</script>
+</body>
+</html>

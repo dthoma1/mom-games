@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 비밀번호 배우기</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#6366f1; --accent2:#ec4899; --good:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+  }
+  *{box-sizing:border-box; -webkit-user-select:none; user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;
+    overscroll-behavior:none;touch-action:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1000px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;
+    border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:120;}
+
+  /* intro */
+  #introView{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(99,102,241,.12);padding:26px;text-align:center;overflow:auto;}
+  #introArt{font-size:70px;line-height:1.15;margin-bottom:10px;}
+  #introTitle{font-size:26px;font-weight:800;margin:4px 0;}
+  #introText{font-size:17px;line-height:1.7;max-width:700px;color:#374151;}
+  #introText b{color:var(--accent);}
+  .introBtns{margin-top:20px;display:flex;gap:10px;}
+
+  /* guard-at-the-door illustration */
+  .guardScene{position:relative;width:330px;height:118px;margin:2px auto 14px;}
+  .gLayer{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;gap:12px;}
+  .gLayer .fig{font-size:50px;line-height:1;}
+  .gLayer .door{font-size:50px;line-height:1;position:relative;}
+  .gLayer .door .lock{position:absolute;right:-8px;bottom:2px;font-size:22px;}
+  .gBubble{position:absolute;top:0;left:50%;transform:translateX(-50%);background:#fff;border:2px solid #c7d2fe;
+    border-radius:14px;padding:6px 13px;font-size:14px;font-weight:700;color:#374151;white-space:nowrap;box-shadow:0 4px 10px rgba(0,0,0,.10);}
+  .gBubble::after{content:"";position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);
+    border:7px solid transparent;border-top-color:#c7d2fe;}
+  .gBubble.ok{border-color:#86efac;} .gBubble.ok::after{border-top-color:#86efac;}
+  .gLayer.locked{animation:gLocked 4.4s infinite;}
+  .gLayer.granted{animation:gGranted 4.4s infinite;}
+  @keyframes gLocked{0%,40%{opacity:1;}50%,90%{opacity:0;}100%{opacity:1;}}
+  @keyframes gGranted{0%,40%{opacity:0;}50%,90%{opacity:1;}100%{opacity:0;}}
+
+  /* lesson */
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;}
+  #banner .t{font-size:18px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .i b{color:var(--accent);}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  #stage{position:relative;flex:1;min-height:0;border-radius:16px;overflow:auto;
+    background:#fff;box-shadow:0 14px 34px rgba(99,102,241,.14);
+    display:flex;align-items:center;justify-content:center;padding:18px;}
+  .panel{width:100%;max-width:620px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;}
+  .lead{font-size:15px;color:var(--soft);}
+  .bigField{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:26px;font-weight:700;letter-spacing:1px;
+    background:#f3f4f6;border:2px dashed #cbd5e1;border-radius:14px;padding:16px 22px;min-width:280px;word-break:break-all;}
+  .bigField.locked{background:#052e16;color:#4ade80;border:2px solid #16a34a;letter-spacing:2px;}
+  .kbtn{font-size:17px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    border:none;border-radius:999px;padding:13px 26px;cursor:pointer;box-shadow:0 6px 16px rgba(99,102,241,.3);}
+  .kbtn:active{transform:translateY(1px);}
+  .kbtn.small{font-size:14px;padding:9px 16px;}
+  .kbtn.ghost{background:#fff;color:var(--accent);border:2px solid var(--accent);box-shadow:none;}
+  .kbtn:disabled{opacity:.5;cursor:default;}
+  .note{font-size:15px;line-height:1.6;color:#374151;background:#eef2ff;border-radius:12px;padding:12px 16px;max-width:560px;}
+  .note b{color:var(--accent);}
+  .note.good{background:#ecfdf5;} .note.good b{color:var(--good);}
+  .note.bad{background:#fef2f2;} .note.bad b{color:var(--bad);}
+
+  /* strength builder */
+  .meter{width:100%;max-width:420px;height:16px;background:#f1f5f9;border-radius:999px;overflow:hidden;}
+  .meterFill{height:100%;width:0;border-radius:999px;transition:width .3s ease,background .3s ease;}
+  .buildBtns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+  .reqs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+  .req{font-size:14px;padding:7px 14px;border-radius:999px;background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;}
+  .req.ok{background:#ecfdf5;color:#15803d;border-color:#86efac;font-weight:700;}
+  .req.ok::before{content:"✓ ";}
+
+  /* crack cards */
+  .crackWrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;width:100%;}
+  .crackCard{flex:1;min-width:240px;max-width:280px;background:#f8fafc;border:2px solid #e2e8f0;border-radius:16px;
+    padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .crackCard .tag{font-size:13px;font-weight:700;color:var(--soft);}
+  .crackCard .pw{font-family:"SF Mono",Menlo,monospace;font-size:18px;font-weight:700;word-break:break-all;}
+  .crackCard .count{font-family:"SF Mono",Menlo,monospace;font-size:15px;color:var(--soft);min-height:22px;}
+  .crackCard .verdict{font-size:15px;font-weight:800;min-height:24px;}
+  .crackCard.done-bad{border-color:#fecaca;background:#fef2f2;} .crackCard.done-bad .verdict{color:var(--bad);}
+  .crackCard.done-good{border-color:#bbf7d0;background:#f0fdf4;} .crackCard.done-good .verdict{color:var(--good);}
+
+  /* vault */
+  .vault{width:100%;max-width:520px;background:#0f172a;border-radius:18px;padding:18px;color:#e2e8f0;text-align:left;
+    box-shadow:0 14px 30px rgba(0,0,0,.3);}
+  .vault .vhead{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;margin-bottom:6px;}
+  .vault .master{background:#1e293b;border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .vault .master .k{color:#fbbf24;}
+  .vrow{display:flex;align-items:center;gap:10px;background:#1e293b;border-radius:12px;padding:11px 14px;margin-bottom:9px;}
+  .vrow .site{font-weight:700;min-width:78px;}
+  .vrow .pw{font-family:"SF Mono",Menlo,monospace;font-size:14px;color:#7dd3fc;flex:1;letter-spacing:1px;}
+  .vrow .st{font-size:12px;color:#94a3b8;}
+  .vrow.saved{outline:2px solid #22c55e;} .vrow.saved .st{color:#4ade80;font-weight:700;}
+
+  /* 2FA */
+  .twofa{display:flex;gap:20px;flex-wrap:wrap;align-items:center;justify-content:center;width:100%;}
+  .phone{width:150px;background:#0f172a;border-radius:22px;padding:12px 10px 16px;color:#fff;text-align:center;
+    box-shadow:0 12px 26px rgba(0,0,0,.3);}
+  .phone .top{font-size:11px;color:#94a3b8;margin-bottom:8px;}
+  .phone .msgApp{font-size:12px;color:#cbd5e1;}
+  .phone .code{font-family:"SF Mono",Menlo,monospace;font-size:30px;font-weight:800;letter-spacing:6px;margin:8px 0;color:#7dd3fc;}
+  .loginBox{width:250px;background:#f8fafc;border:2px solid #e2e8f0;border-radius:16px;padding:16px;text-align:center;}
+  .loginBox .step{font-size:13px;margin:6px 0;}
+  .loginBox .step .ok{color:var(--good);font-weight:700;}
+  .codeInput{font-family:"SF Mono",Menlo,monospace;font-size:24px;letter-spacing:8px;text-align:center;width:180px;
+    padding:10px;border:2px solid #cbd5e1;border-radius:12px;-webkit-user-select:text;user-select:text;}
+  .codeInput:focus{outline:none;border-color:var(--accent);}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:60;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:130;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);overflow:auto;}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+  button.big.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipStep()"></button>
+
+    <div id="introView" style="display:none;">
+      <div id="introArt">🔐</div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button class="big soft" id="introBack" onclick="prevIntro()"></button>
+        <button class="big" id="introNext" onclick="nextIntro()"></button>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+      </div>
+      <div id="stage"></div>
+      <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:16px;margin-top:8px;line-height:1.7;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  pageTitle:{ko:"엄마의 비밀번호 배우기",en:"Learning Passwords"},
+  h1:{ko:"🔐 엄마의 비밀번호 배우기",en:"🔐 Learning Passwords"},
+  sub:{ko:"암호화 · 강한 비밀번호 · 비밀번호 관리자",en:"Encryption · strong passwords · password managers"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  introBack:{ko:"‹ 이전",en:"‹ Back"},
+  introNext:{ko:"다음 ▶",en:"Next ▶"},
+  introStart:{ko:"시작하기 ▶",en:"Start ▶"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"비밀번호 지킴이!",en:"Password protector!"},
+  finalMsg:{ko:"이제 엄마는 알아요 —<br>비밀번호는 <b>암호로 바뀌어</b> 보관되고, <b>길고 다양하게</b> 만들수록 안전하고,<br><b>비밀번호 관리자</b>가 다 기억해 줘요 💖<br><span style=\"font-size:14px;color:#6b7280;\">다음엔 <b style=\"color:#6366f1;\">2편</b>에서 ‘2단계 인증’으로 한 겹 더 지키는 법을 배워요!</span>",
+            en:"Now you know —<br>passwords are stored after being <b>changed into secret code</b>, they are safer when they are <b>long and varied</b>,<br>and a <b>password manager</b> can remember them for you 💖<br><span style=\"font-size:14px;color:#6b7280;\">Next, in <b style=\"color:#6366f1;\">part 2</b>, we'll learn how two-step verification adds another layer of protection!</span>"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  next:{ko:"다음 ›",en:"Next ›"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.title=T(UI.pageTitle);
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("introBack").textContent=T(UI.introBack);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").innerHTML=T(UI.finalMsg);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){
+  LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(phase==="intro"){ showIntro(); }
+  else if(!doneGuard){ loadLesson(lidx); }
+}
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+const clickSnd=()=>beep(520,.05);
+const buzz=()=>{beep(200,.18);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ---------- intro ---------- */
+let introIdx=0, phase="intro";
+const INTRO=[
+  { art:"💂", title:{ko:"문 앞의 문지기 이야기",en:"The guard at the door"},
+    html:{ko:`<div class="guardScene">
+      <div class="gLayer locked">
+        <span class="gBubble">“암호를 대세요!”</span>
+        <span class="fig">🧍</span><span class="fig">💂</span>
+        <span class="door">🚪<span class="lock">🔒</span></span>
+      </div>
+      <div class="gLayer granted">
+        <span class="gBubble ok">“통과! 어서 오세요 🎉”</span>
+        <span class="fig">🚶</span><span class="fig">💂</span>
+        <span class="door">🚪<span class="lock">🔓</span></span>
+      </div>
+    </div>
+    비밀번호는 사실 아주 옛날 <b>문을 지키던 문지기(경비)</b>에서 나온 생각이에요.
+    성문이나 부대 앞에서 문지기가 “<b>암호를 대라!</b>” 하고 물으면,
+    <b>정확한 말</b>을 한 사람만 들여보내 줬어요.<br><br>
+    컴퓨터도 똑같아요. 문지기(컴퓨터)가 비밀번호를 묻고, <b>맞아야만</b> 문을 열어 줘요. 틀리면 못 들어가요.`,
+    en:`<div class="guardScene">
+      <div class="gLayer locked">
+        <span class="gBubble">“Password, please!”</span>
+        <span class="fig">🧍</span><span class="fig">💂</span>
+        <span class="door">🚪<span class="lock">🔒</span></span>
+      </div>
+      <div class="gLayer granted">
+        <span class="gBubble ok">“Come in! Welcome 🎉”</span>
+        <span class="fig">🚶</span><span class="fig">💂</span>
+        <span class="door">🚪<span class="lock">🔓</span></span>
+      </div>
+    </div>
+    A password comes from the old idea of a <b>guard watching a door</b>.
+    At a gate, the guard would ask, “<b>What is the secret word?</b>”
+    Only the person who said the <b>right word</b> could come in.<br><br>
+    Computers work the same way. The guard (the computer) asks for your password, and opens the door only when it is <b>correct</b>. If it is wrong, you stay outside.`} },
+  { art:"🔐", title:{ko:"그럼 왜 어렵게 만들까요?",en:"Then why make passwords hard?"},
+    html:{ko:`문지기 앞에서 나쁜 사람이 암호를 <b>마구 찍어</b> 맞히려 하면 어떡하죠?<br><br>
+    컴퓨터 세상의 나쁜 사람들은 <b>1초에 수백만 번</b> 암호를 찔러 봐요.
+    그래서 <b>쉬운 암호는 금방 뚫려요</b>.<br><br>
+    오늘은 문지기가 <b>절대 속지 않는 튼튼한 암호</b> 만드는 법을 배워요 😊`,
+    en:`What if a bad person tries to <b>guess and guess</b> the secret word in front of the guard?<br><br>
+    In the computer world, bad people can try <b>millions of guesses every second</b>.
+    That means <b>easy passwords break quickly</b>.<br><br>
+    Today we'll learn how to make a <b>strong password the guard will not be fooled by</b> 😊`} },
+  { art:"🧩", title:{ko:"암호화 — 알아볼 수 없게 바꾸기",en:"Encryption — changing it so nobody can read it"},
+    html:{ko:`엄마가 비밀번호를 만들면, 컴퓨터는 그걸 그대로 저장하지 <b>않아요</b>.<br><br>
+    믹서기에 갈듯이 <b>알아볼 수 없는 암호</b>로 바꿔서 보관해요. 이걸 <b>암호화</b>라고 해요.<br><br>
+    한 번 갈면 <b>되돌릴 수 없어서</b>, 회사 직원조차 엄마의 진짜 비밀번호를 볼 수 없어요.`,
+    en:`When you make a password, the computer does <b>not</b> save it as plain words.<br><br>
+    It changes it into an <b>unreadable secret code</b>, like blending it in a mixer. This is called <b>encryption</b>.<br><br>
+    Once it is changed, it <b>cannot be changed back</b>, so even company workers cannot see your real password.`} },
+  { art:"💪", title:{ko:"길고 다양할수록 튼튼해요",en:"Long and varied is stronger"},
+    html:{ko:`열쇠가 <b>길수록</b>, 그리고 <b>대문자·숫자·특수문자(@ # !)</b>가 섞일수록 경우의 수가 어마어마하게 많아져요.<br><br>
+    그래서 추측하는 컴퓨터가 <b>평생 걸려도 못 뚫어요</b>.<br><br>
+    반대로 <b>짧고 뻔한</b> 비밀번호(1234, 생일)는 순식간에 뚫려요.`,
+    en:`The <b>longer</b> the key is, and the more it mixes <b>capital letters, numbers, and symbols (@ # !)</b>, the more possibilities there are.<br><br>
+    A guessing computer might <b>never break it in a lifetime</b>.<br><br>
+    But a <b>short and obvious</b> password (1234, a birthday) can be broken right away.`} },
+  { art:"🗄️", title:{ko:"비밀번호 관리자로 편하게",en:"Make it easy with a password manager"},
+    html:{ko:`길고 복잡한 걸 어떻게 다 외우죠? 안 외워도 돼요!<br><br>
+    <b>비밀번호 관리자</b>가 사이트마다 강한 비밀번호를 만들고 <b>대신 기억</b>해 줘요.
+    엄마는 <b>딱 하나(마스터 비밀번호)</b>만 기억하면 돼요. 금고 자체가 암호로 잠겨 있어 안전해요.<br><br>
+    자, 이제 하나씩 직접 해볼까요? 😊`,
+    en:`How can you remember all those long, complicated passwords? You do not have to!<br><br>
+    A <b>password manager</b> makes strong passwords for each site and <b>remembers them for you</b>.
+    You only need to remember <b>one master password</b>. The vault itself is locked with encryption, so it is safe.<br><br>
+    Now let's try it step by step 😊`} },
+];
+
+/* ---------- helpers ---------- */
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function generateStrong(len){ const U="ABCDEFGHJKLMNPQRSTUVWXYZ",L="abcdefghijkmnpqrstuvwxyz",N="23456789",S="!@#$%&*";
+  const all=U+L+N+S; let s=pick(U)+pick(L)+pick(N)+pick(S);
+  for(let i=s.length;i<(len||12);i++) s+=pick(all);
+  return s.split("").sort(()=>Math.random()-.5).join(""); }
+
+/* ---------- lessons ---------- */
+const stage=document.getElementById("stage");
+let doneGuard=false;
+
+const LESSONS=[
+  /* 1. Encryption */
+  { title:{ko:"① 암호화 체험하기",en:"① Try encryption"},
+    instr:{ko:"엄마의 비밀번호를 <b>암호로 바꾸기</b> 버튼을 눌러, 컴퓨터가 어떻게 감추는지 보세요.",en:"Press <b>Change into secret code</b> to see how the computer hides your password."},
+    hint:{ko:"버튼을 누르면 글자가 알아볼 수 없는 암호로 갈려요. 다시는 원래대로 못 돌려요.",en:"When you press the button, the words are mixed into unreadable code. They cannot be changed back."},
+    render(stage,done){
+      stage.innerHTML=`<div class="panel">
+        <div class="lead">${T({ko:"엄마가 만든 비밀번호",en:"The password you made"})}</div>
+        <div class="bigField" id="plain">${T({ko:"사랑해요1004",en:"LoveYou1004"})}</div>
+        <button class="kbtn" id="lockBtn">${T({ko:"🔒 암호로 바꾸기 (암호화)",en:"🔒 Change into secret code (encrypt)"})}</button>
+        <div class="note" id="encNote" style="display:none;"></div>
+      </div>`;
+      const field=stage.querySelector("#plain"), btn=stage.querySelector("#lockBtn"), note=stage.querySelector("#encNote");
+      const cipher="9Xq$7mL#pR2vZ!8kW";
+      btn.onclick=()=>{ btn.disabled=true; clickSnd();
+        const chars="!@#$%&*ABCDEF0123456789qwertyXKMLPZ";
+        let t=0; const iv=setInterval(()=>{ t++;
+          field.textContent=Array.from({length:cipher.length},()=>pick(chars.split(""))).join("");
+          field.classList.add("locked");
+          if(t>14){ clearInterval(iv); field.textContent=cipher; chime();
+            note.style.display="block"; note.className="note good";
+            note.innerHTML=T({ko:"웹사이트는 이 <b>알아볼 수 없는 암호</b>만 저장해요. 되돌릴 수 없어서 <b>아무도 원래 글자를 못 봐요</b>.",en:"The website saves only this <b>unreadable secret code</b>. It cannot be changed back, so <b>nobody can see the original words</b>."});
+            setTimeout(()=>done("🔒",T({ko:"비밀번호가 아무도 못 읽는 암호로 바뀌었어요!",en:"The password changed into code nobody can read!"})),2800);
+          }
+        },70);
+      };
+    }},
+
+  /* 2. Strong password builder */
+  { title:{ko:"② 튼튼한 비밀번호 만들기",en:"② Build a strong password"},
+    instr:{ko:"아래 버튼으로 <b>길이·대문자·숫자·특수문자</b>를 더해, 힘 막대를 <b>초록색</b>까지 채워 보세요.",en:"Use the buttons to add <b>length, a capital letter, a number, and a symbol</b> until the strength bar turns <b>green</b>."},
+    hint:{ko:"네 가지(길게·대문자·숫자·특수문자)를 모두 넣으면 아주 튼튼해져요. 왜 하나하나가 필요한지 느껴 보세요.",en:"When all four are included, the password becomes very strong. Notice why each one helps."},
+    render(stage,done){
+      const st={words:[],upper:false,num:false,sym:false};
+      const pool=T({ko:["-바다","-구름","-햇살","-별빛","-바람"],en:["-ocean","-cloud","-sun","-star","-breeze"]});
+      stage.innerHTML=`<div class="panel">
+        <div class="lead">${T({ko:"지금 내 비밀번호",en:"My password right now"})}</div>
+        <div class="bigField" id="pwShow"></div>
+        <div class="meter"><div class="meterFill" id="mfill"></div></div>
+        <div class="reqs">
+          <div class="req" id="rLen">${T({ko:"길이 12자 이상",en:"At least 12 characters"})}</div>
+          <div class="req" id="rUp">${T({ko:"대문자 A",en:"Capital letter A"})}</div>
+          <div class="req" id="rNum">${T({ko:"숫자 7",en:"Number 7"})}</div>
+          <div class="req" id="rSym">${T({ko:"특수문자 @",en:"Symbol @"})}</div>
+        </div>
+        <div class="buildBtns">
+          <button class="kbtn small" id="bLong">${T({ko:"➕ 길게",en:"➕ Make longer"})}</button>
+          <button class="kbtn small" id="bUp">${T({ko:"대문자 A",en:"Capital A"})}</button>
+          <button class="kbtn small" id="bNum">${T({ko:"숫자 7",en:"Number 7"})}</button>
+          <button class="kbtn small" id="bSym">${T({ko:"특수문자 @",en:"Symbol @"})}</button>
+        </div>
+      </div>`;
+      const show=stage.querySelector("#pwShow"), fill=stage.querySelector("#mfill");
+      function build(){ let s=st.upper?"Coffee":"coffee"; s+=st.words.join(""); if(st.num) s+="7"; if(st.sym) s+="@"; return s; }
+      function update(){ const pw=build(); show.textContent=pw;
+        const okLen=pw.length>=12, okUp=st.upper, okNum=st.num, okSym=st.sym;
+        stage.querySelector("#rLen").classList.toggle("ok",okLen);
+        stage.querySelector("#rUp").classList.toggle("ok",okUp);
+        stage.querySelector("#rNum").classList.toggle("ok",okNum);
+        stage.querySelector("#rSym").classList.toggle("ok",okSym);
+        const n=[okLen,okUp,okNum,okSym].filter(Boolean).length;
+        fill.style.width=(n/4*100)+"%";
+        fill.style.background=n<=1?"var(--bad)":n<=2?"var(--warn)":n<=3?"#eab308":"var(--good)";
+        if(okLen&&okUp&&okNum&&okSym){ chime(); done("💪",T({ko:"네 가지를 모두 넣어 아주 튼튼한 비밀번호가 됐어요!",en:"You added all four parts, so the password is very strong!"})); }
+      }
+      stage.querySelector("#bLong").onclick=()=>{ if(st.words.length<pool.length){ st.words.push(pool[st.words.length]); } clickSnd(); update(); };
+      stage.querySelector("#bUp").onclick=()=>{ st.upper=true; clickSnd(); update(); };
+      stage.querySelector("#bNum").onclick=()=>{ st.num=true; clickSnd(); update(); };
+      stage.querySelector("#bSym").onclick=()=>{ st.sym=true; clickSnd(); update(); };
+      update();
+    }},
+
+  /* 3. Length / guessing machine */
+  { title:{ko:"③ 길이의 힘 — 추측 기계",en:"③ The power of length — guessing machine"},
+    instr:{ko:"두 비밀번호에 각각 <b>🤖 추측 시작</b>을 눌러, 얼마나 빨리 뚫리는지 비교해 보세요.",en:"Press <b>🤖 Start guessing</b> for each password and compare how quickly they break."},
+    hint:{ko:"짧고 뻔한 건 순식간에 뚫려요. 길고 다양한 건 몇 백 년이 걸려요. 그래서 길이가 중요해요!",en:"Short and obvious passwords break instantly. Long and varied ones can take hundreds of years. That is why length matters!"},
+    render(stage,done){
+      const tested={weak:false,strong:false};
+      stage.innerHTML=`<div class="panel"><div class="crackWrap">
+        <div class="crackCard" id="cWeak"><div class="tag">${T({ko:"짧고 뻔한 비밀번호",en:"Short and obvious password"})}</div>
+          <div class="pw">cat</div><div class="count" id="wCount"></div>
+          <div class="verdict" id="wVerd"></div>
+          <button class="kbtn small" id="wBtn">${T({ko:"🤖 추측 시작",en:"🤖 Start guessing"})}</button></div>
+        <div class="crackCard" id="cStrong"><div class="tag">${T({ko:"길고 다양한 비밀번호",en:"Long and varied password"})}</div>
+          <div class="pw">${T({ko:"바다7구름@별빛K",en:"Ocean7Cloud@StarK"})}</div><div class="count" id="sCount"></div>
+          <div class="verdict" id="sVerd"></div>
+          <button class="kbtn small" id="sBtn">${T({ko:"🤖 추측 시작",en:"🤖 Start guessing"})}</button></div>
+      </div><div class="note" id="crackNote" style="display:none;"></div></div>`;
+      function maybeDone(){ if(tested.weak&&tested.strong){ const note=stage.querySelector("#crackNote");
+        note.style.display="block"; note.className="note good";
+        note.innerHTML=T({ko:"봤죠? <b>짧은 건 눈 깜짝할 새</b>, <b>길고 다양한 건 몇 백 년</b>! 그래서 비밀번호는 길게 만들어요.",en:"See? <b>The short one breaks in a blink</b>, while the <b>long, varied one takes hundreds of years</b>! That is why we make passwords long."});
+        setTimeout(()=>done("⏳",T({ko:"길이의 힘을 두 눈으로 확인했어요!",en:"You saw the power of length with your own eyes!"})),1200); } }
+      const wBtn=stage.querySelector("#wBtn"), wCount=stage.querySelector("#wCount"), wVerd=stage.querySelector("#wVerd");
+      wBtn.onclick=()=>{ wBtn.disabled=true; clickSnd(); let n=0; const iv=setInterval(()=>{ n+=Math.floor(Math.random()*900+300);
+        wCount.textContent=T({ko:`${n.toLocaleString()} 번 시도`,en:`${n.toLocaleString()} tries`}); if(n>2600){ clearInterval(iv); buzz();
+          wVerd.textContent=T({ko:"0.002초 만에 뚫림 😱",en:"Broken in 0.002 seconds 😱"}); stage.querySelector("#cWeak").classList.add("done-bad");
+          tested.weak=true; maybeDone(); } },60); };
+      const sBtn=stage.querySelector("#sBtn"), sCount=stage.querySelector("#sCount"), sVerd=stage.querySelector("#sVerd");
+      sBtn.onclick=()=>{ sBtn.disabled=true; clickSnd(); let n=0; const iv=setInterval(()=>{ n+=Math.floor(Math.random()*90000+40000);
+        sCount.textContent=T({ko:`${n.toLocaleString()} 번 시도…`,en:`${n.toLocaleString()} tries…`}); if(n>900000){ clearInterval(iv); chime();
+          sVerd.textContent=T({ko:"몇 백 년 걸림 — 안전! 🛡️",en:"Hundreds of years — safe! 🛡️"}); stage.querySelector("#cStrong").classList.add("done-good");
+          tested.strong=true; maybeDone(); } },60); };
+    }},
+];
+
+/* ---------- engine ---------- */
+let lidx=0;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"), introArt:document.getElementById("introArt"),
+  introTitle:document.getElementById("introTitle"), introText:document.getElementById("introText"),
+  introBack:document.getElementById("introBack"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"), skip:document.getElementById("skipBtn"),
+  bTitle:document.getElementById("bTitle"), bInstr:document.getElementById("bInstr"), bHint:document.getElementById("bHint") };
+const totalSteps=INTRO.length+LESSONS.length;
+function doneCount(){ return phase==="intro"?introIdx:INTRO.length+lidx; }
+function updateProgress(){ els.step.textContent=T(UI.step)(doneCount()+1,totalSteps); els.bar.style.width=(doneCount()/totalSteps*100)+"%"; }
+
+function showIntro(){ phase="intro"; els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none";
+  const c=INTRO[introIdx]; els.introArt.textContent=c.art; els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
+  els.introBack.style.visibility=introIdx===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=introIdx===INTRO.length-1?T(UI.introStart):T(UI.introNext); updateProgress(); }
+function nextIntro(){ if(introIdx<INTRO.length-1){ introIdx++; showIntro(); } else startLessons(); }
+function prevIntro(){ if(introIdx>0){ introIdx--; showIntro(); } }
+function startLessons(){ phase="lessons"; lidx=0; els.intro.style.display="none"; els.main.style.display="flex"; loadLesson(0); }
+
+function loadLesson(i){
+  const lv=LESSONS[i]; doneGuard=false;
+  els.bTitle.textContent=T(lv.title); els.bInstr.innerHTML=T(lv.instr); els.bHint.textContent="💡 "+T(lv.hint);
+  updateProgress(); els.overlay.style.display="none"; stage.innerHTML="";
+  lv.render(stage,onDone);
+}
+function onDone(emoji,msg){
+  if(doneGuard) return; doneGuard=true;
+  els.bar.style.width=((INTRO.length+lidx+1)/totalSteps*100)+"%";
+  els.msg.textContent=msg?T(msg):praise(); els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex"; confetti(); chime();
+}
+function goNext(){ els.overlay.style.display="none"; lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function skipStep(){ if(phase==="intro"){ nextIntro(); return; } doneGuard=true;
+  lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:passwords","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.final.style.display="none"; showIntro(); }
+
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+applyStatic();
+showIntro();
+</script>
+</body>
+</html>

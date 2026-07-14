@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>영상 편집기 사용하기</title>
+<style>
+  :root{--bg1:#eef2ff;--bg2:#fdf2f8;--ink:#1f2937;--soft:#6b7280;--accent:#6366f1;--accent2:#ec4899;
+    --good:#22c55e;--macblue:#0a63ff;--desk1:#2b6cff;--desk2:#8a5cf6;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+  #banner .extra{margin-top:8px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;}
+  #replayBtn{font-size:14px;font-weight:700;color:var(--accent);background:#eef2ff;border:1px solid #dfe4ff;
+    border-radius:999px;padding:7px 16px;cursor:pointer;display:none;}
+  #stage{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;
+    background:linear-gradient(135deg,var(--desk1),var(--desk2));display:flex;align-items:center;justify-content:center;padding:18px;}
+
+  .bwin{background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.30);width:min(580px,96%);overflow:hidden;
+    display:flex;flex-direction:column;}
+  .btool{height:46px;background:linear-gradient(#f6f6f7,#e9e9eb);display:flex;align-items:center;gap:8px;padding:0 12px;
+    border-bottom:1px solid #e1e1e4;}
+  .dots{display:flex;gap:7px;margin-right:4px;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dot.r{background:#ff5f57;}.dot.y{background:#febc2e;}.dot.g{background:#28c840;}
+  .closeDot{cursor:pointer;}
+  .macCard.redClose .dots .dot{width:15px;height:15px;}
+  .macCard.redClose .closeDot{box-shadow:0 0 0 4px rgba(255,95,87,.30);}
+  .navbtn{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5b6270;
+    font-size:17px;cursor:pointer;flex:0 0 auto;}
+  .navbtn:hover{background:rgba(0,0,0,.06);}
+  .navbtn.off{opacity:.32;pointer-events:none;}
+  .addrbar{flex:1;height:32px;background:#fff;border:1px solid #d5d5da;border-radius:8px;display:flex;align-items:center;
+    padding:0 10px;gap:7px;font-size:14px;color:#374151;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);min-width:0;}
+  .addrbar .lock{font-size:11px;color:#9ca3af;}
+  .addrbar input{border:none;outline:none;flex:1;font-size:14px;background:transparent;min-width:0;color:#374151;}
+  .addrbar.focusRing{border-color:var(--macblue);box-shadow:0 0 0 3px rgba(10,99,255,.25);}
+  .tabstrip{height:34px;background:#e6e6e9;display:flex;align-items:flex-end;gap:2px;padding:0 8px;}
+  .tab{height:29px;background:#d3d3d8;border-radius:8px 8px 0 0;padding:0 12px;display:flex;align-items:center;gap:8px;
+    font-size:13px;color:#4b5563;max-width:170px;white-space:nowrap;overflow:hidden;}
+  .tab.active{background:#fff;color:#1f2937;}
+  .tabx{font-size:13px;color:#9ca3af;cursor:pointer;border-radius:4px;padding:0 3px;}
+  .tabx:hover{background:rgba(0,0,0,.1);}
+  .bcontent{background:#fff;flex:1;min-height:150px;padding:24px;text-align:center;overflow:hidden;transition:font-size .2s;}
+  .bcontent h2{margin:6px 0;}
+  .bcontent p{color:#6b7280;line-height:1.5;margin:8px 0;}
+  .fav{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+  .favIcon{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;
+    box-shadow:0 3px 8px rgba(0,0,0,.12);}
+
+  @keyframes tpulse{0%,100%{box-shadow:0 0 0 0 rgba(10,99,255,.55);}50%{box-shadow:0 0 0 7px rgba(10,99,255,0);}}
+  .target{animation:tpulse 1.4s infinite;border-radius:8px;position:relative;z-index:5;}
+  .miniToast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(43,47,54,.92);color:#fff;
+    font-size:13px;font-weight:600;padding:8px 15px;border-radius:999px;z-index:35;box-shadow:0 6px 16px rgba(0,0,0,.3);transition:opacity .2s;}
+
+  .demoCursor{position:absolute;width:26px;height:26px;z-index:40;pointer-events:none;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));transition:left .5s ease,top .5s ease,opacity .2s;}
+  .demoCursor.click{animation:clickPulse .35s ease;}
+  @keyframes clickPulse{0%{transform:scale(1);}50%{transform:scale(.8);}100%{transform:scale(1);}}
+  .clickRipple{position:absolute;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
+    z-index:39;pointer-events:none;animation:ripple .5s ease-out forwards;}
+  @keyframes ripple{from{transform:scale(.3);opacity:.85;}to{transform:scale(2.4);opacity:0;}}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:60;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:95;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+
+
+  /* ===== scam-game macOS desktop stage ===== */
+  #stage.scamStage{background:
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,.38), transparent 28%),
+    radial-gradient(circle at 82% 22%, rgba(255,255,255,.22), transparent 24%),
+    linear-gradient(135deg,#8ec5ff 0%,#c6a7ff 48%,#ffd1e8 100%);}
+  .desktop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;}
+  .softDock{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:10px;background:rgba(255,255,255,.35);
+    border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(12px);padding:9px 14px;border-radius:22px;box-shadow:0 10px 24px rgba(0,0,0,.12);}
+  .dockIcon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.78);font-size:20px;}
+  .macCard{background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.8);border-radius:18px;box-shadow:0 22px 60px rgba(31,41,55,.24);overflow:hidden;}
+  .macTitlebar{height:34px;background:linear-gradient(#fbfbfc,#ececf0);display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid #dedee4;}
+  .macTitlebar .ttl{font-size:13px;font-weight:800;color:#4b5563;margin-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .macBody{padding:24px;text-align:center;}
+  .alertBox{width:min(470px,95%);}
+  .alertIcon{font-size:48px;margin-bottom:8px;}
+  .alertTitle{font-size:22px;font-weight:900;margin-bottom:8px;}
+  .alertMsg{font-size:16px;line-height:1.45;color:#4b5563;margin:0 auto 18px;max-width:390px;}
+  .btnRow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  .safeBtn,.plainBtn,.trapBtn,.linkTrap{border:none;border-radius:999px;padding:10px 20px;font-size:15px;font-weight:800;cursor:pointer;}
+  .safeBtn{background:#e8f0ff;color:var(--macblue);border:1px solid #cfe0ff;}
+  .plainBtn{background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;}
+  .trapBtn{background:linear-gradient(90deg,#ef4444,#f97316);color:#fff;box-shadow:0 6px 14px rgba(239,68,68,.25);}
+  .linkTrap{background:#fff1f2;color:#dc2626;border:1px solid #fecdd3;text-decoration:underline;}
+  .emailCard{width:min(520px,96%);}
+  .emailHead{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #eef2f7;padding:14px 18px;background:#fff;}
+  .emailFrom{font-size:13px;color:#6b7280;}.emailSubject{font-size:18px;font-weight:900;}
+  .chatWrap{width:min(520px,96%);display:flex;flex-direction:column;gap:12px;}
+  .bubble{align-self:flex-start;background:#fff;border-radius:18px 18px 18px 6px;padding:15px 17px;box-shadow:0 8px 22px rgba(0,0,0,.13);font-size:17px;line-height:1.45;max-width:430px;}
+  .passwordRow{background:rgba(255,255,255,.92);border-radius:18px;padding:14px;display:flex;gap:9px;align-items:center;box-shadow:0 10px 25px rgba(0,0,0,.14);flex-wrap:wrap;justify-content:center;}
+  .passwordRow input{height:40px;border:1px solid #d1d5db;border-radius:10px;padding:0 12px;font-size:16px;min-width:190px;}
+  .choiceGrid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:18px;width:min(760px,96%);}
+  .choiceCard{cursor:pointer;text-align:left;transition:transform .15s ease, box-shadow .15s ease;}
+  .choiceCard:hover{transform:translateY(-2px);box-shadow:0 24px 62px rgba(31,41,55,.28);}
+  .choiceBody{padding:22px;min-height:180px;}
+  .choiceLabel{font-size:12px;font-weight:900;color:#6b7280;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;}
+  .calmIcon{font-size:36px;}.fakeFlash{font-size:42px;animation:flashSoft 1.2s infinite;}
+  @keyframes flashSoft{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.06);opacity:.82;}}
+  .recap{width:min(650px,96%);text-align:center;padding:30px;}
+  .recapIcon{font-size:68px;margin-bottom:10px;}
+  .recapText{font-size:20px;line-height:1.55;font-weight:800;color:#374151;}
+  @media (max-width:720px){.choiceGrid{grid-template-columns:1fr}.macBody{padding:20px}.btnRow{flex-direction:column}.safeBtn,.plainBtn,.trapBtn,.linkTrap{width:100%;}}
+
+  /* ===== video editor simulation ===== */
+  .veWin{width:min(700px,98%);}
+  .veTop{height:38px;background:linear-gradient(#fbfbfc,#eceef2);display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid #e1e1e6;}
+  .veTop .app{font-size:14px;font-weight:900;color:#5b21b6;display:flex;align-items:center;gap:6px;}
+  .veTop .exportBtn{margin-left:auto;background:linear-gradient(90deg,#6366f1,#ec4899);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:800;padding:7px 15px;cursor:pointer;}
+  .vePreview{background:#0f172a;min-height:150px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+  .veScene{font-size:56px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4));}
+  .vePreview.playing .veScene{animation:sceneMove 1.6s ease-in-out infinite;}
+  .vePlay{position:absolute;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;font-size:24px;color:#6366f1;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.3);}
+  .vePreview.playing .vePlay{display:none;}
+  .veTimeArea{background:#f4f4f8;border-top:1px solid #e1e1e6;padding:12px 14px;}
+  .veTimeLabel{font-size:11px;font-weight:800;color:#8b8b96;text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;display:flex;align-items:center;gap:6px;}
+  .veTrack{display:flex;gap:6px;align-items:stretch;min-height:60px;background:#e7e7ee;border-radius:10px;padding:7px;}
+  .clip{flex:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#fff;font-size:12px;font-weight:800;position:relative;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15);min-width:0;overflow:hidden;transition:transform .15s,box-shadow .15s,flex .3s;}
+  .clip .cEmoji{font-size:22px;}
+  .clip.c1{background:linear-gradient(135deg,#f59e0b,#ef4444);}
+  .clip.c2{background:linear-gradient(135deg,#3b82f6,#8b5cf6);}
+  .clip.c3{background:linear-gradient(135deg,#10b981,#06b6d4);}
+  .clip.sel{outline:3px solid #6366f1;outline-offset:2px;transform:translateY(-2px);}
+  .clip.dragging{opacity:.5;}
+  .clip.dropOK{outline:3px dashed #6366f1;}
+  .clip .handle{position:absolute;top:0;bottom:0;width:12px;background:rgba(255,255,255,.55);cursor:ew-resize;display:flex;align-items:center;justify-content:center;font-size:9px;color:#1f2937;}
+  .clip .handle.l{left:0;border-radius:8px 0 0 8px;}
+  .clip .handle.r{right:0;border-radius:0 8px 8px 0;}
+  .clip.trimmed{flex:.5;}
+  .veAdd{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap;justify-content:center;}
+  .veAddBtn{background:#fff;border:1px solid #d9d9e3;border-radius:9px;font-size:13px;font-weight:700;color:#4b5563;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:5px;}
+  .veAddBtn:hover{background:#f5f5ff;}
+  .veAddBtn.added{background:#ecfdf5;border-color:#a7f3d0;color:#059669;}
+  .musicBar{margin-top:8px;height:34px;background:linear-gradient(90deg,#fca5a5,#f9a8d4);border-radius:8px;display:flex;align-items:center;gap:8px;padding:0 12px;color:#7f1d1d;font-size:12px;font-weight:800;}
+  .titleClip{margin-top:8px;height:30px;background:#1f2937;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;}
+  .exportPanel{padding:24px;text-align:center;background:#fff;min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+  .exportPanel .spinner{width:44px;height:44px;border:5px solid #e0e7ff;border-top-color:#6366f1;border-radius:50%;animation:spin 1s linear infinite;}
+  .exportBar2{width:min(300px,85%);height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden;}
+  .exportBar2 > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6366f1,#ec4899);transition:width .3s linear;}
+  .fileChip{display:inline-flex;align-items:center;gap:8px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:12px 18px;font-size:15px;font-weight:800;color:#4338ca;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+        <div class="extra"><button id="replayBtn" onclick="replayDemo()"></button></div>
+      </div>
+      <div id="stage"></div>
+    </div>
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+  </div>
+</div>
+
+<script>
+/* ===== language ===== */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"✂️ 영상 편집기 사용하기", en:"✂️ Using a Video Editor"},
+  sub:{ko:"클립·자르기·내보내기가 뭔지 천천히 알아봐요. 같이 해봐요 😊", en:"Let's slowly learn what clips, trimming, and exporting mean. Let's try together 😊"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  replay:{ko:"👀 다시 보여주기",en:"👀 Show me again"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"영상을 편집했어요!", en:"You edited a video!"},
+  finalMsg:{ko:"클립을 자르고, 순서를 정하고, 내보내면 끝! 천천히 하면 돼요 💖", en:"Trim clips, put them in order, and export — that's it! Take your time 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  next:{ko:"다음 ›",en:"Next ›"}
+}
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("replayBtn").textContent=T(UI.replay);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(!doneLock){ loadLevel(current); } }
+
+/* ===== praise + sound + confetti ===== */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ===== cursors ===== */
+const SVG_ARROW=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 3 L5 20 L9.5 15.8 L12.6 22 L15.2 20.8 L12.1 14.8 L18 14.8 Z" fill="#111" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const SVG_IBEAM=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g><g fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g></svg>`;
+function makeCursor(kind){ const c=document.createElement("div"); c.className="demoCursor";
+  c.innerHTML=kind==="ibeam"?SVG_IBEAM:SVG_ARROW; return c; }
+
+/* ===== state + helpers ===== */
+const stage=document.getElementById("stage");
+let locked=false,currentDemo=null;
+function clearStage(){ stage.innerHTML=""; }
+function stageXY(el){ const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect();
+  return {x:r.left-s.left+r.width/2,y:r.top-s.top+r.height/2}; }
+function ripple(x,y){ const r=document.createElement("div"); r.className="clickRipple";
+  r.style.left=(x-13)+"px"; r.style.top=(y-13)+"px"; stage.appendChild(r); setTimeout(()=>r.remove(),520); }
+function markTarget(el){ if(el) el.classList.add("target"); }
+function showToast(msg){ let t=stage.querySelector(".miniToast");
+  if(!t){ t=document.createElement("div"); t.className="miniToast"; stage.appendChild(t); }
+  t.textContent=msg; t.style.opacity="1"; clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>{ t.style.opacity="0"; },1800); }
+
+/* ===== scam desktop builders ===== */
+function desk(){
+  stage.classList.add("scamStage");
+  const d=document.createElement("div"); d.className="desktop";
+  d.innerHTML=`<div class="softDock"><div class="dockIcon">🧭</div><div class="dockIcon">✉️</div><div class="dockIcon">🛡️</div><div class="dockIcon">💬</div></div>`;
+  stage.appendChild(d); return d;
+}
+function dotsHTML(){ return `<div class="dots"><span class="dot r closeDot"></span><span class="dot y"></span><span class="dot g"></span></div>`; }
+function macAlert(opts){
+  const d=desk(); const card=document.createElement("div"); card.className="macCard alertBox";
+  card.innerHTML=`<div class="macTitlebar">${dotsHTML()}<div class="ttl">${T(opts.app||{ko:"알림",en:"Alert"})}</div></div>
+    <div class="macBody"><div class="alertIcon">${opts.icon||"⚠️"}</div><div class="alertTitle">${T(opts.title)}</div>
+    <p class="alertMsg">${T(opts.msg)}</p><div class="btnRow"></div></div>`;
+  d.appendChild(card); return card;
+}
+function addButton(row,cls,label,fn){ const b=document.createElement("button"); b.className=cls; b.textContent=T(label); b.addEventListener("click",fn); row.appendChild(b); return b; }
+function gentle(msg){ showToast(T(msg)); beep(360,.08); }
+/* ===== demos ===== */
+function replayDemo(){ if(currentDemo) currentDemo(); }
+function showReplay(on){ document.getElementById("replayBtn").style.display=on?"inline-flex":"none"; }
+function autoDemo(fn,delay){ currentDemo=fn; showReplay(!!fn); if(fn) setTimeout(()=>{ if(!locked) fn(); },delay||800); }
+function demoTap(getTarget,atClick,reset,holdMs,kind){
+  return function run(){ if(locked) return; locked=true;
+    const target=getTarget(); if(!target){ locked=false; return; }
+    const cur=makeCursor(kind); stage.appendChild(cur);
+    const {x,y}=stageXY(target);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+34)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-4)+"px"; cur.style.top=(kind==="ibeam"?y-13:y-2)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(560,.05); if(atClick)atClick(target); },760);
+    setTimeout(()=>{ if(reset)reset(target); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },760+(holdMs||900));
+  };
+}
+function demoType(getInput,word,holdMs){
+  return function run(){ if(locked) return; locked=true;
+    const f=getInput(); if(!f){ locked=false; return; }
+    const bar=f.closest(".addrbar"); const {x,y}=stageXY(f);
+    const cur=makeCursor("ibeam"); stage.appendChild(cur);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+28)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-6)+"px"; cur.style.top=(y-13)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(540,.05); if(bar)bar.classList.add("focusRing"); f.value="";
+      let i=0; const iv=setInterval(()=>{ f.value=word.slice(0,++i); beep(700,.03); if(i>=word.length) clearInterval(iv); },170);
+    },780);
+    setTimeout(()=>{ f.value=""; if(bar)bar.classList.remove("focusRing"); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },780+(holdMs||1600));
+  };
+}
+
+/* ===== video editor builders ===== */
+function cdesk(){
+  stage.classList.add("scamStage");
+  const d=document.createElement("div"); d.className="desktop";
+  stage.appendChild(d); return d;
+}
+function veEditor(opts){
+  opts=opts||{};
+  const d=cdesk();
+  const win=document.createElement("div"); win.className="macCard veWin";
+  win.innerHTML=`<div class="macTitlebar">${dotsHTML()}<div class="ttl">${T({ko:"영상 편집기",en:"Video Editor"})}</div></div>
+    <div class="veTop"><span class="app">🎬 ${T({ko:"편집기",en:"Editor"})}</span>${opts.exportBtn?`<button class="exportBtn veExport">⬆︎ ${T({ko:"내보내기",en:"Export"})}</button>`:""}</div>
+    <div class="vePreview" id="vePrev">${opts.preview||`<div class="veScene">${opts.scene||"🎬"}</div>`}</div>
+    <div class="veTimeArea">
+      <div class="veTimeLabel">🎞️ ${T({ko:"타임라인 · 시간 순서",en:"Timeline · order in time"})}</div>
+      <div class="veTrack" id="veTrack">${opts.track||""}</div>
+      ${opts.below||""}
+    </div>`;
+  d.appendChild(win);
+  return {d,win,track:win.querySelector("#veTrack"),preview:win.querySelector("#vePrev")};
+}
+function clipHTML(n,emoji,label,cls,inner){ return `<div class="clip ${cls||("c"+n)}" data-n="${n}"><span class="cEmoji">${emoji}</span>${label}${inner||""}</div>`; }
+const CLIPS={
+  balloon:{e:"🎈",ko:"풍선 꾸미기",en:"Decorating"},
+  cake:{e:"🎂",ko:"케이크",en:"The cake"},
+  clap:{e:"👏",ko:"축하하기",en:"Cheering"}
+};
+/* ===== levels ===== */
+const levels=[
+  { title:{ko:"영상 편집기가 뭐예요?",en:"What is a video editor?"},
+    instr:{ko:"먼저, 영상 편집이 무슨 뜻인지 알아봐요.",en:"First, let's see what video editing means."},
+    hint:{ko:"읽고 ‘알겠어요’를 누르세요.",en:"Read it and click ‘Got it’."},
+    build(done){
+      const d=cdesk(); const card=document.createElement("div"); card.className="macCard recap";
+      card.innerHTML=`<div class="recapIcon">🎬</div><div class="recapText" style="font-size:18px;">${T({
+        ko:"영상 편집은 <b>사진첩을 정리하는 것</b>과 비슷해요.<br><br>찍어 둔 여러 <b>영상 조각</b>을 골라서, <b>순서대로 늘어놓고</b>, 필요 없는 부분은 <b>잘라내는</b> 거예요.<br><br>아래에 있는 긴 줄을 <b>‘타임라인’</b>이라고 불러요. 왼쪽이 <b>먼저</b>, 오른쪽이 <b>나중</b>이에요. 천천히 하나씩 배워봐요 😊",
+        en:"Editing a video is a lot like <b>organizing a photo album</b>.<br><br>You pick several <b>pieces of video</b>, <b>line them up in order</b>, and <b>cut away</b> the parts you don't need.<br><br>The long strip at the bottom is called the <b>‘timeline’</b>. Left is <b>earlier</b>, right is <b>later</b>. Let's learn it one step at a time 😊"})}</div><button class="big gotBtn">${T({ko:"알겠어요",en:"Got it"})}</button>`;
+      d.appendChild(card); card.querySelector(".gotBtn").addEventListener("click",()=>{ if(!locked) done("🎬",{ko:"편집은 조각을 순서대로 놓는 거예요!",en:"Editing is arranging pieces in order!"}); });
+      autoDemo(null);
+    } },
+
+  { title:{ko:"① 클립이 뭐예요?",en:"① What is a clip?"},
+    instr:{ko:"영상 조각 하나하나를 <b>‘클립’</b>이라고 해요. 클립을 하나 눌러보세요.",en:"Each piece of video is called a <b>‘clip’</b>. Tap one clip."},
+    hint:{ko:"타임라인에 색깔 조각이 클립이에요. 아무거나 눌러보세요.",en:"The colored pieces on the timeline are clips. Tap any of them."},
+    build(done){
+      const track=clipHTML(1,CLIPS.balloon.e,T({ko:CLIPS.balloon.ko,en:CLIPS.balloon.en}),"c1")
+        +clipHTML(2,CLIPS.cake.e,T({ko:CLIPS.cake.ko,en:CLIPS.cake.en}),"c2")
+        +clipHTML(3,CLIPS.clap.e,T({ko:CLIPS.clap.ko,en:CLIPS.clap.en}),"c3");
+      const ed=veEditor({scene:"🎈🎂👏",track});
+      const clips=ed.track.querySelectorAll(".clip");
+      clips.forEach(c=>c.addEventListener("click",()=>{ if(locked)return;
+        clips.forEach(x=>x.classList.remove("sel")); c.classList.add("sel");
+        done("🎞️",{ko:"이게 클립 하나예요!",en:"That's one clip!"}); }));
+      markTarget(clips[0]); autoDemo(demoTap(()=>clips[0]),1000);
+    } },
+
+  { title:{ko:"② 자르기 (트리밍)",en:"② Trimming"},
+    instr:{ko:"필요 없는 부분을 <b>잘라내는</b> 걸 자르기라고 해요. 클립 끝의 <b>✂ 손잡이</b>를 누르세요.",en:"Cutting away the part you don't need is called trimming. Tap the <b>✂ handle</b> at the clip's edge."},
+    hint:{ko:"가운데 클립이 너무 길어요. 오른쪽 ✂ 손잡이를 눌러 줄여요.",en:"The middle clip is too long. Tap the right ✂ handle to shorten it."},
+    build(done){
+      const trimClip=`<div class="clip c2 tooLong" data-n="2" style="flex:2;"><span class="cEmoji">${CLIPS.cake.e}</span>${T({ko:"케이크 (너무 길어요)",en:"Cake (too long)"})}<div class="handle r trimHandle">✂</div></div>`;
+      const track=clipHTML(1,CLIPS.balloon.e,T({ko:CLIPS.balloon.ko,en:CLIPS.balloon.en}),"c1")+trimClip+clipHTML(3,CLIPS.clap.e,T({ko:CLIPS.clap.ko,en:CLIPS.clap.en}),"c3");
+      const ed=veEditor({scene:"🎂",track});
+      const clip=ed.track.querySelector(".tooLong"); const handle=ed.track.querySelector(".trimHandle");
+      handle.addEventListener("click",(e)=>{ e.stopPropagation(); if(locked)return; locked=true;
+        clip.style.transition="flex .5s ease"; clip.style.flex="1"; beep(520,.06);
+        clip.querySelector(".cEmoji").nextSibling.textContent=T({ko:"케이크",en:"Cake"});
+        setTimeout(()=>{ locked=false; done("✂️",{ko:"필요 없는 부분을 잘라냈어요!",en:"You trimmed off the extra part!"}); },600);
+      });
+      markTarget(handle); autoDemo(demoTap(()=>handle),1000);
+    } },
+
+  { title:{ko:"③ 순서 바꾸기",en:"③ Put them in order"},
+    instr:{ko:"클립 순서를 바꿀 수 있어요. <b>🎈 풍선</b>이 맨 앞에 와야 해요. <b>◀ 앞으로</b>를 누르세요.",en:"You can reorder clips. The <b>🎈 balloon</b> clip should be first. Tap <b>◀ Move</b>."},
+    hint:{ko:"지금은 케이크가 먼저예요. 🎈 클립의 ◀ 단추를 누르면 앞으로 와요.",en:"Right now the cake is first. Tap the ◀ button on the 🎈 clip to move it forward."},
+    build(done){
+      const moveBtn=`<button class="clipMove" style="position:absolute;bottom:3px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.92);border:none;border-radius:6px;font-size:10px;font-weight:800;color:#1f2937;cursor:pointer;padding:1px 6px;">◀ ${T({ko:"앞으로",en:"Move"})}</button>`;
+      const track=clipHTML(2,CLIPS.cake.e,T({ko:CLIPS.cake.ko,en:CLIPS.cake.en}),"c2")
+        +clipHTML(1,CLIPS.balloon.e,T({ko:CLIPS.balloon.ko,en:CLIPS.balloon.en}),"c1",moveBtn)
+        +clipHTML(3,CLIPS.clap.e,T({ko:CLIPS.clap.ko,en:CLIPS.clap.en}),"c3");
+      const ed=veEditor({scene:"🎂→🎈",track});
+      const btn=ed.track.querySelector(".clipMove"); const balloon=btn.closest(".clip");
+      btn.addEventListener("click",(e)=>{ e.stopPropagation(); if(locked)return; locked=true;
+        ed.track.insertBefore(balloon,ed.track.firstChild); btn.remove(); beep(620,.06);
+        ed.preview.querySelector(".veScene").textContent="🎈🎂👏";
+        setTimeout(()=>{ locked=false; done("🔀",{ko:"순서를 바꿨어요! 이제 딱 맞아요.",en:"Reordered! Now it's just right."}); },500);
+      });
+      markTarget(btn); autoDemo(demoTap(()=>btn),1000);
+    } },
+
+  { title:{ko:"④ 음악 넣기",en:"④ Add music"},
+    instr:{ko:"배경 음악이나 제목도 넣을 수 있어요. <b>🎵 음악 넣기</b>를 누르세요.",en:"You can add background music or a title too. Tap <b>🎵 Add music</b>."},
+    hint:{ko:"타임라인 아래의 🎵 음악 넣기 단추예요.",en:"It's the 🎵 Add music button below the timeline."},
+    build(done){
+      const track=clipHTML(1,CLIPS.balloon.e,T({ko:CLIPS.balloon.ko,en:CLIPS.balloon.en}),"c1")
+        +clipHTML(2,CLIPS.cake.e,T({ko:CLIPS.cake.ko,en:CLIPS.cake.en}),"c2")
+        +clipHTML(3,CLIPS.clap.e,T({ko:CLIPS.clap.ko,en:CLIPS.clap.en}),"c3");
+      const below=`<div class="veAdd"><button class="veAddBtn addMusic">🎵 ${T({ko:"음악 넣기",en:"Add music"})}</button><button class="veAddBtn addTitle">🔤 ${T({ko:"제목 넣기",en:"Add title"})}</button></div><div id="veExtras"></div>`;
+      const ed=veEditor({scene:"🎈🎂👏",track,below});
+      const mBtn=ed.win.querySelector(".addMusic"); const tBtn=ed.win.querySelector(".addTitle");
+      const extras=ed.win.querySelector("#veExtras");
+      tBtn.addEventListener("click",()=>{ if(locked)return; if(tBtn.classList.contains("added"))return;
+        tBtn.classList.add("added"); tBtn.textContent="✓ "+T({ko:"제목 넣음",en:"Title added"});
+        extras.insertAdjacentHTML("beforeend",`<div class="titleClip">🔤 ${T({ko:"할머니의 생일 영상",en:"Grandma's Birthday"})}</div>`); beep(700,.05); });
+      mBtn.addEventListener("click",()=>{ if(locked)return; if(mBtn.classList.contains("added"))return;
+        mBtn.classList.add("added"); mBtn.textContent="✓ "+T({ko:"음악 넣음",en:"Music added"});
+        extras.insertAdjacentHTML("beforeend",`<div class="musicBar">🎵 ${T({ko:"따뜻한 배경 음악",en:"Warm background music"})}</div>`); beep(660,.06);
+        setTimeout(()=>{ done("🎵",{ko:"음악을 넣었어요!",en:"You added music!"}); },500); });
+      markTarget(mBtn); autoDemo(demoTap(()=>mBtn),1000);
+    } },
+
+  { title:{ko:"⑤ 내보내기가 뭐예요?",en:"⑤ What is exporting?"},
+    instr:{ko:"편집이 끝나면 <b>‘내보내기’</b>를 해야 해요. 왜 그런지 알아봐요.",en:"When editing is done, you must <b>‘export’</b>. Let's see why."},
+    hint:{ko:"읽고 ‘알겠어요’를 누르세요.",en:"Read it and click ‘Got it’."},
+    build(done){
+      const d=cdesk(); const card=document.createElement("div"); card.className="macCard recap";
+      card.innerHTML=`<div class="recapIcon">📦</div><div class="recapText" style="font-size:18px;">${T({
+        ko:"편집하는 동안 컴퓨터는 <b>‘설명서’</b>만 가지고 있어요 — 어떤 클립을, 어떤 순서로, 어디를 잘랐는지요.<br><br>이건 <b>요리법(레시피)</b>과 같아요. 아직 <b>완성된 요리</b>가 아니에요!<br><br><b>내보내기(Export)</b>를 누르면, 컴퓨터가 모든 걸 합쳐서 <b>영상 파일 하나</b>로 만들어 줘요. 그래야 <b>다른 사람에게 보내거나 유튜브에 올릴 수</b> 있어요 😊",
+        en:"While you edit, the computer only holds a <b>‘set of instructions’</b> — which clips, in what order, and where you trimmed.<br><br>That's like a <b>recipe</b>. It's not the <b>finished dish</b> yet!<br><br>When you press <b>Export</b>, the computer combines everything into <b>one video file</b>. Only then can you <b>send it to someone or upload it to YouTube</b> 😊"})}</div><button class="big gotBtn">${T({ko:"알겠어요",en:"Got it"})}</button>`;
+      d.appendChild(card); card.querySelector(".gotBtn").addEventListener("click",()=>{ if(!locked) done("📦",{ko:"내보내면 하나의 파일이 돼요!",en:"Exporting makes one finished file!"}); });
+      autoDemo(null);
+    } },
+
+  { title:{ko:"⑥ 내보내기",en:"⑥ Export it"},
+    instr:{ko:"오른쪽 위 <b>⬆︎ 내보내기</b>를 누르세요. 조금 기다리면 돼요.",en:"Tap <b>⬆︎ Export</b> at the top-right. Just wait a moment."},
+    hint:{ko:"만드는 데 시간이 조금 걸려요 — 정상이에요 😊",en:"It takes a little time — that's completely normal 😊"},
+    build(done){
+      const track=clipHTML(1,CLIPS.balloon.e,T({ko:CLIPS.balloon.ko,en:CLIPS.balloon.en}),"c1")
+        +clipHTML(2,CLIPS.cake.e,T({ko:CLIPS.cake.ko,en:CLIPS.cake.en}),"c2")
+        +clipHTML(3,CLIPS.clap.e,T({ko:CLIPS.clap.ko,en:CLIPS.clap.en}),"c3");
+      const ed=veEditor({scene:"🎈🎂👏",track,exportBtn:true});
+      const ex=ed.win.querySelector(".veExport");
+      ex.addEventListener("click",()=>{ if(locked)return; locked=true;
+        ed.win.querySelector(".veTop").style.display="none";
+        ed.win.querySelector(".vePreview").remove(); ed.win.querySelector(".veTimeArea").remove();
+        const panel=document.createElement("div"); panel.className="exportPanel";
+        panel.innerHTML=`<div class="spinner"></div><div style="font-weight:800;color:#6b7280;">${T({ko:"영상을 내보내는 중이에요…",en:"Exporting your video…"})}</div><div class="exportBar2"><i></i></div><div style="font-size:12px;color:#9ca3af;">${T({ko:"조금 걸려요 — 정상이에요 😊",en:"This takes a moment — that's normal 😊"})}</div>`;
+        ed.win.appendChild(panel);
+        const bar=panel.querySelector(".exportBar2 > i"); let p=0;
+        const iv=setInterval(()=>{ p+=10; bar.style.width=p+"%"; beep(480+p*4,.03);
+          if(p>=100){ clearInterval(iv);
+            panel.innerHTML=`<div style="font-size:52px;">🎉</div><div class="fileChip">🎬 ${T({ko:"생일영상.mp4",en:"birthday.mp4"})}</div><div style="font-size:13px;color:#6b7280;">${T({ko:"이제 파일 하나가 됐어요 — 어디든 보낼 수 있어요!",en:"Now it's one file — ready to send anywhere!"})}</div>`;
+            locked=false; setTimeout(()=>{ if(!doneLock) done("💾",{ko:"영상을 내보냈어요!",en:"You exported the video!"}); },800);
+          } },240);
+      });
+      markTarget(ex); autoDemo(demoTap(()=>ex),1000);
+    } },
+
+  { title:{ko:"다 배웠어요!",en:"You did it!"},
+    instr:{ko:"이제 나만의 영상을 편집할 수 있어요.",en:"Now you can edit your own videos."},
+    hint:{ko:"읽고 ‘알겠어요’를 누르세요.",en:"Read it and click ‘Got it’."},
+    build(done){
+      const d=cdesk(); const card=document.createElement("div"); card.className="macCard recap";
+      card.innerHTML=`<div class="recapIcon">🎉</div><div class="recapText">${T({
+        ko:"정말 잘하셨어요! 기억할 것은:<br><br>🎞️ <b>클립</b> = 영상 조각 하나<br>✂️ <b>자르기</b> = 필요 없는 부분 잘라내기<br>🔀 <b>순서</b> = 타임라인에서 앞뒤 바꾸기<br>📦 <b>내보내기</b> = 하나의 파일로 완성하기<br><br>급하지 않아요. <b>천천히</b> 하면 돼요 💖",
+        en:"Wonderful! Just remember:<br><br>🎞️ <b>Clip</b> = one piece of video<br>✂️ <b>Trim</b> = cut off what you don't need<br>🔀 <b>Order</b> = rearrange on the timeline<br>📦 <b>Export</b> = finish it into one file<br><br>No rush at all. Just <b>take your time</b> 💖"})}</div><button class="big gotBtn">${T({ko:"알겠어요",en:"Got it"})}</button>`;
+      d.appendChild(card); card.querySelector(".gotBtn").addEventListener("click",()=>{ if(!locked) done("🎓",{ko:"이제 영상을 편집할 수 있어요!",en:"Now you can edit videos!"}); });
+      autoDemo(null);
+    } }
+];
+
+/* ===== engine ===== */
+let current=0,doneLock=false;
+const els={ bar:document.getElementById("progressBar"),step:document.getElementById("stepText"),
+  main:document.getElementById("mainView"),final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"),msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+function wireGotAdvance(){
+  const gb=stage.querySelector(".gotBtn"); if(!gb) return;
+  const fresh=gb.cloneNode(true); gb.parentNode.replaceChild(fresh,gb);
+  fresh.addEventListener("click",()=>{ if(locked||doneLock) return; doneLock=true; locked=true;
+    chime(); confetti(); els.bar.style.width=((current+1)/levels.length*100)+"%";
+    setTimeout(()=>{ doneLock=false; current++; if(current>=levels.length) showFinal(); else loadLevel(current); },240);
+  });
+}
+function loadLevel(i){
+  clearStage(); locked=false; currentDemo=null; showReplay(false);
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.innerHTML=T(lv.instr); banner.h.innerHTML="💡 "+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  requestAnimationFrame(()=>{ lv.build(onLevelDone); wireGotAdvance(); });
+}
+function onLevelDone(emoji,msg){
+  if(doneLock) return; doneLock=true; locked=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(()=>{
+    els.msg.textContent=msg?T(msg):praise();
+    els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime();
+  },650);
+}
+function goNext(){
+  els.overlay.style.display="none"; doneLock=false;
+  current++; if(current>=levels.length) showFinal(); else loadLevel(current);
+}
+function skipLevel(){ if(doneLock) return; current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block"; try{localStorage.setItem("momHub:done:videoedit","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ current=0; doneLock=false; els.main.style.display="flex"; els.skip.style.display="block";
+  els.final.style.display="none"; loadLevel(0); }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+applyStatic(); loadLevel(0);
+</script>
+</body>
+</html>

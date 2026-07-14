@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>이메일 / Mail</title>
+<style>
+  :root{--bg1:#eef2ff;--bg2:#fdf2f8;--ink:#1f2937;--soft:#6b7280;--accent:#6366f1;--accent2:#ec4899;
+    --good:#22c55e;--macblue:#0a63ff;--desk1:#2b6cff;--desk2:#8a5cf6;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+  #banner .extra{margin-top:8px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;}
+  #replayBtn{font-size:14px;font-weight:700;color:var(--accent);background:#eef2ff;border:1px solid #dfe4ff;
+    border-radius:999px;padding:7px 16px;cursor:pointer;display:none;}
+  #stage{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;
+    background:linear-gradient(135deg,var(--desk1),var(--desk2));display:flex;align-items:center;justify-content:center;padding:18px;}
+
+  .bwin{background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.30);width:min(580px,96%);overflow:hidden;
+    display:flex;flex-direction:column;}
+  .btool{height:46px;background:linear-gradient(#f6f6f7,#e9e9eb);display:flex;align-items:center;gap:8px;padding:0 12px;
+    border-bottom:1px solid #e1e1e4;}
+  .dots{display:flex;gap:7px;margin-right:4px;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dot.r{background:#ff5f57;}.dot.y{background:#febc2e;}.dot.g{background:#28c840;}
+  .navbtn{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5b6270;
+    font-size:17px;cursor:pointer;flex:0 0 auto;}
+  .navbtn:hover{background:rgba(0,0,0,.06);}
+  .navbtn.off{opacity:.32;pointer-events:none;}
+  .addrbar{flex:1;height:32px;background:#fff;border:1px solid #d5d5da;border-radius:8px;display:flex;align-items:center;
+    padding:0 10px;gap:7px;font-size:14px;color:#374151;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);min-width:0;}
+  .addrbar .lock{font-size:11px;color:#9ca3af;}
+  .addrbar input{border:none;outline:none;flex:1;font-size:14px;background:transparent;min-width:0;color:#374151;}
+  .addrbar.focusRing{border-color:var(--macblue);box-shadow:0 0 0 3px rgba(10,99,255,.25);}
+  .tabstrip{height:34px;background:#e6e6e9;display:flex;align-items:flex-end;gap:2px;padding:0 8px;}
+  .tab{height:29px;background:#d3d3d8;border-radius:8px 8px 0 0;padding:0 12px;display:flex;align-items:center;gap:8px;
+    font-size:13px;color:#4b5563;max-width:170px;white-space:nowrap;overflow:hidden;}
+  .tab.active{background:#fff;color:#1f2937;}
+  .tabx{font-size:13px;color:#9ca3af;cursor:pointer;border-radius:4px;padding:0 3px;}
+  .tabx:hover{background:rgba(0,0,0,.1);}
+  .bcontent{background:#fff;flex:1;min-height:150px;padding:24px;text-align:center;overflow:hidden;transition:font-size .2s;}
+  .bcontent h2{margin:6px 0;}
+  .bcontent p{color:#6b7280;line-height:1.5;margin:8px 0;}
+  .fav{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+  .favIcon{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;
+    box-shadow:0 3px 8px rgba(0,0,0,.12);}
+
+
+  .mailWin{background:#fff;border-radius:13px;box-shadow:0 18px 50px rgba(0,0,0,.30);width:min(760px,98%);height:min(430px,96%);overflow:hidden;display:flex;flex-direction:column;}
+  .mailTop{height:46px;background:linear-gradient(#f8f8f9,#e8e8eb);display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:1px solid #d7d7dc;}
+  .mailTitle{flex:1;text-align:center;font-size:14px;font-weight:800;color:#4b5563;margin-right:72px;}
+  .mailBody{flex:1;min-height:0;display:grid;grid-template-columns:260px 1fr;background:#fff;}
+  .mailList{background:#f6f7fb;border-right:1px solid #e5e7eb;overflow:hidden;padding:10px;}
+  .mailItem{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-bottom:9px;cursor:pointer;box-shadow:0 2px 7px rgba(0,0,0,.05);transition:transform .25s ease,opacity .25s ease;}
+  .mailItem:hover{transform:translateY(-1px);}
+  .mailItem.sel{border-color:var(--macblue);box-shadow:0 0 0 3px rgba(10,99,255,.16);}
+  .mailItem.gone{transform:translateX(-120%);opacity:0;}
+  .sender{font-size:14px;font-weight:850;color:#111827;}
+  .subject{font-size:13px;color:#374151;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .preview{font-size:12px;color:#8b93a1;margin-top:3px;}
+  .mailPane{display:flex;flex-direction:column;min-width:0;}
+  .mailBar{height:50px;border-bottom:1px solid #eef0f4;display:flex;align-items:center;gap:9px;padding:0 13px;background:#fff;}
+  .mailBtn{border:1px solid #d8dce3;background:#fff;border-radius:10px;padding:8px 13px;font-size:14px;font-weight:800;cursor:pointer;color:#1f2937;}
+  .mailBtn.primary{background:#0a63ff;color:#fff;border-color:#0a63ff;}
+  .mailBtn.trash{font-size:20px;line-height:1;padding:8px 11px;}
+  .mailRead{flex:1;padding:22px 26px;overflow:auto;font-size:16px;line-height:1.55;}
+  .mailRead h2{margin:0 0 8px;font-size:23px;}
+  .mailRead .from{color:#6b7280;font-size:14px;margin-bottom:16px;}
+  .emptyMail{height:100%;display:flex;align-items:center;justify-content:center;color:#9ca3af;text-align:center;font-weight:800;font-size:19px;}
+  .composeBox{border-top:1px solid #e5e7eb;background:#fbfdff;padding:13px;display:none;}
+  .composeBox.on{display:block;}
+  .composeBox textarea{width:100%;height:74px;border:1px solid #d1d5db;border-radius:10px;padding:10px;font-size:15px;font-family:inherit;resize:none;outline:none;}
+  .composeTools{display:flex;align-items:center;gap:9px;margin-top:8px;}
+  .photoThumb{width:82px;height:58px;border-radius:10px;background:linear-gradient(135deg,#bfdbfe,#fde68a);display:none;align-items:center;justify-content:center;font-size:29px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.14);}
+  .photoThumb.on{display:flex;}
+  @media(max-width:720px){.mailBody{grid-template-columns:1fr;}.mailList{max-height:160px;border-right:none;border-bottom:1px solid #e5e7eb;}.mailWin{height:96%;}.mailTitle{margin-right:0;}}
+
+  @keyframes tpulse{0%,100%{box-shadow:0 0 0 0 rgba(10,99,255,.55);}50%{box-shadow:0 0 0 7px rgba(10,99,255,0);}}
+  .target{animation:tpulse 1.4s infinite;border-radius:8px;position:relative;z-index:5;}
+  .miniToast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(43,47,54,.92);color:#fff;
+    font-size:13px;font-weight:600;padding:8px 15px;border-radius:999px;z-index:35;box-shadow:0 6px 16px rgba(0,0,0,.3);transition:opacity .2s;}
+
+  .demoCursor{position:absolute;width:26px;height:26px;z-index:40;pointer-events:none;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));transition:left .5s ease,top .5s ease,opacity .2s;}
+  .demoCursor.click{animation:clickPulse .35s ease;}
+  @keyframes clickPulse{0%{transform:scale(1);}50%{transform:scale(.8);}100%{transform:scale(1);}}
+  .clickRipple{position:absolute;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
+    z-index:39;pointer-events:none;animation:ripple .5s ease-out forwards;}
+  @keyframes ripple{from{transform:scale(.3);opacity:.85;}to{transform:scale(2.4);opacity:0;}}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:60;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:95;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+        <div class="extra"><button id="replayBtn" onclick="replayDemo()"></button></div>
+      </div>
+      <div id="stage"></div>
+    </div>
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+  </div>
+</div>
+
+<script>
+/* ===== language ===== */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"✉️ 엄마의 이메일 배우기",en:"✉️ Learning Mail"},
+  sub:{ko:"메일을 열고, 답장하고, 사진을 넣고, 정리하는 법을 배워요 😊",en:"Open, reply, add a photo, and tidy your email 😊"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  replay:{ko:"👀 다시 보여주기",en:"👀 Show me again"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"이메일 마스터!",en:"Mail master!"},
+  finalMsg:{ko:"열기·답장·사진 넣기·삭제까지 다 하셨어요 💖",en:"Open, reply, add a photo, delete — all done 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  next:{ko:"다음 ›",en:"Next ›"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("replayBtn").textContent=T(UI.replay);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(!doneLock){ loadLevel(current); } }
+
+/* ===== praise + sound + confetti ===== */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ===== cursors ===== */
+const SVG_ARROW=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 3 L5 20 L9.5 15.8 L12.6 22 L15.2 20.8 L12.1 14.8 L18 14.8 Z" fill="#111" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const SVG_IBEAM=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g><g fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g></svg>`;
+function makeCursor(kind){ const c=document.createElement("div"); c.className="demoCursor";
+  c.innerHTML=kind==="ibeam"?SVG_IBEAM:SVG_ARROW; return c; }
+
+/* ===== state + helpers ===== */
+const stage=document.getElementById("stage");
+let locked=false,currentDemo=null;
+function clearStage(){ stage.innerHTML=""; }
+function stageXY(el){ const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect();
+  return {x:r.left-s.left+r.width/2,y:r.top-s.top+r.height/2}; }
+function ripple(x,y){ const r=document.createElement("div"); r.className="clickRipple";
+  r.style.left=(x-13)+"px"; r.style.top=(y-13)+"px"; stage.appendChild(r); setTimeout(()=>r.remove(),520); }
+function markTarget(el){ if(el) el.classList.add("target"); }
+function showToast(msg){ let t=stage.querySelector(".miniToast");
+  if(!t){ t=document.createElement("div"); t.className="miniToast"; stage.appendChild(t); }
+  t.textContent=msg; t.style.opacity="1"; clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>{ t.style.opacity="0"; },1800); }
+
+/* ===== mail builder ===== */
+const MAILS=[
+  {from:{ko:"민지",en:"Minji"},sub:{ko:"주말 점심 약속",en:"Weekend lunch"},body:{ko:"엄마, 이번 주말에 따뜻한 국수 먹으러 가요. 시간 괜찮으세요?",en:"Mom, let's go eat warm noodles this weekend. Does that sound good?"}},
+  {from:{ko:"가족 사진",en:"Family photos"},sub:{ko:"지난번 사진 보냈어요",en:"I sent the photos"},body:{ko:"지난번에 찍은 가족 사진을 보냈어요. 마음에 드시면 답장 주세요.",en:"I sent the family photos from last time. Reply if you like them."}},
+  {from:{ko:"요리 모임",en:"Cooking group"},sub:{ko:"새 반찬 레시피",en:"New side dish recipe"},body:{ko:"오늘은 간단한 반찬 레시피를 나눠요. 천천히 읽어 보세요.",en:"Today we're sharing an easy side dish recipe. Read it when you like."}}
+];
+const JUNK={from:{ko:"광고",en:"Advertisement"},sub:{ko:"필요 없는 할인 소식",en:"Unneeded sale news"},body:{ko:"지금 사면 큰 할인! 필요 없으면 휴지통으로 정리해요.",en:"Big sale if you buy now! If you don't need it, tidy it into the trash."}};
+function esc(v){return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
+function mailWindow(opts){
+  opts=opts||{};
+  const win=document.createElement("div"); win.className="mailWin";
+  win.innerHTML=`
+    <div class="mailTop">
+      <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+      <div class="mailTitle">${T({ko:"메일",en:"Mail"})}</div>
+    </div>
+    <div class="mailBody">
+      <div class="mailList"></div>
+      <div class="mailPane">
+        <div class="mailBar">
+          <button class="mailBtn primary replyBtn">${T({ko:"답장",en:"Reply"})}</button>
+          <button class="mailBtn photoBtn">📎 ${T({ko:"사진",en:"Photo"})}</button>
+          <button class="mailBtn trash trashBtn">🗑</button>
+        </div>
+        <div class="mailRead"></div>
+        <div class="composeBox">
+          <textarea readonly>${T({ko:"좋아요, 고마워요!",en:"Sounds good, thank you!"})}</textarea>
+          <div class="composeTools"><button class="mailBtn photoBtn2">📎 ${T({ko:"사진 넣기",en:"Add photo"})}</button><div class="photoThumb">🌷</div><button class="mailBtn primary sendBtn2" style="margin-left:auto;">✉️ ${T({ko:"보내기",en:"Send"})}</button></div>
+        </div>
+      </div>
+    </div>`;
+  stage.appendChild(win);
+  const bar=win.querySelector(".mailBar");
+  if(opts.hideBar) bar.style.display="none";
+  renderList(win,opts.items||MAILS,opts.openIndex);
+  if(opts.compose){ win.querySelector(".composeBox").classList.add("on"); setRead(win,{sub:{ko:"답장 쓰기",en:"Writing a reply"},from:{ko:"나",en:"Me"},body:{ko:"아래의 사진 버튼을 눌러 사진을 넣어 보세요.",en:"Tap the photo button below to add a photo."}}); }
+  win.querySelector(".sendBtn2").addEventListener("click",()=>{ const cb=win.querySelector(".composeBox"); if(!cb.classList.contains("on"))return;
+    cb.classList.remove("on"); win.querySelector(".photoThumb").classList.remove("on");
+    showToast(T({ko:"메일을 보냈어요! ✉️",en:"Your email was sent! ✉️"})); });
+  return win;
+}
+function renderList(win,items,openIndex){
+  const list=win.querySelector(".mailList"); list.innerHTML="";
+  items.forEach((m,i)=>{ const el=document.createElement("div"); el.className="mailItem"+(i===openIndex?" sel":""); el.dataset.i=i;
+    el.innerHTML=`<div class="sender">${esc(T(m.from))}</div><div class="subject">${esc(T(m.sub))}</div><div class="preview">${esc(T(m.body)).slice(0,34)}…</div>`;
+    list.appendChild(el); });
+  if(openIndex!=null && items[openIndex]) setRead(win,items[openIndex]); else win.querySelector(".mailRead").innerHTML=`<div class="emptyMail">${T({ko:"왼쪽에서 메일을 눌러 읽어요",en:"Click a message on the left to read it"})}</div>`;
+}
+function setRead(win,m){
+  win.querySelector(".mailRead").innerHTML=`<h2>${esc(T(m.sub))}</h2><div class="from">${T({ko:"보낸 사람",en:"From"})}: ${esc(T(m.from))}</div><p>${esc(T(m.body))}</p>`;
+}
+/* ===== demos ===== */
+function replayDemo(){ if(currentDemo) currentDemo(); }
+function showReplay(on){ document.getElementById("replayBtn").style.display=on?"inline-flex":"none"; }
+function autoDemo(fn,delay){ currentDemo=fn; showReplay(!!fn); if(fn) setTimeout(()=>{ if(!locked) fn(); },delay||800); }
+function demoTap(getTarget,atClick,reset,holdMs,kind){
+  return function run(){ if(locked) return; locked=true;
+    const target=getTarget(); if(!target){ locked=false; return; }
+    const cur=makeCursor(kind); stage.appendChild(cur);
+    const {x,y}=stageXY(target);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+34)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-4)+"px"; cur.style.top=(kind==="ibeam"?y-13:y-2)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(560,.05); if(atClick)atClick(target); },760);
+    setTimeout(()=>{ if(reset)reset(target); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },760+(holdMs||900));
+  };
+}
+function demoType(getInput,word,holdMs){
+  return function run(){ if(locked) return; locked=true;
+    const f=getInput(); if(!f){ locked=false; return; }
+    const bar=f.closest(".addrbar"); const {x,y}=stageXY(f);
+    const cur=makeCursor("ibeam"); stage.appendChild(cur);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+28)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-6)+"px"; cur.style.top=(y-13)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(540,.05); if(bar)bar.classList.add("focusRing"); f.value="";
+      let i=0; const iv=setInterval(()=>{ f.value=word.slice(0,++i); beep(700,.03); if(i>=word.length) clearInterval(iv); },170);
+    },780);
+    setTimeout(()=>{ f.value=""; if(bar)bar.classList.remove("focusRing"); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },780+(holdMs||1600));
+  };
+}
+
+/* ===== mail screens ===== */
+/* ===== levels ===== */
+const levels=[
+  { title:{ko:"메일 열기",en:"Open an email"},
+    instr:{ko:"받은 편지함에서 메일 제목을 누르면 오른쪽에 내용이 열려요.",en:"Click a message in the inbox to open and read it on the right."},
+    hint:{ko:"첫 번째 메일을 눌러 열어 보세요.",en:"Click the first message to open it."},
+    build(done){
+      const win=mailWindow({hideBar:true});
+      const first=win.querySelector(".mailItem"); markTarget(first);
+      win.querySelectorAll(".mailItem").forEach(el=>el.addEventListener("click",()=>{ if(locked)return;
+        win.querySelectorAll(".mailItem").forEach(x=>x.classList.remove("sel")); el.classList.add("sel"); setRead(win,MAILS[+el.dataset.i]);
+        done("📖",{ko:"메일을 열었어요!",en:"You opened an email!"});
+      }));
+      autoDemo(demoTap(()=>win.querySelector(".mailItem"),el=>{ el.classList.add("sel"); setRead(win,MAILS[0]); },el=>{ el.classList.remove("sel"); win.querySelector(".mailRead").innerHTML=`<div class="emptyMail">${T({ko:"왼쪽에서 메일을 눌러 읽어요",en:"Click a message on the left to read it"})}</div>`; },900),900);
+    } },
+  { title:{ko:"답장하기",en:"Reply"},
+    instr:{ko:"메일을 읽은 뒤 답장 버튼을 누르면 아래에 답장을 쓰는 칸이 나타나요.",en:"After reading, click Reply and a small writing area appears below."},
+    hint:{ko:"위쪽의 ‘답장 / Reply’ 버튼을 눌러 보세요.",en:"Click the Reply button in the toolbar."},
+    build(done){
+      const win=mailWindow({openIndex:0});
+      const reply=win.querySelector(".replyBtn"); markTarget(reply);
+      reply.addEventListener("click",()=>{ if(locked)return; win.querySelector(".composeBox").classList.add("on"); done("↩️",{ko:"답장 칸이 열렸어요!",en:"The reply area opened!"}); });
+      autoDemo(demoTap(()=>win.querySelector(".replyBtn"),()=>win.querySelector(".composeBox").classList.add("on"),()=>win.querySelector(".composeBox").classList.remove("on"),900),900);
+    } },
+  { title:{ko:"사진 넣기",en:"Add a photo"},
+    instr:{ko:"답장에 사진을 넣고 싶을 때는 📎 사진 버튼을 눌러요. 작은 사진이 붙어요.",en:"To add a photo to your reply, click the 📎 Photo button. A small photo appears."},
+    hint:{ko:"아래쪽의 사진 버튼을 눌러 보세요.",en:"Click the photo button near the reply area."},
+    build(done){
+      const win=mailWindow({compose:true,openIndex:1});
+      const photoBtn=win.querySelector(".photoBtn2"); markTarget(photoBtn);
+      const addPhoto=()=>win.querySelector(".photoThumb").classList.add("on");
+      photoBtn.addEventListener("click",()=>{ if(locked)return; addPhoto(); done("🖼️",{ko:"사진이 들어갔어요!",en:"The photo was added!"}); });
+      autoDemo(demoTap(()=>win.querySelector(".photoBtn2"),addPhoto,()=>win.querySelector(".photoThumb").classList.remove("on"),900),900);
+    } },
+  { title:{ko:"정리하기 (삭제)",en:"Tidy up (delete)"},
+    instr:{ko:"필요 없는 메일은 선택한 뒤 휴지통 버튼을 눌러 정리할 수 있어요.",en:"Select unwanted mail, then click the trash button to tidy it away."},
+    hint:{ko:"광고 메일을 선택한 채 🗑 버튼을 눌러 삭제해 보세요.",en:"With the junk message selected, click the 🗑 button to delete it."},
+    build(done){
+      const win=mailWindow({items:[JUNK,MAILS[0]],openIndex:0});
+      const trash=win.querySelector(".trashBtn"); markTarget(trash);
+      trash.addEventListener("click",()=>{ if(locked)return; const junk=win.querySelector(".mailItem"); junk.classList.add("gone"); setTimeout(()=>junk.remove(),260); done("🗑️",{ko:"필요 없는 메일을 삭제했어요!",en:"You deleted the unwanted email!"}); });
+      autoDemo(demoTap(()=>win.querySelector(".trashBtn"),()=>win.querySelector(".mailItem").classList.add("gone"),()=>win.querySelector(".mailItem").classList.remove("gone"),900),900);
+    } },
+  { title:{ko:"다 모아 보기",en:"Put it all together"},
+    instr:{ko:"메일 창에서 읽기·답장·사진 넣기·보내기·삭제를 마음껏 연습해 보세요. 답장을 쓴 뒤 ‘보내기 ✉️’를 눌러 보세요. 끝나면 완료를 누르세요.",en:"Practice reading, replying, adding a photo, sending, and deleting in this Mail window. Write a reply, then press ‘Send ✉️’. Press Done when finished."},
+    hint:{ko:"답장 → 사진 넣기 → 보내기 ✉️ 순서로 해보고, 끝나면 ‘완료’를 누르면 돼요.",en:"Try Reply → Add photo → Send ✉️, then press ‘Done’ when finished."},
+    build(done){
+      const win=mailWindow({items:[MAILS[0],MAILS[1],JUNK],openIndex:0});
+      win.querySelectorAll(".mailItem").forEach(el=>el.addEventListener("click",()=>{ if(locked)return; win.querySelectorAll(".mailItem").forEach(x=>x.classList.remove("sel")); el.classList.add("sel"); setRead(win,[MAILS[0],MAILS[1],JUNK][+el.dataset.i]); }));
+      win.querySelector(".replyBtn").addEventListener("click",()=>win.querySelector(".composeBox").classList.add("on"));
+      win.querySelectorAll(".photoBtn,.photoBtn2").forEach(b=>b.addEventListener("click",()=>{ win.querySelector(".composeBox").classList.add("on"); win.querySelector(".photoThumb").classList.add("on"); }));
+      win.querySelector(".trashBtn").addEventListener("click",()=>{ const sel=win.querySelector(".mailItem.sel"); if(sel){ sel.classList.add("gone"); setTimeout(()=>sel.remove(),260); } });
+      const done2=document.createElement("button"); done2.className="big"; done2.textContent=T({ko:"완료 ✓",en:"Done ✓"});
+      done2.style.cssText="position:absolute;bottom:16px;right:16px;margin:0;z-index:30;";
+      done2.addEventListener("click",()=>{ if(!locked) done("🎓",{ko:"메일을 다 익혔어요!",en:"You've mastered Mail!"}); });
+      stage.appendChild(done2);
+      autoDemo(null);
+    } }
+]
+
+/* ===== engine ===== */
+let current=0,doneLock=false;
+const els={ bar:document.getElementById("progressBar"),step:document.getElementById("stepText"),
+  main:document.getElementById("mainView"),final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"),msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+function loadLevel(i){
+  clearStage(); locked=false; currentDemo=null; showReplay(false);
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.textContent=T(lv.instr); banner.h.textContent="💡 "+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  requestAnimationFrame(()=>lv.build(onLevelDone));
+}
+function onLevelDone(emoji,msg){
+  if(doneLock) return; doneLock=true; locked=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(()=>{
+    els.msg.textContent=msg?T(msg):praise();
+    els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime();
+  },650);
+}
+function goNext(){
+  els.overlay.style.display="none"; doneLock=false;
+  current++; if(current>=levels.length) showFinal(); else loadLevel(current);
+}
+function skipLevel(){ if(doneLock) return; current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block"; try{localStorage.setItem("momHub:done:mail","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ current=0; doneLock=false; els.main.style.display="flex"; els.skip.style.display="block";
+  els.final.style.display="none"; loadLevel(0); }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+applyStatic(); loadLevel(0);
+</script>
+</body>
+</html>

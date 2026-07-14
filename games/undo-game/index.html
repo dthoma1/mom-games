@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>실수해도 괜찮아 / You can't break it</title>
+<style>
+  :root{--bg1:#eef2ff;--bg2:#fdf2f8;--ink:#1f2937;--soft:#6b7280;--accent:#6366f1;--accent2:#ec4899;
+    --good:#22c55e;--macblue:#0a63ff;--desk1:#2b6cff;--desk2:#8a5cf6;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+  #banner .extra{margin-top:8px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;}
+  #replayBtn{font-size:14px;font-weight:700;color:var(--accent);background:#eef2ff;border:1px solid #dfe4ff;
+    border-radius:999px;padding:7px 16px;cursor:pointer;display:none;}
+  #stage{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;
+    background:linear-gradient(135deg,var(--desk1),var(--desk2));display:flex;align-items:center;justify-content:center;padding:18px;}
+
+  .bwin{background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.30);width:min(580px,96%);overflow:hidden;
+    display:flex;flex-direction:column;}
+  .btool{height:46px;background:linear-gradient(#f6f6f7,#e9e9eb);display:flex;align-items:center;gap:8px;padding:0 12px;
+    border-bottom:1px solid #e1e1e4;}
+  .dots{display:flex;gap:7px;margin-right:4px;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dot.r{background:#ff5f57;}.dot.y{background:#febc2e;}.dot.g{background:#28c840;}
+  .navbtn{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5b6270;
+    font-size:17px;cursor:pointer;flex:0 0 auto;}
+  .navbtn:hover{background:rgba(0,0,0,.06);}
+  .navbtn.off{opacity:.32;pointer-events:none;}
+  .addrbar{flex:1;height:32px;background:#fff;border:1px solid #d5d5da;border-radius:8px;display:flex;align-items:center;
+    padding:0 10px;gap:7px;font-size:14px;color:#374151;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);min-width:0;}
+  .addrbar .lock{font-size:11px;color:#9ca3af;}
+  .addrbar input{border:none;outline:none;flex:1;font-size:14px;background:transparent;min-width:0;color:#374151;}
+  .addrbar.focusRing{border-color:var(--macblue);box-shadow:0 0 0 3px rgba(10,99,255,.25);}
+  .tabstrip{height:34px;background:#e6e6e9;display:flex;align-items:flex-end;gap:2px;padding:0 8px;}
+  .tab{height:29px;background:#d3d3d8;border-radius:8px 8px 0 0;padding:0 12px;display:flex;align-items:center;gap:8px;
+    font-size:13px;color:#4b5563;max-width:170px;white-space:nowrap;overflow:hidden;}
+  .tab.active{background:#fff;color:#1f2937;}
+  .tabx{font-size:13px;color:#9ca3af;cursor:pointer;border-radius:4px;padding:0 3px;}
+  .tabx:hover{background:rgba(0,0,0,.1);}
+  .bcontent{background:#fff;flex:1;min-height:150px;padding:24px;text-align:center;overflow:hidden;transition:font-size .2s;}
+  .bcontent h2{margin:6px 0;}
+  .bcontent p{color:#6b7280;line-height:1.5;margin:8px 0;}
+  .fav{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+  .favIcon{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;
+    box-shadow:0 3px 8px rgba(0,0,0,.12);}
+
+  @keyframes tpulse{0%,100%{box-shadow:0 0 0 0 rgba(10,99,255,.55);}50%{box-shadow:0 0 0 7px rgba(10,99,255,0);}}
+  .target{animation:tpulse 1.4s infinite;border-radius:8px;position:relative;z-index:5;}
+  .miniToast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(43,47,54,.92);color:#fff;
+    font-size:13px;font-weight:600;padding:8px 15px;border-radius:999px;z-index:35;box-shadow:0 6px 16px rgba(0,0,0,.3);transition:opacity .2s;}
+
+  .demoCursor{position:absolute;width:26px;height:26px;z-index:40;pointer-events:none;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));transition:left .5s ease,top .5s ease,opacity .2s;}
+  .demoCursor.click{animation:clickPulse .35s ease;}
+  @keyframes clickPulse{0%{transform:scale(1);}50%{transform:scale(.8);}100%{transform:scale(1);}}
+  .clickRipple{position:absolute;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
+    z-index:39;pointer-events:none;animation:ripple .5s ease-out forwards;}
+  @keyframes ripple{from{transform:scale(.3);opacity:.85;}to{transform:scale(2.4);opacity:0;}}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:60;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:95;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+
+  .macWin{background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.30);width:min(620px,96%);overflow:hidden;display:flex;flex-direction:column;}
+  .macBar{height:42px;background:linear-gradient(#f7f7f8,#e9e9eb);display:flex;align-items:center;gap:10px;padding:0 13px;border-bottom:1px solid #dedee3;}
+  .macTitle{font-size:13px;font-weight:700;color:#4b5563;flex:1;text-align:center;margin-right:58px;white-space:nowrap;}
+  .docArea{min-height:260px;background:#fffdf7;padding:24px;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;}
+  .paper{width:min(420px,92%);min-height:128px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 5px 16px rgba(0,0,0,.08);padding:20px;font-size:22px;line-height:1.55;color:#1f2937;}
+  .paper .missing{color:#ef4444;text-decoration:line-through;opacity:.75;}
+  .safeBtn{font-size:16px;font-weight:800;color:#fff;background:linear-gradient(180deg,#2f8cff,#0a63ff);border:none;border-radius:10px;padding:11px 18px;cursor:pointer;box-shadow:0 4px 10px rgba(10,99,255,.25);}
+  .safeBtn.secondary{background:linear-gradient(180deg,#34d399,#22c55e);box-shadow:0 4px 10px rgba(34,197,94,.24);}
+  .keyHint{display:inline-flex;align-items:center;gap:4px;font-weight:800;color:#4b5563;background:#f8fafc;border:1px solid #e5e7eb;border-radius:999px;padding:5px 10px;}
+  .keycap{min-width:28px;height:26px;padding:0 7px;border-radius:7px;background:linear-gradient(#fff,#e9edf3);border:1px solid #cfd5dd;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.12);display:inline-flex;align-items:center;justify-content:center;font-size:14px;color:#374151;}
+  .trashBody{min-height:280px;background:#f8fafc;padding:22px;display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap;}
+  .finderSide{width:140px;align-self:stretch;background:#eef2f7;border-radius:10px;padding:14px;color:#64748b;font-size:14px;}
+  .trashMain{flex:1;min-width:260px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px;text-align:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.8);}
+  .fileIcon{width:92px;height:104px;margin:0 auto 12px;background:#fff;border:2px solid #cbd5e1;border-radius:10px;position:relative;box-shadow:0 5px 14px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;font-size:38px;}
+  .fileIcon:after{content:"";position:absolute;right:-2px;top:-2px;border-left:22px solid transparent;border-bottom:22px solid #e0ecff;}
+  .desktopMock{min-height:285px;width:100%;background:linear-gradient(135deg,#2775ff,#9b5cf6);padding:18px;position:relative;display:flex;align-items:center;justify-content:center;}
+  .closedNote{background:rgba(255,255,255,.92);border-radius:16px;padding:22px;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.24);max-width:420px;}
+  .closedNote .bigIcon{font-size:52px;margin-bottom:6px;}
+  .rescues{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:12px;margin:18px 0;width:min(620px,96%);}
+  .rescueCard{background:#fff;border-radius:14px;padding:16px;box-shadow:0 8px 20px rgba(0,0,0,.12);text-align:center;font-weight:800;}
+  .rescueCard .ico{font-size:38px;margin-bottom:8px;}
+  .capstone{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:rgba(255,255,255,.86);border-radius:18px;padding:24px;box-shadow:0 12px 35px rgba(0,0,0,.18);}
+  .capMsg{font-size:20px;font-weight:800;line-height:1.45;max-width:650px;}
+  @media(max-width:620px){.rescues{grid-template-columns:1fr}.paper{font-size:18px}.macTitle{margin-right:0}}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+        <div class="extra"><button id="replayBtn" onclick="replayDemo()"></button></div>
+      </div>
+      <div id="stage"></div>
+    </div>
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+  </div>
+</div>
+
+<script>
+/* ===== language ===== */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"↩️ 실수해도 괜찮아요",en:"↩️ You can't break it"},
+  sub:{ko:"거의 모든 실수는 되돌릴 수 있어요. 마음 편히 눌러 봐요 😊",
+       en:"Almost any mistake can be undone. Relax and try 😊"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  replay:{ko:"👀 다시 보여주기",en:"👀 Show me again"},
+  next:{ko:"다음 ›",en:"Next ›"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"이제 안 무서워요!",en:"Nothing to fear!"},
+  finalMsg:{ko:"되돌리기·휴지통 되살리기·닫은 창 다시 열기까지 다 배웠어요 💖",
+            en:"Undo, restore from Trash, reopen a closed window — all learned 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("replayBtn").textContent=T(UI.replay);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(!doneLock){ loadLevel(current); } }
+
+/* ===== praise + sound + confetti ===== */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ===== cursors ===== */
+const SVG_ARROW=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 3 L5 20 L9.5 15.8 L12.6 22 L15.2 20.8 L12.1 14.8 L18 14.8 Z" fill="#111" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const SVG_IBEAM=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g><g fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g></svg>`;
+function makeCursor(kind){ const c=document.createElement("div"); c.className="demoCursor";
+  c.innerHTML=kind==="ibeam"?SVG_IBEAM:SVG_ARROW; return c; }
+
+/* ===== state + helpers ===== */
+const stage=document.getElementById("stage");
+let locked=false,currentDemo=null;
+function clearStage(){ stage.innerHTML=""; }
+function stageXY(el){ const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect();
+  return {x:r.left-s.left+r.width/2,y:r.top-s.top+r.height/2}; }
+function ripple(x,y){ const r=document.createElement("div"); r.className="clickRipple";
+  r.style.left=(x-13)+"px"; r.style.top=(y-13)+"px"; stage.appendChild(r); setTimeout(()=>r.remove(),520); }
+function markTarget(el){ if(el) el.classList.add("target"); }
+function showToast(msg){ let t=stage.querySelector(".miniToast");
+  if(!t){ t=document.createElement("div"); t.className="miniToast"; stage.appendChild(t); }
+  t.textContent=msg; t.style.opacity="1"; clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>{ t.style.opacity="0"; },1800); }
+
+/* ===== demos ===== */
+function replayDemo(){ if(currentDemo) currentDemo(); }
+function showReplay(on){ document.getElementById("replayBtn").style.display=on?"inline-flex":"none"; }
+function autoDemo(fn,delay){ currentDemo=fn; showReplay(!!fn); if(fn) setTimeout(()=>{ if(!locked) fn(); },delay||800); }
+function demoTap(getTarget,atClick,reset,holdMs,kind){
+  return function run(){ if(locked) return; locked=true;
+    const target=getTarget(); if(!target){ locked=false; return; }
+    const cur=makeCursor(kind); stage.appendChild(cur);
+    const {x,y}=stageXY(target);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+34)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-4)+"px"; cur.style.top=(kind==="ibeam"?y-13:y-2)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(560,.05); if(atClick)atClick(target); },760);
+    setTimeout(()=>{ if(reset)reset(target); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },760+(holdMs||900));
+  };
+}
+function demoType(getInput,word,holdMs){
+  return function run(){ if(locked) return; locked=true;
+    const f=getInput(); if(!f){ locked=false; return; }
+    const bar=f.closest(".addrbar"); const {x,y}=stageXY(f);
+    const cur=makeCursor("ibeam"); stage.appendChild(cur);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+28)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-6)+"px"; cur.style.top=(y-13)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(540,.05); if(bar)bar.classList.add("focusRing"); f.value="";
+      let i=0; const iv=setInterval(()=>{ f.value=word.slice(0,++i); beep(700,.03); if(i>=word.length) clearInterval(iv); },170);
+    },780);
+    setTimeout(()=>{ f.value=""; if(bar)bar.classList.remove("focusRing"); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },780+(holdMs||1600));
+  };
+}
+
+/* ===== game builders ===== */
+function macWindow(title,bodyClass){
+  const win=document.createElement("div"); win.className="macWin";
+  win.innerHTML=`<div class="macBar"><div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div><div class="macTitle">${T(title)}</div></div><div class="${bodyClass||"docArea"}"></div>`;
+  stage.appendChild(win); return win;
+}
+function keycaps(keys){ return `<span class="keyHint">${keys.map(k=>`<span class="keycap">${k}</span>`).join("")}</span>`; }
+function actionButton(label,cls){ const b=document.createElement("button"); b.className="safeBtn"+(cls?" "+cls:""); b.textContent=T(label); return b; }
+
+/* ===== levels ===== */
+const levels=[
+  { title:{ko:"되돌리기 (⌘Z)",en:"Undo (⌘Z)"},
+    instr:{ko:"문장에서 마지막 말이 실수로 지워졌어요. 되돌리기를 누르면 바로 돌아와요.",
+           en:"The last words were accidentally deleted. Press Undo and they come right back."},
+    hint:{ko:"되돌리기 버튼을 눌러 문장을 되살려 보세요.",en:"Click Undo to bring the words back."},
+    build(done){
+      document.onkeydown=null;
+      const full={ko:"오늘은 차분하게 MacBook을 배워요.",en:"Today I am calmly learning my MacBook."};
+      const short={ko:"오늘은 차분하게",en:"Today I am calmly"};
+      const win=macWindow({ko:"텍스트 편집 — 연습 메모",en:"TextEdit — Practice Note"},"docArea");
+      const body=win.querySelector(".docArea");
+      const paper=document.createElement("div"); paper.className="paper";
+      paper.innerHTML=`<span>${T(short)}</span> <span class="missing">${T({ko:"MacBook을 배워요.",en:"learning my MacBook."})}</span>`;
+      const hint=document.createElement("div"); hint.innerHTML=keycaps(["⌘","Z"]);
+      const btn=actionButton({ko:"되돌리기 / Undo",en:"되돌리기 / Undo"});
+      body.append(paper,hint,btn); markTarget(btn);
+      function restore(){ paper.textContent=T(full); showToast(T({ko:"걱정 마세요. 글이 돌아왔어요!",en:"No worry. The text came back!"})); }
+      btn.addEventListener("click",()=>{ if(locked)return; restore(); done("↩️",{ko:"되돌렸어요!",en:"Undone!"}); });
+      document.onkeydown=e=>{ if(!locked&&e.metaKey&&e.key.toLowerCase()==="z"){ restore(); done("↩️",{ko:"⌘Z로 되돌렸어요!",en:"Undone with ⌘Z!"}); } };
+      autoDemo(demoTap(()=>btn,()=>{ paper.textContent=T(full); },()=>{ paper.innerHTML=`<span>${T(short)}</span> <span class="missing">${T({ko:"MacBook을 배워요.",en:"learning my MacBook."})}</span>`; },900),900);
+    } },
+  { title:{ko:"휴지통에서 되살리기",en:"Restore from Trash"},
+    instr:{ko:"파일을 지워도 휴지통 안에 있으면 다시 제자리로 되돌릴 수 있어요.",
+           en:"Even if a file is deleted, you can put it back from Trash."},
+    hint:{ko:"제자리로 되돌려놓기 버튼을 눌러 보세요.",en:"Click Put Back."},
+    build(done){
+      document.onkeydown=null;
+      const win=macWindow({ko:"휴지통",en:"Trash"},"trashBody");
+      const body=win.querySelector(".trashBody");
+      body.innerHTML=`<div class="finderSide">${T({ko:"즐겨찾기",en:"Favorites"})}<br><br>🏠 ${T({ko:"홈",en:"Home"})}<br>🗑️ ${T({ko:"휴지통",en:"Trash"})}</div><div class="trashMain"><div class="fileIcon">📄</div><div style="font-weight:800;margin-bottom:12px;">${T({ko:"가족사진 메모.txt",en:"Family photo note.txt"})}</div></div>`;
+      const main=body.querySelector(".trashMain");
+      const btn=actionButton({ko:"제자리로 되돌려놓기 / Put Back",en:"제자리로 되돌려놓기 / Put Back"},"secondary");
+      main.appendChild(btn); markTarget(btn);
+      function putBack(){ main.innerHTML=`<div style="font-size:54px;">✅</div><h2>${T({ko:"파일이 원래 자리로 돌아갔어요",en:"The file went back where it belongs"})}</h2><p>${T({ko:"휴지통은 마지막 기회를 줘요.",en:"Trash gives you a second chance."})}</p>`; }
+      btn.addEventListener("click",()=>{ if(locked)return; putBack(); done("🗑️",{ko:"휴지통에서 되살렸어요!",en:"Restored from Trash!"}); });
+      autoDemo(demoTap(()=>btn,null,null,700),900);
+    } },
+  { title:{ko:"실수로 닫은 창 다시 열기",en:"Reopen a closed tab/window"},
+    instr:{ko:"창이나 탭을 닫아도 다시 열 수 있어요. 다시 열기를 눌러 보세요.",
+           en:"Closed a tab or window by mistake? You can reopen it."},
+    hint:{ko:"다시 열기 버튼을 눌러 닫은 창을 되살려 보세요.",en:"Click Reopen to bring the closed window back."},
+    build(done){
+      document.onkeydown=null;
+      const wrap=document.createElement("div"); wrap.className="desktopMock"; stage.appendChild(wrap);
+      const note=document.createElement("div"); note.className="closedNote";
+      note.innerHTML=`<div class="bigIcon">🙈</div><h2>${T({ko:"방금 창을 닫았어요",en:"A window just closed"})}</h2><p>${T({ko:"괜찮아요. 바로 다시 열 수 있어요.",en:"It's okay. You can reopen it right away."})}</p><div style="margin:10px 0;">${keycaps(["⌘","⇧","T"])}</div>`;
+      const btn=actionButton({ko:"다시 열기 / Reopen",en:"다시 열기 / Reopen"}); note.appendChild(btn); wrap.appendChild(note); markTarget(btn);
+      function reopen(){ note.innerHTML=`<div class="bigIcon">🪟</div><h2>${T({ko:"창이 다시 열렸어요!",en:"The window reopened!"})}</h2><p>${T({ko:"닫아도 끝이 아니에요.",en:"Closed doesn't mean gone forever."})}</p>`; }
+      btn.addEventListener("click",()=>{ if(locked)return; reopen(); done("🪟",{ko:"닫은 창을 다시 열었어요!",en:"Reopened the closed window!"}); });
+      document.onkeydown=e=>{ if(!locked&&e.metaKey&&e.shiftKey&&e.key.toLowerCase()==="t"){ reopen(); done("🪟",{ko:"⌘⇧T로 다시 열었어요!",en:"Reopened with ⌘⇧T!"}); } };
+      autoDemo(demoTap(()=>btn,null,null,700),900);
+    } },
+  { title:{ko:"기억하면 마음이 편해요",en:"Remember and relax"},
+    instr:{ko:"오늘 배운 세 가지 구조 신호예요. 알겠어요를 누르면 끝나요.",
+           en:"These are the three rescue signals from today. Tap Got it to finish."},
+    hint:{ko:"준비되면 알겠어요 버튼을 누르세요.",en:"Tap Got it when you're ready."},
+    build(done){
+      document.onkeydown=null;
+      const box=document.createElement("div"); box.className="capstone";
+      box.innerHTML=`<div class="capMsg">${T({ko:"기억하세요: ⌘Z 되돌리기, 휴지통은 되살릴 수 있어요, 닫은 창도 다시 열려요. 컴퓨터는 잘 안 망가져요!",en:"Remember: ⌘Z undoes things, Trash can be restored, closed windows reopen. You really can't break it!"})}</div><div class="rescues"><div class="rescueCard"><div class="ico">↩️</div>${T({ko:"되돌리기",en:"Undo"})}</div><div class="rescueCard"><div class="ico">🗑️</div>${T({ko:"휴지통 되살리기",en:"Restore Trash"})}</div><div class="rescueCard"><div class="ico">🪟</div>${T({ko:"닫은 창 다시 열기",en:"Reopen closed window"})}</div></div>`;
+      const btn=document.createElement("button"); btn.className="big gotBtn"; btn.textContent=T({ko:"알겠어요 / Got it",en:"알겠어요 / Got it"});
+      btn.addEventListener("click",()=>{ if(!locked) done("💖",{ko:"이제 안 무서워요!",en:"Nothing to fear!"}); });
+      box.appendChild(btn); stage.appendChild(box); autoDemo(null);
+    } }
+];
+
+/* ===== engine ===== */
+let current=0,doneLock=false;
+const els={ bar:document.getElementById("progressBar"),step:document.getElementById("stepText"),
+  main:document.getElementById("mainView"),final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"),msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+function wireGotAdvance(){
+  const gb=stage.querySelector(".gotBtn"); if(!gb) return;
+  const fresh=gb.cloneNode(true); gb.parentNode.replaceChild(fresh,gb);
+  fresh.addEventListener("click",()=>{ if(locked||doneLock) return; doneLock=true; locked=true;
+    chime(); confetti(); els.bar.style.width=((current+1)/levels.length*100)+"%";
+    setTimeout(()=>{ doneLock=false; current++; if(current>=levels.length) showFinal(); else loadLevel(current); },240);
+  });
+}
+function loadLevel(i){
+  clearStage(); locked=false; currentDemo=null; showReplay(false);
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.textContent=T(lv.instr); banner.h.textContent="💡 "+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  requestAnimationFrame(()=>{ lv.build(onLevelDone); wireGotAdvance(); });
+}
+function onLevelDone(emoji,msg){
+  if(doneLock) return; doneLock=true; locked=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(()=>{
+    els.msg.textContent=msg?T(msg):praise();
+    els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime();
+  },650);
+}
+function goNext(){
+  els.overlay.style.display="none"; doneLock=false;
+  current++; if(current>=levels.length) showFinal(); else loadLevel(current);
+}
+function skipLevel(){ if(doneLock) return; current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block"; try{localStorage.setItem("momHub:done:undo","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ current=0; doneLock=false; els.main.style.display="flex"; els.skip.style.display="block";
+  els.final.style.display="none"; loadLevel(0); }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+applyStatic(); loadLevel(0);
+</script>
+</body>
+</html>

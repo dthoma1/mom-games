@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 메뉴 배우기</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#6366f1; --accent2:#ec4899; --good:#22c55e;
+    --desk1:#5b8def; --desk2:#a06cd5; --menuhi:#2f7bff;
+  }
+  *{box-sizing:border-box; -webkit-user-select:none; user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;
+    overscroll-behavior:none;touch-action:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1000px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;
+    border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:120;}
+
+  /* intro */
+  #introView{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(99,102,241,.12);padding:26px;text-align:center;}
+  #introArt{font-size:74px;line-height:1.15;margin-bottom:10px;}
+  #introTitle{font-size:26px;font-weight:800;margin:4px 0;}
+  #introText{font-size:17px;line-height:1.7;max-width:640px;color:#374151;}
+  #introText b{color:var(--accent);}
+  .introBtns{margin-top:20px;display:flex;gap:10px;}
+
+  /* lesson banner */
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;}
+  #banner .t{font-size:18px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  /* fake desktop */
+  #desktop{position:relative;flex:1;min-height:0;border-radius:14px;overflow:hidden;
+    background:linear-gradient(160deg,var(--desk1),var(--desk2));
+    box-shadow:inset 0 0 60px rgba(0,0,0,.12), 0 18px 40px rgba(0,0,0,.18);}
+
+  #menubar{position:absolute;top:0;left:0;right:0;height:28px;background:rgba(255,255,255,.6);
+    backdrop-filter:blur(10px);display:flex;align-items:center;gap:2px;padding:0 8px;z-index:20;font-size:14px;}
+  .mbTitle{padding:3px 9px;border-radius:6px;cursor:pointer;font-weight:600;color:#111827;white-space:nowrap;}
+  .mbTitle.app{font-weight:800;}
+  .mbTitle:hover{background:rgba(0,0,0,.08);}
+  .mbTitle.open{background:var(--menuhi);color:#fff;}
+  .mbTitle.pulse,.trayIcon.pulse,#clockBtn.pulse{animation:pulse 1.3s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}50%{box-shadow:0 0 0 4px rgba(255,255,255,.75);}}
+  #mbRight{margin-left:auto;display:flex;align-items:center;gap:4px;}
+  .trayIcon{padding:3px 6px;border-radius:6px;cursor:pointer;font-size:15px;line-height:1;}
+  .trayIcon:hover,#clockBtn:hover{background:rgba(0,0,0,.08);}
+  .trayIcon.open{background:var(--menuhi);}
+  #clockBtn{padding:3px 8px;border-radius:6px;cursor:pointer;font-weight:600;color:#111827;font-size:13px;white-space:nowrap;}
+  #clockBtn.open{background:var(--menuhi);color:#fff;}
+
+  /* desktop icons */
+  #deskIcons{position:absolute;top:44px;left:16px;display:flex;flex-direction:column;gap:16px;z-index:5;}
+  .deskFile{width:88px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;}
+  .deskFile .ic{font-size:46px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));}
+  .deskFile .nm{font-size:12px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);background:rgba(0,0,0,.08);
+    padding:1px 6px;border-radius:5px;text-align:center;}
+  .deskFile.sel .nm{background:var(--menuhi);}
+  .deskFile.pulse .ic{animation:pulse 1.3s ease-in-out infinite;border-radius:10px;}
+
+  #deskHint{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);color:rgba(255,255,255,.85);
+    font-size:14px;text-align:center;z-index:1;text-shadow:0 1px 3px rgba(0,0,0,.4);pointer-events:none;}
+
+  /* menus / popovers layer */
+  #layer{position:absolute;inset:0;z-index:60;display:none;}
+  #backdrop{position:absolute;inset:0;}
+  .menu{position:absolute;background:rgba(250,250,252,.98);backdrop-filter:blur(12px);border:1px solid rgba(0,0,0,.12);
+    border-radius:9px;box-shadow:0 12px 34px rgba(0,0,0,.28);padding:5px;min-width:190px;z-index:61;
+    animation:menuIn .09s ease-out;}
+  @keyframes menuIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+  .mRow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:5px 10px;border-radius:6px;
+    font-size:13.5px;color:#1f2937;cursor:pointer;white-space:nowrap;}
+  .mRow:hover{background:var(--menuhi);color:#fff;}
+  .mRow .sc{font-size:12px;color:#9ca3af;}
+  .mRow:hover .sc{color:rgba(255,255,255,.8);}
+  .mRow.disabled{color:#c3c6cf;cursor:default;}
+  .mRow.disabled:hover{background:transparent;color:#c3c6cf;}
+  .mRow.danger{color:#dc2626;}
+  .mRow.danger:hover{background:#dc2626;color:#fff;}
+  .mSep{height:1px;background:rgba(0,0,0,.1);margin:5px 8px;}
+
+  /* popover panels */
+  .popover{position:absolute;background:rgba(245,245,248,.98);backdrop-filter:blur(14px);border:1px solid rgba(0,0,0,.12);
+    border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.3);padding:14px;z-index:61;animation:menuIn .1s ease-out;}
+  .poTitle{font-size:13px;font-weight:800;color:#111827;margin-bottom:8px;}
+  .netRow{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:13px;cursor:pointer;}
+  .netRow:hover{background:rgba(0,0,0,.06);}
+  .netRow.on{font-weight:700;}
+  .ccGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:230px;}
+  .ccTile{background:rgba(255,255,255,.8);border-radius:12px;padding:10px;font-size:12px;font-weight:600;color:#374151;
+    display:flex;align-items:center;gap:8px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  .ccTile .d{font-size:20px;}
+  .ccSlider{grid-column:1/3;background:rgba(255,255,255,.8);border-radius:12px;padding:10px;}
+  .ccSlider .lab{font-size:11px;color:#6b7280;margin-bottom:5px;}
+  .track{height:10px;border-radius:999px;background:linear-gradient(90deg,#c7d2fe var(--v,60%), #e5e7eb var(--v,60%));}
+
+  /* notification center */
+  #notif{position:absolute;top:0;right:0;bottom:0;width:300px;background:rgba(30,30,40,.28);backdrop-filter:blur(18px);
+    z-index:55;transform:translateX(105%);transition:transform .32s cubic-bezier(.3,.7,.3,1);padding:36px 14px 14px;
+    display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+  #notif.open{transform:none;}
+  .nWidget{background:rgba(255,255,255,.9);border-radius:16px;padding:14px;text-align:center;}
+  .nWidget .day{font-size:13px;color:#ef4444;font-weight:700;}
+  .nWidget .date{font-size:40px;font-weight:800;color:#111827;line-height:1;}
+  .nCard{background:rgba(255,255,255,.92);border-radius:14px;padding:10px 12px;box-shadow:0 4px 14px rgba(0,0,0,.14);
+    display:flex;gap:10px;align-items:flex-start;cursor:pointer;}
+  .nCard .ni{font-size:24px;}
+  .nCard .nt{font-size:13px;font-weight:700;color:#111827;}
+  .nCard .nb{font-size:12px;color:#4b5563;margin-top:1px;}
+
+  #ctxHintDot{position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,.4);
+    display:none;z-index:6;animation:pulse 1.2s ease-in-out infinite;}
+
+  #successOverlay{position:absolute;inset:0;background:rgba(255,255,255,.93);display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:6px;border-radius:14px;z-index:100;}
+  #successOverlay .be{font-size:76px;animation:pop .5s ease;}
+  #successOverlay .msg{font-size:24px;font-weight:800;color:var(--good);}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:130;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+  button.big.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+  .toast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;
+    padding:8px 16px;border-radius:999px;font-size:13px;z-index:70;opacity:0;transition:opacity .2s;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipStep()"></button>
+
+    <div id="introView" style="display:none;">
+      <div id="introArt">📋</div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button class="big soft" id="introBack" onclick="prevIntro()"></button>
+        <button class="big" id="introNext" onclick="nextIntro()"></button>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+      </div>
+      <div id="desktop">
+        <div id="menubar">
+          <span class="mbTitle app-logo" data-menu="apple"></span>
+          <span class="mbTitle app" data-menu="app">Finder</span>
+          <span class="mbTitle" data-menu="file" id="menuFile"></span>
+          <span class="mbTitle" data-menu="edit" id="menuEdit"></span>
+          <span class="mbTitle" data-menu="view" id="menuView"></span>
+          <span class="mbTitle" data-menu="help" id="menuHelp"></span>
+          <span id="mbRight">
+            <span class="trayIcon" data-tray="battery">🔋</span>
+            <span class="trayIcon" data-tray="wifi">📶</span>
+            <span class="trayIcon" data-tray="search">🔍</span>
+            <span class="trayIcon" data-tray="control">🎛️</span>
+            <span id="clockBtn"></span>
+          </span>
+        </div>
+        <div id="deskIcons"></div>
+        <div id="deskHint"></div>
+        <div id="ctxHintDot"></div>
+        <div id="notif"></div>
+        <div id="layer"><div id="backdrop"></div></div>
+      </div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div></div>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"📋 엄마의 메뉴 배우기",en:"📋 Learning Menus"}, sub:{ko:"숨어 있는 메뉴들을 여는 법을 하나씩 배워요.",en:"Learn how to open hidden menus, one step at a time."},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"}, back:{ko:"‹ 이전",en:"‹ Back"}, next:{ko:"다음 ▶",en:"Next ▶"}, start:{ko:"시작하기 ▶",en:"Start ▶"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"}, hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"메뉴 박사님!",en:"Menu expert!"}, finalMsg:{ko:"이제 어떤 메뉴든 척척 열 수 있어요. 정말 멋져요 💖",en:"Now you can open any menu with confidence. Wonderful work 💖"},
+  file:{ko:"파일",en:"File"}, edit:{ko:"편집",en:"Edit"}, view:{ko:"보기",en:"View"}, help:{ko:"도움말",en:"Help"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`}, finalStep:{ko:"완료! 🎊",en:"Done! 🎊"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1); document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip); document.getElementById("introBack").textContent=T(UI.back);
+  document.getElementById("restartBtn").textContent=T(UI.restart); document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle); document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.getElementById("menuFile").textContent=T(UI.file); document.getElementById("menuEdit").textContent=T(UI.edit);
+  document.getElementById("menuView").textContent=T(UI.view); document.getElementById("menuHelp").textContent=T(UI.help);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG)); tickClock();
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic(); els.overlay.style.display="none";
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(phase==="intro") showIntro(); else loadLesson(lidx); }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko; return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+const click=()=>beep(520,.05);
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ---------- elements ---------- */
+const desktop=document.getElementById("desktop");
+const menubar=document.getElementById("menubar");
+const layer=document.getElementById("layer");
+const backdrop=document.getElementById("backdrop");
+const notif=document.getElementById("notif");
+const deskIcons=document.getElementById("deskIcons");
+const deskHint=document.getElementById("deskHint");
+const ctxDot=document.getElementById("ctxHintDot");
+const clockBtn=document.getElementById("clockBtn");
+
+/* ---------- menu data ---------- */
+const MENUS={
+  apple:[ {label:{ko:"이 Mac에 관하여",en:"About This Mac"},key:"about"},{sep:1},{label:{ko:"시스템 설정…",en:"System Settings…"},key:"settings"},{sep:1},
+    {label:{ko:"잠자기",en:"Sleep"},key:"sleep"},{label:{ko:"재시동…",en:"Restart…"},key:"restart"},{label:{ko:"시스템 종료…",en:"Shut Down…"},key:"shutdown"} ],
+  app:[ {label:{ko:"Finder에 관하여",en:"About Finder"}},{sep:1},{label:{ko:"환경설정…",en:"Settings…"},sc:"⌘,"},{sep:1},{label:{ko:"Finder 가리기",en:"Hide Finder"},sc:"⌘H"},{sep:1},{label:{ko:"Finder 종료",en:"Quit Finder"},key:"quit",sc:"⌘Q"} ],
+  file:[ {label:{ko:"새로운 Finder 윈도우",en:"New Finder Window"},key:"newwin",sc:"⌘N"},{label:{ko:"새로운 폴더",en:"New Folder"},key:"newfolder",sc:"⇧⌘N"},{sep:1},
+    {label:{ko:"열기",en:"Open"},sc:"⌘O"},{label:{ko:"휴지통으로 이동",en:"Move to Trash"},sc:"⌘⌫"},{sep:1},{label:{ko:"윈도우 닫기",en:"Close Window"},sc:"⌘W"} ],
+  edit:[ {label:{ko:"실행 취소",en:"Undo"},sc:"⌘Z",disabled:1},{sep:1},{label:{ko:"오려두기",en:"Cut"},sc:"⌘X"},{label:{ko:"복사하기",en:"Copy"},key:"copy",sc:"⌘C"},
+    {label:{ko:"붙여넣기",en:"Paste"},sc:"⌘V"},{sep:1},{label:{ko:"전체 선택",en:"Select All"},sc:"⌘A"} ],
+  view:[ {label:{ko:"아이콘으로 보기",en:"as Icons"},key:"icon"},{label:{ko:"목록으로 보기",en:"as List"}},{label:{ko:"계단식으로 보기",en:"as Columns"}},{sep:1},{label:{ko:"정렬 방식",en:"Sort By"},disabled:1} ],
+  help:[ {label:{ko:"도움말 검색",en:"Search Help"}},{label:{ko:"macOS 도움말",en:"macOS Help"}} ],
+};
+const MENU_TITLE={apple:{ko:"사과 메뉴",en:"Apple menu"},app:{ko:"앱 메뉴",en:"App menu"},file:UI.file,edit:UI.edit,view:UI.view,help:UI.help};
+
+/* ---------- open / close ---------- */
+let openState=null; // {kind, name}
+function closeMenus(){
+  layer.style.display="none";
+  [...menubar.querySelectorAll(".mbTitle,.trayIcon")].forEach(e=>e.classList.remove("open"));
+  clockBtn.classList.remove("open");
+  // remove any menu/popover nodes (keep backdrop)
+  [...layer.querySelectorAll(".menu,.popover")].forEach(n=>n.remove());
+  openState=null;
+}
+function closeNotif(){ notif.classList.remove("open"); clockBtn.classList.remove("open"); }
+
+function placeNode(node, pos){
+  layer.appendChild(node); layer.style.display="block";
+  const dw=desktop.clientWidth;
+  const nw=node.offsetWidth, nh=node.offsetHeight;
+  let left;
+  if(pos.left!=null) left=pos.left;
+  else if(pos.right!=null) left=dw-pos.right-nw;
+  else if(pos.cx!=null) left=pos.cx;
+  left=Math.max(6, Math.min(left, dw-nw-6));
+  let top=pos.top!=null?pos.top:28;
+  node.style.left=left+"px"; node.style.top=top+"px";
+}
+
+function buildMenuList(items, onSelect){
+  const m=document.createElement("div"); m.className="menu";
+  items.forEach(it=>{
+    if(it.sep){ const s=document.createElement("div"); s.className="mSep"; m.appendChild(s); return; }
+    const r=document.createElement("div");
+    r.className="mRow"+(it.disabled?" disabled":"")+(it.danger?" danger":"");
+    r.innerHTML=`<span>${T(it.label)}</span>${it.sc?`<span class="sc">${it.sc}</span>`:""}`;
+    if(!it.disabled) r.addEventListener("click",e=>{ e.stopPropagation(); onSelect(it); });
+    m.appendChild(r);
+  });
+  return m;
+}
+
+function openTopMenu(name, anchor){
+  closeNotif();
+  if(openState&&openState.kind==="top"&&openState.name===name){ closeMenus(); return; }
+  closeMenus();
+  const items=MENUS[name];
+  const m=buildMenuList(items,(it)=>{ handleMenuSelect(name,it); });
+  anchor.classList.add("open");
+  placeNode(m,{left:anchor.offsetLeft, top:28});
+  openState={kind:"top",name};
+  click();
+  notifyGame("menu-open",{menu:name});
+}
+function handleMenuSelect(menu,it){
+  closeMenus();
+  if(it.key==="quit"){ flash(T({ko:"앱을 종료했어요",en:"Quit the app"})); }
+  else if(it.key==="about"){ flash(T({ko:"이 Mac에 관하여 창을 열었어요",en:"Opened About This Mac"})); }
+  else if(it.key==="settings"){ flash(T({ko:"시스템 설정을 열었어요",en:"Opened System Settings"})); }
+  else if(it.key==="newfolder"){ flash(T({ko:"새 폴더를 만들었어요",en:"Made a new folder"})); }
+  else if(it.label){ flash(T({ko:`‘${T(it.label)}’을(를) 골랐어요`,en:`Chose ‘${T(it.label)}’`})); }
+  beep(700,.09);
+  notifyGame("menu-select",{menu,key:it.key,label:it.label});
+}
+
+/* ---------- tray popovers ---------- */
+function trayContent(name){
+  const p=document.createElement("div"); p.className="popover";
+  if(name==="wifi"){
+    p.innerHTML=`<div class="poTitle">Wi‑Fi</div>`;
+    [{ko:"우리집 5G",en:"Home 5G"},{ko:"우리집",en:"Home"},{ko:"옆집 카페",en:"Neighbor Cafe"},{ko:"공용 와이파이",en:"Public Wi‑Fi"}].forEach((n,i)=>{
+      const r=document.createElement("div"); r.className="netRow"+(i===0?" on":"");
+      r.innerHTML=`<span>${i===0?"✓":"📶"}</span><span>${T(n)}</span>`;
+      r.addEventListener("click",e=>{ e.stopPropagation(); closeMenus(); flash(T({ko:`‘${T(n)}’에 연결했어요`,en:`Connected to ‘${T(n)}’`})); notifyGame("tray-select",{tray:"wifi",value:T(n)}); });
+      p.appendChild(r);
+    });
+  } else if(name==="battery"){
+    p.innerHTML=`<div class="poTitle">${T({ko:"배터리",en:"Battery"})}</div><div style="font-size:13px;color:#374151;">🔋 100% — ${T({ko:"충전 완료",en:"Fully charged"})}<br><span style="color:#6b7280;font-size:12px;">${T({ko:"전원 어댑터 사용 중",en:"Using power adapter"})}</span></div>`;
+  } else if(name==="search"){
+    p.innerHTML=`<div class="poTitle">${T({ko:"Spotlight 검색",en:"Spotlight Search"})}</div>
+      <input placeholder="${T({ko:"무엇이든 검색하세요",en:"Search for anything"})}" style="width:220px;padding:8px 10px;border-radius:8px;border:1px solid #d1d5db;outline:none;font-size:14px;" />`;
+    setTimeout(()=>p.querySelector("input")&&p.querySelector("input").focus(),30);
+  } else if(name==="control"){
+    p.innerHTML=`<div class="poTitle">${T({ko:"제어 센터",en:"Control Center"})}</div>
+      <div class="ccGrid">
+        <div class="ccTile"><span class="d">📶</span><div>Wi‑Fi<br><span style="color:#3b82f6;">${T({ko:"켬",en:"On"})}</span></div></div>
+        <div class="ccTile"><span class="d">🔵</span><div>${T({ko:"블루투스",en:"Bluetooth"})}<br><span style="color:#3b82f6;">${T({ko:"켬",en:"On"})}</span></div></div>
+        <div class="ccTile" id="ccDark"><span class="d">🌙</span><div>${T({ko:"다크 모드",en:"Dark Mode"})}</div></div>
+        <div class="ccTile"><span class="d">🔕</span><div>${T({ko:"집중 모드",en:"Focus"})}</div></div>
+        <div class="ccSlider"><div class="lab">☀️ ${T({ko:"화면 밝기",en:"Display brightness"})}</div><div class="track" style="--v:70%;"></div></div>
+        <div class="ccSlider"><div class="lab">🔊 ${T({ko:"소리",en:"Sound"})}</div><div class="track" style="--v:50%;"></div></div>
+      </div>`;
+    p.querySelectorAll(".ccTile").forEach(t=>t.addEventListener("click",e=>{ e.stopPropagation(); flash(T({ko:"설정을 바꿨어요",en:"Changed the setting"})); }));
+    p.querySelectorAll(".track").forEach(t=>t.addEventListener("click",e=>{
+      e.stopPropagation(); const r=t.getBoundingClientRect(); const pct=Math.round((e.clientX-r.left)/r.width*100);
+      t.style.setProperty("--v",Math.max(0,Math.min(100,pct))+"%"); beep(600,.05);
+    }));
+  }
+  return p;
+}
+function openTray(name, anchor){
+  closeNotif();
+  if(openState&&openState.kind==="tray"&&openState.name===name){ closeMenus(); return; }
+  closeMenus();
+  const p=trayContent(name); anchor.classList.add("open");
+  placeNode(p,{right:desktop.clientWidth-(anchor.offsetLeft+anchor.offsetWidth), top:30});
+  openState={kind:"tray",name}; click();
+  notifyGame("tray-open",{tray:name});
+}
+
+/* ---------- notification center ---------- */
+function buildNotif(){
+  const now=new Date(); const days=LANG==="ko"?["일","월","화","수","목","금","토"]:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  notif.innerHTML=`
+    <div class="nWidget"><div class="day">${LANG==="ko"?days[now.getDay()]+"요일":days[now.getDay()]}</div><div class="date">${now.getDate()}</div>
+      <div style="font-size:13px;color:#374151;margin-top:2px;">${LANG==="ko"?now.getMonth()+1+"월":T({ko:"",en:new Intl.DateTimeFormat("en",{month:"long"}).format(now)})}</div></div>
+    <div class="nCard"><div class="ni">💬</div><div><div class="nt">${T({ko:"메시지",en:"Messages"})}</div><div class="nb">${T({ko:"아들: 엄마 잘 하고 있어요? 😊",en:"Son: Mom, are you doing well? 😊"})}</div></div></div>
+    <div class="nCard"><div class="ni">📅</div><div><div class="nt">${T({ko:"캘린더",en:"Calendar"})}</div><div class="nb">${T({ko:"오후 3시 — 손자와 영상통화",en:"3 PM — Video call with grandson"})}</div></div></div>
+    <div class="nCard"><div class="ni">🌤️</div><div><div class="nt">${T({ko:"날씨",en:"Weather"})}</div><div class="nb">${T({ko:"오늘은 맑아요. 22°C",en:"Sunny today. 22°C"})}</div></div></div>`;
+  notif.querySelectorAll(".nCard").forEach(c=>c.addEventListener("click",e=>{ e.stopPropagation(); flash(T({ko:"알림을 열었어요",en:"Opened the notification"})); notifyGame("notif-select",{}); }));
+}
+function toggleNotif(){
+  if(notif.classList.contains("open")){ closeNotif(); return; }
+  closeMenus(); buildNotif(); notif.classList.add("open"); clockBtn.classList.add("open");
+  layer.style.display="block"; click();
+  notifyGame("notif-open",{});
+}
+
+/* ---------- context (right-click) menu ---------- */
+const DESKTOP_CTX=[ {label:{ko:"새로운 폴더",en:"New Folder"},key:"newfolder"},{sep:1},{label:{ko:"보기 옵션 보기",en:"Show View Options"}},{label:{ko:"배경화면 설정 바꾸기…",en:"Change Wallpaper…"},key:"wallpaper"} ];
+const FILE_CTX=[ {label:{ko:"열기",en:"Open"},key:"open"},{label:{ko:"다음으로 열기",en:"Open With"}},{sep:1},{label:{ko:"이름 변경",en:"Rename"},key:"rename"},{label:{ko:"복제",en:"Duplicate"},key:"duplicate"},
+  {sep:1},{label:{ko:"정보 가져오기",en:"Get Info"},sc:"⌘I"},{sep:1},{label:{ko:"휴지통으로 이동",en:"Move to Trash"},key:"trash",danger:1} ];
+function openContext(x,y,ctxItems,on){
+  closeNotif(); closeMenus();
+  const m=buildMenuList(ctxItems,(it)=>{ closeMenus();
+    if(it.key==="trash"){ if(on&&on.el){ on.el.style.transition="opacity .2s,transform .2s"; on.el.style.opacity="0"; on.el.style.transform="scale(.6)"; } flash(T({ko:"휴지통으로 옮겼어요",en:"Moved to Trash"})); }
+    else if(it.label) flash(T({ko:`‘${T(it.label)}’을(를) 골랐어요`,en:`Chose ‘${T(it.label)}’`}));
+    beep(700,.09); notifyGame("context-select",{on:on?on.type:"desktop",key:it.key,label:it.label});
+  });
+  placeNode(m,{cx:x, top:y}); openState={kind:"context"}; click();
+  notifyGame("context-open",{on:on?on.type:"desktop"});
+}
+
+/* ---------- wire up ---------- */
+menubar.querySelectorAll(".mbTitle").forEach(el=>{
+  el.addEventListener("click",e=>{ e.stopPropagation(); openTopMenu(el.dataset.menu, el); });
+});
+menubar.querySelectorAll(".trayIcon").forEach(el=>{
+  el.addEventListener("click",e=>{ e.stopPropagation(); openTray(el.dataset.tray, el); });
+});
+clockBtn.addEventListener("click",e=>{ e.stopPropagation(); toggleNotif(); });
+backdrop.addEventListener("click",()=>{ const wasOpen=openState||notif.classList.contains("open"); closeMenus(); closeNotif(); if(wasOpen) notifyGame("menu-dismiss",{}); });
+// Esc key also dismisses an open menu / popover / notification center
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){ const wasOpen=openState||notif.classList.contains("open"); if(wasOpen){ closeMenus(); closeNotif(); notifyGame("menu-dismiss",{}); } }
+});
+// right-click (secondary click): file icons handle their own; empty desktop opens the desktop menu
+desktop.addEventListener("contextmenu",e=>{
+  e.preventDefault();
+  if(e.target.closest(".deskFile")) return;               // handled by the file's own listener
+  if(e.target.closest("#menubar")) return;                 // ignore menu bar
+  if(e.target.closest(".menu")||e.target.closest(".popover")) return;
+  const r=desktop.getBoundingClientRect();
+  openContext(e.clientX-r.left, e.clientY-r.top, DESKTOP_CTX, null);
+});
+
+function flash(msg){
+  const f=document.createElement("div"); f.className="toast"; f.textContent="👉 "+T(msg);
+  desktop.appendChild(f); requestAnimationFrame(()=>f.style.opacity="1");
+  setTimeout(()=>{f.style.opacity="0";setTimeout(()=>f.remove(),250);},1300);
+}
+
+/* desktop file icons (for right-click-on-file lesson) */
+function renderDeskIcons(list){
+  deskIcons.innerHTML="";
+  (list||[]).forEach(f=>{
+    const el=document.createElement("div"); el.className="deskFile"; el.dataset.name=typeof f.name==="object"?f.name.ko:f.name;
+    el.innerHTML=`<div class="ic">${f.ic}</div><div class="nm">${T(f.name)}</div>`;
+    el.addEventListener("click",()=>{ deskIcons.querySelectorAll(".deskFile").forEach(x=>x.classList.remove("sel")); el.classList.add("sel"); });
+    el.addEventListener("contextmenu",e=>{ e.preventDefault(); e.stopPropagation();
+      const r=desktop.getBoundingClientRect(); el.classList.add("sel");
+      openContext(e.clientX-r.left, e.clientY-r.top, FILE_CTX, {type:"file",el,name:f.name}); });
+    deskIcons.appendChild(el);
+  });
+}
+
+/* clock */
+function tickClock(){ const d=new Date(); let h=d.getHours(); const m=String(d.getMinutes()).padStart(2,"0");
+  const ap=h<12?T({ko:"오전",en:"AM"}):T({ko:"오후",en:"PM"}); h=h%12||12; const days=LANG==="ko"?["일","월","화","수","목","금","토"]:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  clockBtn.textContent=LANG==="ko"?`${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]}) ${ap} ${h}:${m}`:`${days[d.getDay()]} ${d.getMonth()+1}/${d.getDate()} ${ap} ${h}:${m}`; }
+
+/* ---------- intro + lessons ---------- */
+let listener=null; function notifyGame(type,payload){ if(listener) listener(type,payload); }
+
+const INTRO=[
+  { art:"📋",
+    title:{ko:"메뉴가 뭐예요?",en:"What is a menu?"},
+    html:{ko:`식당에 가면 <b>메뉴판</b>을 보고 음식을 고르죠?<br>컴퓨터의 <b>메뉴</b>도 똑같아요.<br><br>글자나 아이콘을 누르면 <b>할 수 있는 일들의 목록</b>이<br>주르륵 나와요. 거기서 원하는 걸 고르면 돼요.<br>평소엔 <b>숨어 있다가</b> 누를 때만 나타나요.`,en:`At a restaurant, you look at a <b>menu</b> and choose food, right?<br>A computer <b>menu</b> is the same.<br><br>Click words or icons and a <b>list of things you can do</b><br>drops down. Choose what you want from that list.<br>Menus stay <b>hidden</b> until you click them.`}},
+  { art:"⬆️  ↗️  🖱️  🔔",
+    title:{ko:"메뉴는 어디에 숨어 있나요?",en:"Where are menus hidden?"},
+    html:{ko:`맥에는 메뉴가 <b>네 군데</b> 숨어 있어요:<br><br>① 맨 위 줄 <b>메뉴 막대</b> (파일·편집·보기…)<br>② 오른쪽 위 <b>상태 아이콘</b> (와이파이·배터리…)<br>③ 아무 곳이나 <b>오른쪽 클릭</b> (숨은 메뉴)<br>④ 오른쪽 위 시계 → <b>알림 센터</b><br><br>하나씩 열어 볼까요? 😊`,en:`On a Mac, menus hide in <b>four places</b>:<br><br>① The top <b>menu bar</b> (File, Edit, View…)<br>② Top-right <b>status icons</b> (Wi‑Fi, battery…)<br>③ <b>Right-click</b> almost anywhere (hidden menu)<br>④ The top-right clock → <b>Notification Center</b><br><br>Shall we open them one by one? 😊`}},
+];
+let introIdx=0, phase="intro";
+
+const LESSONS=[
+  { title:{ko:"① 메뉴 막대 열기",en:"① Open the menu bar"},
+    instr:{ko:"맨 위 줄에서 <b>‘파일’</b> 글자를 눌러 메뉴를 펼쳐 보세요.",en:"On the top row, click <b>File</b> to open the menu."},
+    hint:{ko:"맨 윗줄을 ‘메뉴 막대’라고 해요. 글자를 누르면 할 수 있는 일 목록이 아래로 주르륵 나와요.",en:"The top row is called the menu bar. Click a word and a list of actions drops down."},
+    pulse:{menu:"file"},
+    setup(done){ listener=(t,p)=>{ if(t==="menu-open"&&p.menu==="file") done("📂",T({ko:"메뉴가 펼쳐졌어요!",en:"The menu opened!"})); }; } },
+
+  { title:{ko:"② 메뉴 닫기 (그만두기)",en:"② Close a menu (cancel)"},
+    instr:{ko:"<b>‘보기’</b> 메뉴를 연 다음, 아무것도 고르지 말고 <b>닫아</b> 보세요. 메뉴 <b>바깥 빈 곳</b>을 한 번 누르면 사라져요. (키보드 <b>esc</b> 키를 눌러도 닫혀요.)",en:"Open the <b>View</b> menu, then <b>close</b> it without choosing anything. Click an <b>empty place outside</b> the menu. (The <b>Esc</b> key also closes it.)"},
+    hint:{ko:"메뉴를 잘못 열었거나 그냥 닫고 싶을 땐, 아무것도 안 고르고 <b>메뉴 밖 빈 곳</b>을 누르거나 <b>esc</b> 키를 누르면 돼요. 실수로 뭔가 눌릴까 걱정 안 해도 괜찮아요.",en:"If you open a menu by mistake, click an <b>empty place outside</b> or press <b>Esc</b>. You do not need to worry about choosing something by accident."},
+    pulse:{menu:"view"},
+    setup(done){ listener=(t,p)=>{ if(t==="menu-dismiss") done("✋",T({ko:"메뉴를 깔끔하게 닫았어요!",en:"You closed the menu neatly!"})); }; } },
+
+  { title:{ko:"③ 메뉴에서 고르기",en:"③ Choose from a menu"},
+    instr:{ko:"<b>‘편집’</b> 메뉴를 열고, 그 안에서 <b>‘복사하기’</b>를 누르세요.",en:"Open the <b>Edit</b> menu, then click <b>Copy</b>."},
+    hint:{ko:"메뉴를 연 다음, 원하는 줄을 누르면 그 일이 실행돼요. 잘못 열었으면 빈 곳을 누르면 닫혀요.",en:"After opening a menu, click the row you want. If it was a mistake, click an empty place to close it."},
+    pulse:{menu:"edit"},
+    setup(done){ listener=(t,p)=>{ if(t==="menu-select"&&p.menu==="edit"&&p.key==="copy") done("📋",T({ko:"메뉴에서 골랐어요!",en:"You chose from the menu!"})); }; } },
+
+  { title:{ko:"④ 사과() 메뉴",en:"④ Apple menu"},
+    instr:{ko:"왼쪽 맨 위 <b>사과 로고 </b>를 눌러 <b>‘이 Mac에 관하여’</b>를 선택하세요.",en:"Click the <b>Apple logo</b> at the top-left and choose <b>About This Mac</b>."},
+    hint:{ko:" 메뉴에는 컴퓨터 전체와 관련된 것들(설정, 잠자기, 끄기)이 들어 있어요.",en:"The Apple menu has things for the whole computer, like settings, sleep, and shut down."},
+    pulse:{menu:"apple"},
+    setup(done){ listener=(t,p)=>{ if(t==="menu-select"&&p.menu==="apple"&&p.key==="about") done("🍎",T({ko:"사과 메뉴를 잘 열었어요!",en:"You used the Apple menu well!"})); }; } },
+
+  { title:{ko:"⑤ 앱 끝내기",en:"⑤ Quit an app"},
+    instr:{ko:"굵은 글씨 앱 이름 <b>‘Finder’</b>를 눌러 <b>‘Finder 종료’</b>를 선택하세요.",en:"Click the bold app name <b>Finder</b> and choose <b>Quit Finder</b>."},
+    hint:{ko:"사과 옆 굵은 글씨는 지금 쓰는 ‘앱 이름’이에요. 여기서 앱을 완전히 끌 수 있어요(종료 = Quit).",en:"The bold word next to Apple is the current app name. You can fully close the app here (Quit)."},
+    pulse:{menu:"app"},
+    setup(done){ listener=(t,p)=>{ if(t==="menu-select"&&p.menu==="app"&&p.key==="quit") done("🚪",T({ko:"앱을 끝내는 법을 배웠어요!",en:"You learned how to quit an app!"})); }; } },
+
+  { title:{ko:"⑥ 상태 아이콘: 와이파이",en:"⑥ Status icon: Wi‑Fi"},
+    instr:{ko:"오른쪽 위 <b>📶 와이파이 아이콘</b>을 눌러 보세요.",en:"Click the <b>📶 Wi‑Fi icon</b> at the top-right."},
+    hint:{ko:"오른쪽 위 작은 그림들은 컴퓨터 상태를 보여줘요. 와이파이를 누르면 연결할 수 있는 인터넷 목록이 나와요.",en:"The small pictures at the top-right show computer status. Click Wi‑Fi to see internet networks."},
+    pulse:{tray:"wifi"},
+    setup(done){ listener=(t,p)=>{ if(t==="tray-open"&&p.tray==="wifi") done("📶",T({ko:"와이파이 메뉴를 열었어요!",en:"You opened the Wi‑Fi menu!"})); }; } },
+
+  { title:{ko:"⑦ 제어 센터",en:"⑦ Control Center"},
+    instr:{ko:"오른쪽 위 <b>🎛️ 제어 센터</b> 아이콘을 눌러, 밝기·소리 조절을 열어 보세요.",en:"Click the <b>🎛️ Control Center</b> icon at the top-right to open brightness and sound controls."},
+    hint:{ko:"제어 센터에는 화면 밝기, 소리, 와이파이 같은 ‘빠른 설정’이 모여 있어요.",en:"Control Center gathers quick settings like brightness, sound, and Wi‑Fi."},
+    pulse:{tray:"control"},
+    setup(done){ listener=(t,p)=>{ if(t==="tray-open"&&p.tray==="control") done("🎛️",T({ko:"제어 센터를 열었어요!",en:"You opened Control Center!"})); }; } },
+
+  { title:{ko:"⑧ 알림 센터",en:"⑧ Notification Center"},
+    instr:{ko:"오른쪽 맨 위 <b>날짜·시간</b>을 눌러 알림 센터를 여세요.",en:"Click the <b>date and time</b> at the top-right to open Notification Center."},
+    hint:{ko:"시계를 누르면 오른쪽에서 알림 센터가 나와요. 메시지·일정·날씨 같은 소식이 모여 있어요.",en:"Click the clock and Notification Center slides in from the right. It gathers messages, calendar, and weather."},
+    pulse:{clock:true},
+    setup(done){ listener=(t,p)=>{ if(t==="notif-open") done("🔔",T({ko:"알림 센터를 열었어요!",en:"You opened Notification Center!"})); }; } },
+
+  { title:{ko:"⑨ 오른쪽 클릭 (숨은 메뉴)",en:"⑨ Right-click (hidden menu)"},
+    instr:{ko:"바탕화면 <b>빈 곳을 오른쪽 클릭</b>해서, <b>‘새로운 폴더’</b>를 선택하세요.",en:"<b>Right-click an empty place</b> on the desktop, then choose <b>New Folder</b>."},
+    hint:{ko:"트랙패드를 두 손가락으로 누르면 ‘오른쪽 클릭’이에요. 지금 상황에서 할 수 있는 일들이 톡 나와요.",en:"Press the trackpad with two fingers to right-click. A small menu of things you can do appears."},
+    ctxHint:true,
+    setup(done){ listener=(t,p)=>{ if(t==="context-select"&&p.on==="desktop"&&p.key==="newfolder") done("🖱️",T({ko:"오른쪽 클릭 메뉴를 썼어요!",en:"You used the right-click menu!"})); }; } },
+
+  { title:{ko:"⑩ 파일 위에서 오른쪽 클릭",en:"⑩ Right-click a file"},
+    instr:{ko:"바탕화면의 <b>‘메모.txt’</b> 파일을 오른쪽 클릭해서, <b>‘휴지통으로 이동’</b>을 선택하세요.",en:"Right-click the <b>memo.txt</b> file on the desktop and choose <b>Move to Trash</b>."},
+    hint:{ko:"파일 위에서 오른쪽 클릭하면 그 파일로 할 수 있는 일(열기·이름 변경·버리기)이 나와요.",en:"Right-click a file to see what you can do with it: open, rename, or throw away."},
+    deskFiles:[{name:{ko:"메모.txt",en:"memo.txt"},ic:"📝"},{name:{ko:"사진.jpg",en:"photo.jpg"},ic:"🖼️"}],
+    pulseFile:"메모.txt",
+    setup(done){ listener=(t,p)=>{ if(t==="context-select"&&p.on==="file"&&p.key==="trash") done("🗑️",T({ko:"파일 메뉴로 정리했어요!",en:"You cleaned up using the file menu!"})); }; } },
+];
+
+/* ---------- engine ---------- */
+let lidx=0;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"), introArt:document.getElementById("introArt"),
+  introTitle:document.getElementById("introTitle"), introText:document.getElementById("introText"),
+  introBack:document.getElementById("introBack"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"), skip:document.getElementById("skipBtn"),
+  bTitle:document.getElementById("bTitle"), bInstr:document.getElementById("bInstr"), bHint:document.getElementById("bHint") };
+const totalSteps=INTRO.length+LESSONS.length;
+function doneCount(){ return phase==="intro"?introIdx:INTRO.length+lidx; }
+function updateProgress(){ els.step.textContent=T(UI.step)(doneCount()+1,totalSteps); els.bar.style.width=(doneCount()/totalSteps*100)+"%"; }
+
+function showIntro(){ phase="intro"; els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none";
+  const c=INTRO[introIdx]; els.introArt.textContent=c.art; els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
+  els.introBack.style.visibility=introIdx===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=introIdx===INTRO.length-1?T(UI.start):T(UI.next); updateProgress(); }
+function nextIntro(){ if(introIdx<INTRO.length-1){ introIdx++; showIntro(); } else startLessons(); }
+function prevIntro(){ if(introIdx>0){ introIdx--; showIntro(); } }
+function startLessons(){ phase="lessons"; lidx=0; els.intro.style.display="none"; els.main.style.display="flex"; loadLesson(0); }
+
+function clearPulses(){ [...menubar.querySelectorAll(".pulse")].forEach(e=>e.classList.remove("pulse"));
+  clockBtn.classList.remove("pulse"); ctxDot.style.display="none";
+  deskIcons.querySelectorAll(".pulse").forEach(e=>e.classList.remove("pulse")); }
+
+function loadLesson(i){
+  const lv=LESSONS[i];
+  els.bTitle.textContent=T(lv.title); els.bInstr.innerHTML=T(lv.instr); els.bHint.textContent="💡 "+T(lv.hint);
+  updateProgress(); listener=null; closeMenus(); closeNotif(); clearPulses();
+  renderDeskIcons(lv.deskFiles||[]);
+  deskHint.textContent = lv.ctxHint ? T({ko:"여기 빈 곳을 오른쪽 클릭 해보세요\n(트랙패드는 두 손가락으로 꾹)",en:"Right-click an empty place here\n(on a trackpad, press with two fingers)"}) : "";
+  deskHint.style.whiteSpace="pre-line";
+  // apply pulse hints
+  if(lv.pulse){ if(lv.pulse.menu){ const a=menubar.querySelector(`.mbTitle[data-menu="${lv.pulse.menu}"]`); a&&a.classList.add("pulse"); }
+    if(lv.pulse.tray){ const a=menubar.querySelector(`.trayIcon[data-tray="${lv.pulse.tray}"]`); a&&a.classList.add("pulse"); }
+    if(lv.pulse.clock){ clockBtn.classList.add("pulse"); } }
+  if(lv.pulseFile){ const f=[...deskIcons.querySelectorAll(".deskFile")].find(x=>x.dataset.name===lv.pulseFile); f&&f.classList.add("pulse"); }
+  lv.setup(onDone);
+}
+function onDone(emoji,msg){
+  listener=null; closeMenus(); closeNotif(); clearPulses();
+  els.bar.style.width=((INTRO.length+lidx+1)/totalSteps*100)+"%";
+  els.msg.textContent=msg||praise(); els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex"; confetti(); chime();
+  setTimeout(()=>{ els.overlay.style.display="none"; lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); },1600);
+}
+function skipStep(){ if(phase==="intro"){ nextIntro(); return; } listener=null; closeMenus(); closeNotif(); clearPulses();
+  lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:menus","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.final.style.display="none"; renderDeskIcons([]); showIntro(); }
+
+document.addEventListener("gesturestart",e=>e.preventDefault());
+document.addEventListener("wheel",e=>{ if(e.ctrlKey) e.preventDefault(); },{passive:false});
+
+applyStatic();
+tickClock(); setInterval(tickClock,10000);
+showIntro();
+</script>
+</body>
+</html>

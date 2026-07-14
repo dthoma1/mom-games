@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 속임수 알아채기</title>
+<style>
+  :root{--bg1:#eef2ff;--bg2:#fdf2f8;--ink:#1f2937;--soft:#6b7280;--accent:#6366f1;--accent2:#ec4899;
+    --good:#22c55e;--macblue:#0a63ff;--desk1:#2b6cff;--desk2:#8a5cf6;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+  #banner .extra{margin-top:8px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;}
+  #replayBtn{font-size:14px;font-weight:700;color:var(--accent);background:#eef2ff;border:1px solid #dfe4ff;
+    border-radius:999px;padding:7px 16px;cursor:pointer;display:none;}
+  #stage{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;
+    background:linear-gradient(135deg,var(--desk1),var(--desk2));display:flex;align-items:center;justify-content:center;padding:18px;}
+
+  .bwin{background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.30);width:min(580px,96%);overflow:hidden;
+    display:flex;flex-direction:column;}
+  .btool{height:46px;background:linear-gradient(#f6f6f7,#e9e9eb);display:flex;align-items:center;gap:8px;padding:0 12px;
+    border-bottom:1px solid #e1e1e4;}
+  .dots{display:flex;gap:7px;margin-right:4px;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dot.r{background:#ff5f57;}.dot.y{background:#febc2e;}.dot.g{background:#28c840;}
+  .closeDot{cursor:pointer;}
+  .macCard.redClose .dots .dot{width:15px;height:15px;}
+  .macCard.redClose .closeDot{box-shadow:0 0 0 4px rgba(255,95,87,.30);}
+  .navbtn{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5b6270;
+    font-size:17px;cursor:pointer;flex:0 0 auto;}
+  .navbtn:hover{background:rgba(0,0,0,.06);}
+  .navbtn.off{opacity:.32;pointer-events:none;}
+  .addrbar{flex:1;height:32px;background:#fff;border:1px solid #d5d5da;border-radius:8px;display:flex;align-items:center;
+    padding:0 10px;gap:7px;font-size:14px;color:#374151;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);min-width:0;}
+  .addrbar .lock{font-size:11px;color:#9ca3af;}
+  .addrbar input{border:none;outline:none;flex:1;font-size:14px;background:transparent;min-width:0;color:#374151;}
+  .addrbar.focusRing{border-color:var(--macblue);box-shadow:0 0 0 3px rgba(10,99,255,.25);}
+  .tabstrip{height:34px;background:#e6e6e9;display:flex;align-items:flex-end;gap:2px;padding:0 8px;}
+  .tab{height:29px;background:#d3d3d8;border-radius:8px 8px 0 0;padding:0 12px;display:flex;align-items:center;gap:8px;
+    font-size:13px;color:#4b5563;max-width:170px;white-space:nowrap;overflow:hidden;}
+  .tab.active{background:#fff;color:#1f2937;}
+  .tabx{font-size:13px;color:#9ca3af;cursor:pointer;border-radius:4px;padding:0 3px;}
+  .tabx:hover{background:rgba(0,0,0,.1);}
+  .bcontent{background:#fff;flex:1;min-height:150px;padding:24px;text-align:center;overflow:hidden;transition:font-size .2s;}
+  .bcontent h2{margin:6px 0;}
+  .bcontent p{color:#6b7280;line-height:1.5;margin:8px 0;}
+  .fav{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+  .favIcon{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;
+    box-shadow:0 3px 8px rgba(0,0,0,.12);}
+
+  @keyframes tpulse{0%,100%{box-shadow:0 0 0 0 rgba(10,99,255,.55);}50%{box-shadow:0 0 0 7px rgba(10,99,255,0);}}
+  .target{animation:tpulse 1.4s infinite;border-radius:8px;position:relative;z-index:5;}
+  .miniToast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(43,47,54,.92);color:#fff;
+    font-size:13px;font-weight:600;padding:8px 15px;border-radius:999px;z-index:35;box-shadow:0 6px 16px rgba(0,0,0,.3);transition:opacity .2s;}
+
+  .demoCursor{position:absolute;width:26px;height:26px;z-index:40;pointer-events:none;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));transition:left .5s ease,top .5s ease,opacity .2s;}
+  .demoCursor.click{animation:clickPulse .35s ease;}
+  @keyframes clickPulse{0%{transform:scale(1);}50%{transform:scale(.8);}100%{transform:scale(1);}}
+  .clickRipple{position:absolute;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
+    z-index:39;pointer-events:none;animation:ripple .5s ease-out forwards;}
+  @keyframes ripple{from{transform:scale(.3);opacity:.85;}to{transform:scale(2.4);opacity:0;}}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:60;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:95;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+
+
+  /* ===== scam-game macOS desktop stage ===== */
+  #stage.scamStage{background:
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,.38), transparent 28%),
+    radial-gradient(circle at 82% 22%, rgba(255,255,255,.22), transparent 24%),
+    linear-gradient(135deg,#8ec5ff 0%,#c6a7ff 48%,#ffd1e8 100%);}
+  .desktop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;}
+  .softDock{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:10px;background:rgba(255,255,255,.35);
+    border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(12px);padding:9px 14px;border-radius:22px;box-shadow:0 10px 24px rgba(0,0,0,.12);}
+  .dockIcon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.78);font-size:20px;}
+  .macCard{background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.8);border-radius:18px;box-shadow:0 22px 60px rgba(31,41,55,.24);overflow:hidden;}
+  .macTitlebar{height:34px;background:linear-gradient(#fbfbfc,#ececf0);display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid #dedee4;}
+  .macTitlebar .ttl{font-size:13px;font-weight:800;color:#4b5563;margin-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .macBody{padding:24px;text-align:center;}
+  .alertBox{width:min(470px,95%);}
+  .alertIcon{font-size:48px;margin-bottom:8px;}
+  .alertTitle{font-size:22px;font-weight:900;margin-bottom:8px;}
+  .alertMsg{font-size:16px;line-height:1.45;color:#4b5563;margin:0 auto 18px;max-width:390px;}
+  .btnRow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  .safeBtn,.plainBtn,.trapBtn,.linkTrap{border:none;border-radius:999px;padding:10px 20px;font-size:15px;font-weight:800;cursor:pointer;}
+  .safeBtn{background:#e8f0ff;color:var(--macblue);border:1px solid #cfe0ff;}
+  .plainBtn{background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;}
+  .trapBtn{background:linear-gradient(90deg,#ef4444,#f97316);color:#fff;box-shadow:0 6px 14px rgba(239,68,68,.25);}
+  .linkTrap{background:#fff1f2;color:#dc2626;border:1px solid #fecdd3;text-decoration:underline;}
+  .emailCard{width:min(520px,96%);}
+  .emailHead{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #eef2f7;padding:14px 18px;background:#fff;}
+  .emailFrom{font-size:13px;color:#6b7280;}.emailSubject{font-size:18px;font-weight:900;}
+  .chatWrap{width:min(520px,96%);display:flex;flex-direction:column;gap:12px;}
+  .bubble{align-self:flex-start;background:#fff;border-radius:18px 18px 18px 6px;padding:15px 17px;box-shadow:0 8px 22px rgba(0,0,0,.13);font-size:17px;line-height:1.45;max-width:430px;}
+  .passwordRow{background:rgba(255,255,255,.92);border-radius:18px;padding:14px;display:flex;gap:9px;align-items:center;box-shadow:0 10px 25px rgba(0,0,0,.14);flex-wrap:wrap;justify-content:center;}
+  .passwordRow input{height:40px;border:1px solid #d1d5db;border-radius:10px;padding:0 12px;font-size:16px;min-width:190px;}
+  .choiceGrid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:18px;width:min(760px,96%);}
+  .choiceCard{cursor:pointer;text-align:left;transition:transform .15s ease, box-shadow .15s ease;}
+  .choiceCard:hover{transform:translateY(-2px);box-shadow:0 24px 62px rgba(31,41,55,.28);}
+  .choiceBody{padding:22px;min-height:180px;}
+  .choiceLabel{font-size:12px;font-weight:900;color:#6b7280;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;}
+  .calmIcon{font-size:36px;}.fakeFlash{font-size:42px;animation:flashSoft 1.2s infinite;}
+  @keyframes flashSoft{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.06);opacity:.82;}}
+  .recap{width:min(650px,96%);text-align:center;padding:30px;}
+  .recapIcon{font-size:68px;margin-bottom:10px;}
+  .recapText{font-size:20px;line-height:1.55;font-weight:800;color:#374151;}
+  @media (max-width:720px){.choiceGrid{grid-template-columns:1fr}.macBody{padding:20px}.btnRow{flex-direction:column}.safeBtn,.plainBtn,.trapBtn,.linkTrap{width:100%;}}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+        <div class="extra"><button id="replayBtn" onclick="replayDemo()"></button></div>
+      </div>
+      <div id="stage"></div>
+    </div>
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+  </div>
+</div>
+
+<script>
+/* ===== language ===== */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"🎭 속임수와 피싱 알아채기", en:"🎭 Spotting Tricks & Phishing"},
+  sub:{ko:"사기꾼이 마음을 이용하는 수법을 알아보고, 침착하게 대처해요 😊", en:"Learn how tricksters use your feelings — and stay calm and safe 😊"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  replay:{ko:"👀 다시 보여주기",en:"👀 Show me again"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"이제 속임수가 보여요!", en:"Now you can see the tricks!"},
+  finalMsg:{ko:"급하게 재촉하거나 겁주거나 비밀을 요구하면 멈추고 가족에게 물어보세요 💛", en:"If it rushes, scares, or demands secrecy — pause and ask family 💛"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  next:{ko:"다음 ›",en:"Next ›"}
+}
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("replayBtn").textContent=T(UI.replay);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(!doneLock){ loadLevel(current); } }
+
+/* ===== praise + sound + confetti ===== */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ===== cursors ===== */
+const SVG_ARROW=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 3 L5 20 L9.5 15.8 L12.6 22 L15.2 20.8 L12.1 14.8 L18 14.8 Z" fill="#111" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const SVG_IBEAM=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g><g fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g></svg>`;
+function makeCursor(kind){ const c=document.createElement("div"); c.className="demoCursor";
+  c.innerHTML=kind==="ibeam"?SVG_IBEAM:SVG_ARROW; return c; }
+
+/* ===== state + helpers ===== */
+const stage=document.getElementById("stage");
+let locked=false,currentDemo=null;
+function clearStage(){ stage.innerHTML=""; }
+function stageXY(el){ const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect();
+  return {x:r.left-s.left+r.width/2,y:r.top-s.top+r.height/2}; }
+function ripple(x,y){ const r=document.createElement("div"); r.className="clickRipple";
+  r.style.left=(x-13)+"px"; r.style.top=(y-13)+"px"; stage.appendChild(r); setTimeout(()=>r.remove(),520); }
+function markTarget(el){ if(el) el.classList.add("target"); }
+function showToast(msg){ let t=stage.querySelector(".miniToast");
+  if(!t){ t=document.createElement("div"); t.className="miniToast"; stage.appendChild(t); }
+  t.textContent=msg; t.style.opacity="1"; clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>{ t.style.opacity="0"; },1800); }
+
+/* ===== scam desktop builders ===== */
+function desk(){
+  stage.classList.add("scamStage");
+  const d=document.createElement("div"); d.className="desktop";
+  d.innerHTML=`<div class="softDock"><div class="dockIcon">🧭</div><div class="dockIcon">✉️</div><div class="dockIcon">🛡️</div><div class="dockIcon">💬</div></div>`;
+  stage.appendChild(d); return d;
+}
+function dotsHTML(){ return `<div class="dots"><span class="dot r closeDot"></span><span class="dot y"></span><span class="dot g"></span></div>`; }
+function macAlert(opts){
+  const d=desk(); const card=document.createElement("div"); card.className="macCard alertBox";
+  card.innerHTML=`<div class="macTitlebar">${dotsHTML()}<div class="ttl">${T(opts.app||{ko:"알림",en:"Alert"})}</div></div>
+    <div class="macBody"><div class="alertIcon">${opts.icon||"⚠️"}</div><div class="alertTitle">${T(opts.title)}</div>
+    <p class="alertMsg">${T(opts.msg)}</p><div class="btnRow"></div></div>`;
+  d.appendChild(card); return card;
+}
+function addButton(row,cls,label,fn){ const b=document.createElement("button"); b.className=cls; b.textContent=T(label); b.addEventListener("click",fn); row.appendChild(b); return b; }
+function gentle(msg){ showToast(T(msg)); beep(360,.08); }
+/* ===== demos ===== */
+function replayDemo(){ if(currentDemo) currentDemo(); }
+function showReplay(on){ document.getElementById("replayBtn").style.display=on?"inline-flex":"none"; }
+function autoDemo(fn,delay){ currentDemo=fn; showReplay(!!fn); if(fn) setTimeout(()=>{ if(!locked) fn(); },delay||800); }
+function demoTap(getTarget,atClick,reset,holdMs,kind){
+  return function run(){ if(locked) return; locked=true;
+    const target=getTarget(); if(!target){ locked=false; return; }
+    const cur=makeCursor(kind); stage.appendChild(cur);
+    const {x,y}=stageXY(target);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+34)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-4)+"px"; cur.style.top=(kind==="ibeam"?y-13:y-2)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(560,.05); if(atClick)atClick(target); },760);
+    setTimeout(()=>{ if(reset)reset(target); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },760+(holdMs||900));
+  };
+}
+function demoType(getInput,word,holdMs){
+  return function run(){ if(locked) return; locked=true;
+    const f=getInput(); if(!f){ locked=false; return; }
+    const bar=f.closest(".addrbar"); const {x,y}=stageXY(f);
+    const cur=makeCursor("ibeam"); stage.appendChild(cur);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+28)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-6)+"px"; cur.style.top=(y-13)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(540,.05); if(bar)bar.classList.add("focusRing"); f.value="";
+      let i=0; const iv=setInterval(()=>{ f.value=word.slice(0,++i); beep(700,.03); if(i>=word.length) clearInterval(iv); },170);
+    },780);
+    setTimeout(()=>{ f.value=""; if(bar)bar.classList.remove("focusRing"); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },780+(holdMs||1600));
+  };
+}
+
+/* ===== levels ===== */
+const callToast={ko:"진짜 가족은 이렇게 급하게, 비밀로 돈을 요구하지 않아요. 끊고 아는 번호로 직접 확인하세요.",en:"Real family never demands secret, urgent money like this. Hang up and check using a number you already know."};
+const textToast={ko:"진짜 은행은 문자 링크로 확인을 요구하지 않아요. 링크 대신 아는 앱이나 공식 사이트로 직접 들어가세요.",en:"A real bank won't ask you to verify through a text link. Open your own app or the official site directly instead."};
+const senderToast={ko:"이건 진짜 애플 주소예요 (apple.com). 사칭범은 이상하고 긴 주소를 써요. 주소를 다시 보세요!",en:"That's the real Apple address (apple.com). Impersonators use weird, long addresses. Look at the address again!"};
+const levels=[
+  { title:{ko:"속임수란 무엇일까요?",en:"What is a trick?"},
+    instr:{ko:"먼저, 사기꾼이 사람을 어떻게 속이는지 알아봐요.",en:"First, let's learn how tricksters fool people."},
+    hint:{ko:"읽고 ‘알겠어요’를 누르세요.",en:"Read it and click ‘Got it’."},
+    build(done){
+      const d=desk(); const card=document.createElement("div"); card.className="macCard recap";
+      card.innerHTML=`<div class="recapIcon">🎭</div><div class="recapText">${T({
+        ko:"‘사회공학’은 어려운 말이지만 뜻은 간단해요: <b>컴퓨터가 아니라 ‘사람’을 속이는 것</b>이에요.<br><br>사기꾼은 프로그램을 해킹하는 대신, 당신의 <b>마음</b>을 이용해요 — 걱정·사랑·무서움·설렘을 건드려서 <b>급하게 행동하게</b> 만들죠. 그 수법만 알면 <b>쉽게 알아챌 수 있어요!</b>",
+        en:"“Social engineering” is a fancy phrase with a simple meaning: <b>tricking a person, not a computer</b>.<br><br>Instead of hacking a program, the scammer uses your <b>feelings</b> — worry, love, fear, excitement — to make you <b>act fast</b>. Once you know the trick, it's <b>easy to spot!</b>"})}</div><button class="big gotBtn">${T({ko:"알겠어요",en:"Got it"})}</button>`;
+      d.appendChild(card); card.querySelector(".gotBtn").addEventListener("click",()=>{ if(!locked) done("🎭",{ko:"사기꾼은 ‘마음’을 이용한다는 걸 배웠어요!",en:"You learned that scammers use your feelings!"}); });
+      autoDemo(null);
+    } },
+  { title:{ko:"가짜 친척 전화",en:"The fake relative call"},
+    instr:{ko:"모르는 번호가 급하게 돈을 요구해도, 끊고 진짜 가족에게 직접 확인해요.",en:"If an unknown caller urgently demands money, hang up and verify with the real family member."},
+    hint:{ko:"‘끊고 진짜 손자에게 전화’를 누르세요.",en:"Click ‘Hang up & call the real grandchild’."},
+    build(done){
+      const card=macAlert({app:{ko:"전화",en:"Phone call"},icon:"📞",title:{ko:"모르는 번호",en:"Unknown number"},
+        msg:{ko:"“할머니, 저예요! 사고가 났어요. 지금 급히 돈이 필요해요. <b>제발 아무한테도 말하지 마세요!</b>”",en:"“Grandma, it's me! I had an accident. I need money urgently right now. <b>Please don't tell anyone!</b>”"}});
+      const row=card.querySelector(".btnRow");
+      addButton(row,"trapBtn",{ko:"바로 돈 보내기",en:"Send money now"},()=>{ if(locked)return; gentle(callToast); });
+      const safe=addButton(row,"safeBtn",{ko:"끊고 진짜 손자에게 전화",en:"Hang up & call the real grandchild"},()=>{ if(locked)return; done("💚",{ko:"침착하게 확인했어요! 진짜 가족에게 직접 전화했어요.",en:"You stayed calm and verified — you called the real family member!"}); });
+      markTarget(safe); autoDemo(demoTap(()=>safe),1000);
+    } },
+  { title:{ko:"피싱 = 디지털 낚시",en:"Phishing = digital fishing"},
+    instr:{ko:"이번엔 이 속임수의 ‘디지털 버전’을 알아봐요.",en:"Now let's learn the digital version of this trick."},
+    hint:{ko:"읽고 ‘알겠어요’를 누르세요.",en:"Read it and click ‘Got it’."},
+    build(done){
+      const d=desk(); const card=document.createElement("div"); card.className="macCard recap";
+      card.innerHTML=`<div class="recapIcon">🎣</div><div class="recapText">${T({
+        ko:"<b>피싱</b>은 이 속임수의 ‘디지털 버전’이에요. ‘낚시(fishing)’처럼, 사기꾼이 <b>은행·애플·택배</b>인 척 가짜 문자·이메일·사이트로 미끼를 던져요.<br><br>당신의 <b>비밀번호나 돈</b>을 낚으려는 거예요. 진짜인 척하지만, <b>보낸 사람과 링크 주소</b>를 보면 알 수 있어요.",
+        en:"<b>Phishing</b> is the digital version of this trick. Like “fishing,” scammers pretend to be your <b>bank, Apple, or a delivery company</b> and throw out bait — fake texts, emails, and websites.<br><br>They're fishing for your <b>password or money</b>. It looks real, but you can catch it by checking <b>who sent it and where the link goes</b>."})}</div><button class="big gotBtn">${T({ko:"알겠어요",en:"Got it"})}</button>`;
+      d.appendChild(card); card.querySelector(".gotBtn").addEventListener("click",()=>{ if(!locked) done("🎣",{ko:"피싱이 무엇인지 배웠어요!",en:"You learned what phishing is!"}); });
+      autoDemo(null);
+    } },
+  { title:{ko:"가짜 은행 문자",en:"The fake bank text"},
+    instr:{ko:"‘계정이 잠겼어요’ 같은 급한 문자 링크는 누르지 않아요.",en:"Don't tap urgent text links like ‘your account is locked’."},
+    hint:{ko:"‘앱을 직접 열어 확인’을 누르세요.",en:"Click ‘Open my real bank app instead’."},
+    build(done){
+      const d=desk(); const wrap=document.createElement("div"); wrap.className="chatWrap";
+      wrap.innerHTML=`<div class="bubble">${T({ko:"[은행] 계정이 잠겼습니다. 지금 링크를 눌러 본인 확인을 하세요 👉 secure-bank-verify.info",en:"[Bank] Your account is locked. Verify yourself now 👉 secure-bank-verify.info"})}</div>
+        <div class="passwordRow"><button class="linkTrap linkBtn">${T({ko:"링크 열기",en:"Open link"})}</button><button class="safeBtn appBtn">${T({ko:"앱을 직접 열어 확인",en:"Open my real bank app instead"})}</button></div>`;
+      d.appendChild(wrap); const link=wrap.querySelector(".linkBtn"), app=wrap.querySelector(".appBtn");
+      link.addEventListener("click",()=>{ if(locked)return; gentle(textToast); });
+      app.addEventListener("click",()=>{ if(locked)return; done("🏦",{ko:"링크 대신 진짜 앱으로 직접 확인했어요!",en:"You checked using your real app, not the link!"}); });
+      markTarget(app); autoDemo(demoTap(()=>app),900);
+    } },
+  { title:{ko:"누가 보냈는지 확인하기",en:"Check who really sent it"},
+    instr:{ko:"애플인 척하는 사칭 이메일을 골라 보세요. 주소를 보면 알 수 있어요.",en:"Spot the email impersonating Apple. The sender's address gives it away."},
+    hint:{ko:"주소가 이상하고 겁을 주는 쪽이 가짜예요.",en:"The one with a weird address that scares you is fake."},
+    build(done){
+      const d=desk(); const grid=document.createElement("div"); grid.className="choiceGrid";
+      grid.innerHTML=`
+        <div class="macCard choiceCard realCard"><div class="macTitlebar">${dotsHTML()}<div class="ttl">${T({ko:"메일",en:"Mail"})}</div></div>
+          <div class="choiceBody"><div class="choiceLabel">${T({ko:"보낸 사람 주소",en:"Sender address"})}</div><div class="calmIcon">🍎</div><h2 style="font-size:15px;word-break:break-all;">no-reply@apple.com</h2><p class="alertMsg">${T({ko:"영수증이 준비됐어요. 필요하면 확인하세요. (차분함)",en:"Your receipt is ready. Check it whenever you like. (calm)"})}</p></div></div>
+        <div class="macCard choiceCard fakeCard"><div class="macTitlebar">${dotsHTML()}<div class="ttl">${T({ko:"메일",en:"Mail"})}</div></div>
+          <div class="choiceBody"><div class="choiceLabel">${T({ko:"보낸 사람 주소",en:"Sender address"})}</div><div class="fakeFlash">⚠️</div><h2 style="font-size:15px;word-break:break-all;">apple-verify@secure-account.info</h2><p class="alertMsg">${T({ko:"계정이 정지돼요! 지금 눌러 확인하세요!!!",en:"Your account will be suspended! Click now to verify!!!"})}</p></div></div>`;
+      d.appendChild(grid); const real=grid.querySelector(".realCard"), fake=grid.querySelector(".fakeCard");
+      fake.addEventListener("click",()=>{ if(locked)return; done("🕵️",{ko:"사칭을 알아챘어요! 주소가 이상하면 가짜예요.",en:"You spotted the impersonator! A weird address means it's fake."}); });
+      real.addEventListener("click",()=>{ if(locked)return; gentle(senderToast); });
+      markTarget(fake); autoDemo(demoTap(()=>fake),900);
+    } },
+  { title:{ko:"빨간 깃발 기억하기",en:"Remember the red flags"},
+    instr:{ko:"사기꾼이 늘 쓰는 수법을 기억하면 쉽게 알아챌 수 있어요.",en:"Remember the tricks scammers always use, and you'll spot them easily."},
+    hint:{ko:"읽고 ‘알겠어요’를 누르세요.",en:"Read it and click ‘Got it’."},
+    build(done){
+      const d=desk(); const card=document.createElement("div"); card.className="macCard recap";
+      card.innerHTML=`<div class="recapIcon">🚩</div><div class="recapText">${T({
+        ko:"사기꾼은 항상 <b>같은 수법</b>을 써요:<br>⏰ 급하게 재촉하기 · 😱 겁주기 · 🤫 비밀로 하라기 · 🎁 공짜 선물 · 🔑 돈이나 비밀번호 요구.<br><br>이런 게 보이면 <b>잠깐 멈추세요</b>. 누르지 말고, <b>믿을 수 있는 가족에게 먼저 물어보세요</b>. 혹시 속았어도 괜찮아요 — <b>바로 도움을 청하면 돼요</b> 💛",
+        en:"Scammers almost always use the <b>same tricks</b>:<br>⏰ rushing you · 😱 scaring you · 🤫 telling you to keep it secret · 🎁 free prizes · 🔑 asking for money or a password.<br><br>When you see these, <b>pause</b>. Don't click — <b>ask someone you trust first</b>. And if you ever get fooled, that's OK — <b>just ask for help right away</b> 💛"})}</div><button class="big gotBtn">${T({ko:"알겠어요",en:"Got it"})}</button>`;
+      d.appendChild(card); card.querySelector(".gotBtn").addEventListener("click",()=>{ if(!locked) done("🎓",{ko:"이제 사기꾼의 수법이 다 보여요!",en:"Now you can see all the scammer's tricks!"}); });
+      autoDemo(null);
+    } }
+];
+
+/* ===== engine ===== */
+let current=0,doneLock=false;
+const els={ bar:document.getElementById("progressBar"),step:document.getElementById("stepText"),
+  main:document.getElementById("mainView"),final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"),msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+function wireGotAdvance(){
+  const gb=stage.querySelector(".gotBtn"); if(!gb) return;
+  const fresh=gb.cloneNode(true); gb.parentNode.replaceChild(fresh,gb);
+  fresh.addEventListener("click",()=>{ if(locked||doneLock) return; doneLock=true; locked=true;
+    chime(); confetti(); els.bar.style.width=((current+1)/levels.length*100)+"%";
+    setTimeout(()=>{ doneLock=false; current++; if(current>=levels.length) showFinal(); else loadLevel(current); },240);
+  });
+}
+function loadLevel(i){
+  clearStage(); locked=false; currentDemo=null; showReplay(false);
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.textContent=T(lv.instr); banner.h.textContent="💡 "+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  requestAnimationFrame(()=>{ lv.build(onLevelDone); wireGotAdvance(); });
+}
+function onLevelDone(emoji,msg){
+  if(doneLock) return; doneLock=true; locked=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(()=>{
+    els.msg.textContent=msg?T(msg):praise();
+    els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime();
+  },650);
+}
+function goNext(){
+  els.overlay.style.display="none"; doneLock=false;
+  current++; if(current>=levels.length) showFinal(); else loadLevel(current);
+}
+function skipLevel(){ if(doneLock) return; current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{ localStorage.setItem("momHub:done:tricks","1"); }catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ current=0; doneLock=false; els.main.style.display="flex"; els.skip.style.display="block";
+  els.final.style.display="none"; loadLevel(0); }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+applyStatic(); loadLevel(0);
+</script>
+</body>
+</html>

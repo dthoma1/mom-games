@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 창 정리 연습</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#6366f1; --accent2:#ec4899; --good:#22c55e;
+    --win:#ffffff; --titlebar:#e9eaee; --desk1:#7aa8ff; --desk2:#b98be0;
+    --sel:#dbeafe; --selBorder:#3b82f6;
+  }
+  *{box-sizing:border-box; -webkit-user-select:none; user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;
+    overscroll-behavior:none;touch-action:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1000px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+
+  /* lesson banner */
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  /* the fake desktop */
+  #desktop{position:relative;flex:1;min-height:0;border-radius:14px;overflow:hidden;
+    background:linear-gradient(160deg,var(--desk1),var(--desk2));
+    box-shadow:inset 0 0 60px rgba(0,0,0,.12), 0 18px 40px rgba(0,0,0,.18);}
+  #menubar{position:absolute;top:0;left:0;right:0;height:26px;background:rgba(255,255,255,.55);
+    backdrop-filter:blur(8px);display:flex;align-items:center;gap:14px;padding:0 12px;font-size:13px;
+    font-weight:600;color:#1f2937;z-index:5;}
+  #menubar .rt{margin-left:auto;display:flex;gap:14px;}
+
+  /* snap-zone highlight overlays */
+  .snapZone{position:absolute;top:26px;bottom:0;width:50%;background:rgba(255,255,255,.28);
+    border:3px dashed rgba(255,255,255,.85);border-radius:10px;display:none;z-index:2;pointer-events:none;}
+  #snapLeft{left:0;} #snapRight{right:0;}
+
+  /* target drop zone (level 1) */
+  .dropZone{position:absolute;border:4px dashed rgba(255,255,255,.9);border-radius:16px;
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;
+    background:rgba(255,255,255,.12);z-index:1;pointer-events:none;text-align:center;}
+  .dropZone.hot{background:rgba(255,255,255,.35);}
+
+  /* window */
+  .window{position:absolute;background:var(--win);border-radius:12px;overflow:hidden;
+    box-shadow:0 14px 34px rgba(0,0,0,.30);display:flex;flex-direction:column;border:1px solid #cfd2d8;
+    transition:box-shadow .15s ease;}
+  .window.front{box-shadow:0 22px 50px rgba(0,0,0,.42);}
+  .window.dim{filter:saturate(.85) brightness(.98);}
+  .titlebar{height:34px;background:var(--titlebar);display:flex;align-items:center;padding:0 10px;
+    cursor:grab;flex:0 0 auto;position:relative;border-bottom:1px solid #d8dade;}
+  .titlebar.grabbing{cursor:grabbing;}
+  .lights{display:flex;gap:8px;z-index:2;}
+  .light{width:14px;height:14px;border-radius:50%;cursor:pointer;display:flex;align-items:center;
+    justify-content:center;font-size:9px;color:rgba(0,0,0,.55);font-weight:900;line-height:1;}
+  .light.r{background:#ff5f57;} .light.y{background:#febc2e;} .light.g{background:#28c840;}
+  .light .gl{opacity:0;transition:opacity .1s;}
+  .titlebar:hover .light .gl{opacity:1;}
+  .winTitle{position:absolute;left:0;right:0;text-align:center;font-size:14px;font-weight:700;
+    color:#4b5563;pointer-events:none;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .winBody{flex:1;min-height:0;overflow:auto;padding:14px;display:grid;
+    grid-template-columns:repeat(auto-fill,84px);grid-auto-rows:96px;gap:8px;align-content:start;
+    position:relative;background:#fff;}
+  .winBody.plain{display:block;color:#374151;font-size:15px;line-height:1.6;}
+  .winBody .emptyMsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:#c3c6cf;font-size:14px;pointer-events:none;text-align:center;padding:20px;}
+  .fileItem{width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;
+    border-radius:10px;cursor:grab;}
+  .fileItem .fic{font-size:42px;line-height:1;pointer-events:none;}
+  .fileItem .fnm{font-size:12px;text-align:center;word-break:break-word;max-width:80px;pointer-events:none;}
+  .fileItem.dragging{opacity:.35;}
+  .winBody.dropok{outline:4px solid var(--good);outline-offset:-4px;}
+  .window.dropTarget{outline:4px solid var(--good);outline-offset:-2px;box-shadow:0 0 0 6px rgba(34,197,94,.25),0 18px 40px rgba(0,0,0,.28);}
+  /* resize handle */
+  .resizeH{position:absolute;right:0;bottom:0;width:22px;height:22px;cursor:nwse-resize;z-index:3;}
+  .resizeH::after{content:"";position:absolute;right:3px;bottom:3px;width:9px;height:9px;
+    border-right:2px solid #9ca3af;border-bottom:2px solid #9ca3af;}
+  .resizeGoal{position:absolute;border:4px dashed rgba(255,255,255,.9);border-radius:12px;z-index:0;
+    pointer-events:none;}
+
+  /* dock */
+  #dock{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:4;}
+  #dockInner{background:rgba(255,255,255,.5);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.6);
+    border-radius:18px;padding:6px 16px;display:flex;gap:16px;align-items:flex-end;}
+  .dockItem{text-align:center;}
+  .dockIcon{font-size:40px;transition:transform .12s;cursor:pointer;}
+  .dockItem.dropok .dockIcon{transform:scale(1.3) translateY(-6px);}
+  .dockLabel{font-size:10px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4);}
+  .minimized{position:absolute;bottom:10px;right:80px;font-size:30px;z-index:4;cursor:pointer;
+    animation:pop .35s ease;}
+
+  /* drag ghost for files */
+  #ghost{position:fixed;pointer-events:none;font-size:42px;z-index:90;opacity:.9;
+    transform:translate(-50%,-50%);display:none;}
+
+  #successOverlay{position:absolute;inset:0;background:rgba(255,255,255,.93);display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:14px;z-index:60;}
+  #successOverlay .be{font-size:76px;animation:pop .5s ease;}
+  #successOverlay .msg{font-size:24px;font-weight:800;color:var(--good);}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:95;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;
+    padding:11px 24px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+      </div>
+
+      <div id="desktop">
+        <div id="menubar">
+          <span></span><span id="menuFile"></span><span id="menuEdit"></span><span id="menuView"></span>
+          <span class="rt"><span>🔋</span><span>📶</span><span id="clock"></span></span>
+        </div>
+        <div class="snapZone" id="snapLeft"></div>
+        <div class="snapZone" id="snapRight"></div>
+        <!-- windows / dock injected per level -->
+      </div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div></div>
+  </div>
+</div>
+<div id="ghost"></div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"🪟 엄마의 창 정리 연습",en:"🪟 Window Organizing Practice"},
+  sub:{ko:"창을 옮기고, 크기를 바꾸고, 드래그하는 법을 하나씩 배워요.",en:"Learn one step at a time: moving, resizing, and dragging windows."},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"}, restart:{ko:"다시 하기 🔁",en:"Play again 🔁"}, hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"창 정리 마스터!",en:"Window organizing master!"},
+  finalMsg:{ko:"이제 창을 자유롭게 다룰 수 있어요. 드래그도 척척! 정말 잘하셨어요 💖",en:"Now you can handle windows freely, and dragging too. You did wonderfully 💖"},
+  file:{ko:"파일",en:"File"}, edit:{ko:"편집",en:"Edit"}, view:{ko:"보기",en:"View"},
+  empty:{ko:"비어 있어요",en:"Empty"}, step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`}, finalStep:{ko:"완료! 🎊",en:"Done! 🎊"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1); document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip); document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub); document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").textContent=T(UI.finalMsg); document.getElementById("menuFile").textContent=T(UI.file);
+  document.getElementById("menuEdit").textContent=T(UI.edit); document.getElementById("menuView").textContent=T(UI.view);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG)); tickClock();
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic(); els.overlay.style.display="none";
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); } else loadLevel(current); }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko; return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ---------- desktop helpers ---------- */
+const desktop=document.getElementById("desktop");
+const snapLeft=document.getElementById("snapLeft");
+const snapRight=document.getElementById("snapRight");
+const ghost=document.getElementById("ghost");
+let topZ=10;
+
+function clearDesktop(){
+  // remove everything except menubar + snap zones
+  [...desktop.children].forEach(ch=>{
+    if(ch.id==="menubar"||ch.id==="snapLeft"||ch.id==="snapRight") return;
+    ch.remove();
+  });
+  snapLeft.style.display="none"; snapRight.style.display="none";
+}
+function deskRect(){ return desktop.getBoundingClientRect(); }
+
+// create a window; opts: {title,icon,x,y,w,h,items,plainHTML,draggable,resizable,lights}
+function makeWindow(opts){
+  const d=deskRect();
+  const win=document.createElement("div");
+  win.className="window";
+  win.style.left=(opts.x??40)+"px";
+  win.style.top=(opts.y??50)+"px";
+  win.style.width=(opts.w??300)+"px";
+  win.style.height=(opts.h??210)+"px";
+  win.style.zIndex=(++topZ);
+  const lights=opts.lights!==false;
+  win.innerHTML=`
+    <div class="titlebar">
+      <div class="lights">
+        ${lights?`<span class="light r" data-act="close"><span class="gl">✕</span></span>
+          <span class="light y" data-act="min"><span class="gl">−</span></span>
+          <span class="light g" data-act="zoom"><span class="gl">+</span></span>`:``}
+      </div>
+      <div class="winTitle">${opts.icon?`<span>${opts.icon}</span>`:``}<span>${T(opts.title)||""}</span></div>
+    </div>
+    <div class="winBody ${opts.plainHTML?"plain":""}"></div>
+    ${opts.resizable?`<div class="resizeH"></div>`:``}`;
+  const body=win.querySelector(".winBody");
+  if(opts.plainHTML){ body.innerHTML=opts.plainHTML; }
+  else { renderFiles(body, opts.items||[]); }
+  desktop.appendChild(win);
+  bringToFront(win);
+  win.addEventListener("pointerdown",()=>bringToFront(win));
+  return win;
+}
+function renderFiles(body, items){
+  body.innerHTML="";
+  if(items.length===0){ body.innerHTML=`<div class="emptyMsg">${T(UI.empty)}</div>`; return; }
+  items.forEach(it=>{
+    const el=document.createElement("div");
+    el.className="fileItem"; el.dataset.name=typeof it.name==="object"?it.name.ko:it.name;
+    el.innerHTML=`<div class="fic">${it.ic}</div><div class="fnm">${T(it.name)}</div>`;
+    body.appendChild(el);
+  });
+}
+function bringToFront(win){
+  win.style.zIndex=(++topZ);
+  [...desktop.querySelectorAll(".window")].forEach(w=>w.classList.toggle("front", w===win));
+}
+
+// make a window draggable by its titlebar. onMove/onDrop optional (get client x/y of pointer).
+function enableWindowDrag(win, {onMove, onDrop, bounds=true}={}){
+  const tb=win.querySelector(".titlebar");
+  let sx,sy,ox,oy,active=false,pid=null;
+  tb.addEventListener("pointerdown",e=>{
+    if(e.target.closest(".light")) return; // don't start drag from buttons
+    e.preventDefault(); bringToFront(win);
+    active=true; pid=e.pointerId; tb.setPointerCapture(pid); tb.classList.add("grabbing");
+    sx=e.clientX; sy=e.clientY; ox=win.offsetLeft; oy=win.offsetTop;
+  });
+  tb.addEventListener("pointermove",e=>{
+    if(!active) return;
+    let nx=ox+(e.clientX-sx), ny=oy+(e.clientY-sy);
+    if(bounds){
+      const d=deskRect();
+      nx=Math.max(0, Math.min(nx, d.width-win.offsetWidth));
+      ny=Math.max(26, Math.min(ny, d.height-40));
+    }
+    win.style.left=nx+"px"; win.style.top=ny+"px";
+    onMove && onMove(e.clientX, e.clientY, win);
+  });
+  const end=e=>{
+    if(!active) return; active=false; tb.classList.remove("grabbing");
+    try{tb.releasePointerCapture(pid);}catch(_){}
+    onDrop && onDrop(e.clientX, e.clientY, win);
+  };
+  tb.addEventListener("pointerup",end);
+  tb.addEventListener("pointercancel",end);
+}
+
+// make a window resizable by its corner handle. onResize(w,h) optional.
+function enableWindowResize(win, {onResize, min=[160,120]}={}){
+  const h=win.querySelector(".resizeH"); if(!h) return;
+  let sx,sy,ow,oh,active=false,pid=null;
+  h.addEventListener("pointerdown",e=>{
+    e.preventDefault(); e.stopPropagation(); bringToFront(win);
+    active=true; pid=e.pointerId; h.setPointerCapture(pid);
+    sx=e.clientX; sy=e.clientY; ow=win.offsetWidth; oh=win.offsetHeight;
+  });
+  h.addEventListener("pointermove",e=>{
+    if(!active) return;
+    const d=deskRect();
+    let nw=Math.max(min[0], ow+(e.clientX-sx));
+    let nh=Math.max(min[1], oh+(e.clientY-sy));
+    nw=Math.min(nw, d.width-win.offsetLeft);
+    nh=Math.min(nh, d.height-win.offsetTop);
+    win.style.width=nw+"px"; win.style.height=nh+"px";
+    onResize && onResize(nw,nh,win);
+  });
+  const end=()=>{ if(!active)return; active=false; try{h.releasePointerCapture(pid);}catch(_){} };
+  h.addEventListener("pointerup",end);
+  h.addEventListener("pointercancel",end);
+}
+
+// traffic-light button handlers
+function onLight(win, act, cb){
+  const el=win.querySelector('.light[data-act="'+act+'"]');
+  if(el) el.addEventListener("click",e=>{ e.stopPropagation(); cb(win); });
+}
+
+// file drag from a window body to a drop target. cfg.canDrop(target)=>bool, cfg.onDrop(target)
+function enableFileDrag(fileEl, cfg){
+  let sx,sy,active=false,pid=null;
+  fileEl.addEventListener("pointerdown",e=>{
+    e.preventDefault(); e.stopPropagation();
+    active=true; pid=e.pointerId; fileEl.setPointerCapture(pid);
+    sx=e.clientX; sy=e.clientY;
+    started=false;
+  });
+  let started=false;
+  fileEl.addEventListener("pointermove",e=>{
+    if(!active) return;
+    if(!started){
+      if(Math.hypot(e.clientX-sx,e.clientY-sy)<6) return;
+      started=true; fileEl.classList.add("dragging");
+      ghost.textContent=fileEl.querySelector(".fic").textContent;
+      ghost.style.display="block";
+    }
+    ghost.style.left=e.clientX+"px"; ghost.style.top=e.clientY+"px";
+    cfg.highlight && cfg.highlight(e.clientX,e.clientY);
+  });
+  const end=e=>{
+    if(!active) return; active=false;
+    try{fileEl.releasePointerCapture(pid);}catch(_){}
+    ghost.style.display="none"; fileEl.classList.remove("dragging");
+    if(started){ cfg.onDrop && cfg.onDrop(e.clientX,e.clientY,fileEl); }
+    started=false;
+  };
+  fileEl.addEventListener("pointerup",end);
+  fileEl.addEventListener("pointercancel",end);
+}
+function pointInRect(x,y,el){ if(!el) return false; const r=el.getBoundingClientRect();
+  return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom; }
+
+/* ---------- levels ---------- */
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+
+const levels=[
+  { // 1. move a window
+    title:{ko:"창 옮기기",en:"Move a window"},
+    instr:{ko:"창의 회색 제목 막대를 꾹 누른 채로 끌어서, 점선 상자 안으로 옮겨 보세요.",en:"Press and hold the gray title bar, then drag the window into the dashed box."},
+    hint:{ko:"제목 막대(맨 위 줄)를 누른 채로 손을 움직이면 창이 따라와요. 이게 ‘드래그’예요.",en:"Hold the title bar (the top row) and move your hand; the window follows. This is dragging."},
+    setup(done){
+      const zone=document.createElement("div");
+      zone.className="dropZone";
+      const d=deskRect();
+      zone.style.right="6%"; zone.style.bottom="10%"; zone.style.width="220px"; zone.style.height="170px";
+      zone.textContent=T({ko:"여기에 놓으세요",en:"Place it here"});
+      desktop.appendChild(zone);
+      const win=makeWindow({title:{ko:"메모",en:"Notes"},icon:"📝",x:24,y:44,w:230,h:170,
+        plainHTML:`<div style="padding:4px 2px;">${T({ko:"오늘 할 일:<br>· 창 옮기기 연습 🙂<br>· 잘하고 있어요!",en:"Today's to-do:<br>· Practice moving windows 🙂<br>· You are doing great!"})}</div>`});
+      enableWindowDrag(win,{
+        onMove(){ const wr=win.getBoundingClientRect(),zr=zone.getBoundingClientRect();
+          const cx=wr.left+wr.width/2, cy=wr.top+wr.height/2;
+          zone.classList.toggle("hot", cx>zr.left&&cx<zr.right&&cy>zr.top&&cy<zr.bottom); },
+        onDrop(){ const wr=win.getBoundingClientRect(),zr=zone.getBoundingClientRect();
+          const cx=wr.left+wr.width/2, cy=wr.top+wr.height/2;
+          if(cx>zr.left&&cx<zr.right&&cy>zr.top&&cy<zr.bottom){ done("📝",T({ko:"창을 딱 맞게 옮겼어요!",en:"You moved the window right into place!"})); } }
+      });
+    }
+  },
+  { // 2. bring window to front
+    title:{ko:"창을 앞으로 가져오기",en:"Bring a window forward"},
+    instr:{ko:"뒤에 숨은 ‘사진’ 창을 한 번 눌러서 맨 앞으로 가져오세요.",en:"Click the hidden Photos window once to bring it to the front."},
+    hint:{ko:"여러 창이 겹쳐 있을 때, 원하는 창을 클릭하면 맨 앞으로 나와요.",en:"When windows overlap, click the one you want and it comes to the front."},
+    setup(done){
+      const back=makeWindow({title:{ko:"사진",en:"Photos"},icon:"🖼️",x:40,y:50,w:260,h:200,
+        items:[{name:{ko:"바다.jpg",en:"beach.jpg"},ic:"🏖️"},{name:{ko:"산.jpg",en:"mountain.jpg"},ic:"⛰️"}]});
+      const front=makeWindow({title:{ko:"메일",en:"Mail"},icon:"✉️",x:150,y:90,w:300,h:210,
+        plainHTML:`<div>${T({ko:"받은 편지함 (2)<br><br>· 반가워요 엄마!<br>· 잘 하고 있어요 💌",en:"Inbox (2)<br><br>· Hello, Mom!<br>· You are doing great 💌"})}</div>`});
+      // success when the photo window becomes the front-most
+      back.addEventListener("pointerdown",()=>{
+        setTimeout(()=>{ if(back.classList.contains("front")) done("🖼️",T({ko:"사진 창이 앞으로 나왔어요!",en:"The Photos window came to the front!"})); },30);
+      });
+    }
+  },
+  { // 3. resize a window
+    title:{ko:"창 크기 키우기",en:"Make a window bigger"},
+    instr:{ko:"창의 오른쪽 아래 모서리를 끌어서, 점선 크기만큼 창을 크게 만드세요.",en:"Drag the bottom-right corner to make the window as large as the dashed outline."},
+    hint:{ko:"모서리에 마우스를 대면 크기를 바꿀 수 있어요. 누른 채로 바깥으로 끌어요.",en:"Put the mouse on a corner to resize. Hold it and drag outward."},
+    setup(done){
+      const goal=document.createElement("div");
+      goal.className="resizeGoal";
+      goal.style.left="24px"; goal.style.top="44px"; goal.style.width="420px"; goal.style.height="300px";
+      desktop.appendChild(goal);
+      const win=makeWindow({title:{ko:"safari",en:"Safari"},icon:"🧭",x:24,y:44,w:230,h:150,resizable:true,
+        plainHTML:`<div>${T({ko:"창이 너무 작아요!<br>모서리를 끌어서 크게 만들어 주세요. ↘️",en:"The window is too small!<br>Drag the corner to make it bigger. ↘️"})}</div>`});
+      let ok=false;
+      enableWindowResize(win,{onResize(w,h){
+        if(!ok && w>=400 && h>=280){ ok=true; goal.style.borderColor="var(--good)"; done("🧭",T({ko:"창을 시원하게 키웠어요!",en:"You made the window nice and roomy!"})); }
+      }});
+    }
+  },
+  { // 4. close a window (red)
+    title:{ko:"창 닫기 (빨간 단추)",en:"Close a window (red button)"},
+    instr:{ko:"창 왼쪽 위의 빨간색 동그라미를 눌러서 창을 닫으세요.",en:"Click the red circle at the top-left of the window to close it."},
+    hint:{ko:"신호등처럼 생긴 세 단추 중 빨강은 ‘닫기’예요.",en:"Of the three traffic-light buttons, red means Close."},
+    setup(done){
+      const win=makeWindow({title:{ko:"광고",en:"Ad"},icon:"📢",x:120,y:60,w:300,h:200,
+        plainHTML:`<div style="text-align:center;padding-top:20px;">${T({ko:"🎉 축하합니다! 🎉<br><br>이 창을 닫아 주세요.<br><span style=\"font-size:13px;color:#9ca3af;\">← 왼쪽 위 빨간 단추</span>",en:"🎉 Congratulations! 🎉<br><br>Please close this window.<br><span style=\"font-size:13px;color:#9ca3af;\">← Red button at top-left</span>"})}</div>`});
+      onLight(win,"close",()=>{ win.style.transition="transform .2s, opacity .2s"; win.style.transform="scale(.7)"; win.style.opacity="0";
+        setTimeout(()=>done("🚪",T({ko:"창을 깔끔하게 닫았어요!",en:"You closed the window neatly!"})),200); });
+    }
+  },
+  { // 5. minimize a window (yellow)
+    title:{ko:"창 잠시 숨기기 (노란 단추)",en:"Hide a window for a moment (yellow button)"},
+    instr:{ko:"노란색 동그라미를 눌러서 창을 아래(독)로 잠시 내려 보세요.",en:"Click the yellow circle to tuck the window down into the Dock for a moment."},
+    hint:{ko:"노랑은 ‘최소화’예요. 창을 지우지 않고 아래에 잠깐 접어 둬요.",en:"Yellow means Minimize. It folds the window away without deleting it."},
+    setup(done){
+      makeDock();
+      const win=makeWindow({title:{ko:"음악",en:"Music"},icon:"🎧",x:110,y:56,w:300,h:200,
+        plainHTML:`<div style="text-align:center;padding-top:26px;">${T({ko:"🎵 좋아하는 노래 🎵<br><br>노란 단추를 눌러<br>창을 아래로 내려 보세요.",en:"🎵 Favorite song 🎵<br><br>Click the yellow button<br>to send the window down."})}</div>`});
+      onLight(win,"min",()=>{
+        win.style.transition="transform .3s ease, opacity .3s ease";
+        win.style.transformOrigin="bottom center";
+        win.style.transform="translateY(200px) scale(.15)"; win.style.opacity="0";
+        setTimeout(()=>{ win.remove();
+          const m=document.createElement("div"); m.className="minimized"; m.textContent="🎧"; desktop.appendChild(m);
+          done("🎧",T({ko:"창을 살짝 숨겼어요!",en:"You tucked the window away!"})); },300);
+      });
+    }
+  },
+  { // 6. zoom / fullscreen (green)
+    title:{ko:"창 크게 펼치기 (초록 단추)",en:"Make a window large (green button)"},
+    instr:{ko:"초록색 동그라미를 눌러서 창을 화면 가득 크게 펼쳐 보세요.",en:"Click the green circle to make the window fill the screen."},
+    hint:{ko:"초록은 창을 화면에 꽉 차게 키워 줘요.",en:"Green makes the window grow to fill the screen."},
+    setup(done){
+      const win=makeWindow({title:{ko:"지도",en:"Maps"},icon:"🗺️",x:70,y:60,w:280,h:180,
+        plainHTML:`<div style="text-align:center;padding-top:22px;">${T({ko:"🗺️ 작게 보이네요.<br><br>초록 단추를 눌러<br>크게 펼쳐 보세요!",en:"🗺️ It looks small.<br><br>Click the green button<br>to make it big!"})}</div>`});
+      onLight(win,"zoom",()=>{
+        const d=deskRect();
+        win.style.transition="all .3s ease";
+        win.style.left="0px"; win.style.top="26px"; win.style.width=d.width+"px"; win.style.height=(d.height-26)+"px";
+        win.style.borderRadius="0"; bringToFront(win);
+        setTimeout(()=>done("🗺️",T({ko:"창을 화면 가득 펼쳤어요!",en:"You spread the window across the screen!"})),320);
+      });
+    }
+  },
+  { // 7. snap side by side
+    title:{ko:"창 반으로 붙이기",en:"Snap a window to half the screen"},
+    instr:{ko:"제목 막대를 끌어서 창을 화면 왼쪽 끝까지 밀면, 왼쪽 절반에 딱 붙어요.",en:"Drag the title bar to the far left edge, and the window snaps to the left half."},
+    hint:{ko:"창을 화면 가장자리로 밀면 반쪽 크기로 자동으로 정리돼요. 두 창을 나란히 볼 때 좋아요.",en:"Push a window to the screen edge and it neatly becomes half-size. Great for seeing two windows side by side."},
+    setup(done){
+      const win=makeWindow({title:{ko:"문서",en:"Document"},icon:"📄",x:250,y:70,w:280,h:190,
+        plainHTML:`<div>${T({ko:"이 창을 화면 <b>왼쪽 끝</b>으로 밀어 보세요. ⬅️",en:"Push this window to the <b>left edge</b> of the screen. ⬅️"})}</div>`});
+      enableWindowDrag(win,{
+        onMove(cx){ const d=deskRect(); snapLeft.style.display = (cx < d.left + d.width*0.14) ? "block":"none"; },
+        onDrop(cx){ const d=deskRect(); snapLeft.style.display="none";
+          if(cx < d.left + d.width*0.14){
+            win.style.transition="all .25s ease";
+            win.style.left="0px"; win.style.top="26px"; win.style.width=(d.width/2)+"px"; win.style.height=(d.height-26)+"px";
+            bringToFront(win); setTimeout(()=>done("📄",T({ko:"창을 왼쪽에 딱 붙였어요!",en:"You snapped the window to the left!"})),260);
+          }
+        }
+      });
+    }
+  },
+  { // 8. drag file between windows
+    title:{ko:"파일을 다른 창으로 옮기기",en:"Move a file to another window"},
+    instr:{ko:"왼쪽 창의 📄 파일을 꾹 눌러 끌어서, 오른쪽 ‘문서’ 창 안에 놓으세요.",en:"Press and drag the 📄 file from the left window, then drop it inside the Documents window on the right."},
+    hint:{ko:"드래그 앤 드롭! 파일을 누른 채로 옮겨서 원하는 창 위에서 손을 떼요.",en:"Drag and drop! Hold the file, move it, and let go over the window you want."},
+    setup(done){
+      const left=makeWindow({title:{ko:"다운로드",en:"Downloads"},icon:"📥",x:20,y:50,w:250,h:210,
+        items:[{name:{ko:"편지.txt",en:"letter.txt"},ic:"📄"}]});
+      const right=makeWindow({title:{ko:"문서",en:"Documents"},icon:"📁",x:330,y:70,w:250,h:210, items:[]});
+      const rightBody=right.querySelector(".winBody");
+      const fileEl=left.querySelector(".fileItem");
+      enableFileDrag(fileEl,{
+        highlight(x,y){ right.classList.toggle("dropTarget", pointInRect(x,y,right)); },
+        onDrop(x,y){ right.classList.remove("dropTarget");
+          if(pointInRect(x,y,right)){
+            fileEl.remove();
+            if(left.querySelector(".fileItem")===null) left.querySelector(".winBody").innerHTML=`<div class="emptyMsg">${T(UI.empty)}</div>`;
+            renderFiles(rightBody,[{name:{ko:"편지.txt",en:"letter.txt"},ic:"📄"}]);
+            chime(); done("📄",T({ko:"파일을 옮겼어요! 드래그 앤 드롭 성공!",en:"You moved the file! Drag and drop success!"}));
+          }
+        }
+      });
+    }
+  },
+  { // 9. drag file to trash
+    title:{ko:"휴지통에 버리기",en:"Put a file in the Trash"},
+    instr:{ko:"필요 없는 파일을 끌어서, 아래 독의 🗑️ 휴지통에 놓으세요.",en:"Drag the unneeded file to the 🗑️ Trash in the Dock below."},
+    hint:{ko:"파일을 휴지통 위로 끌고 가서 손을 떼면 버려져요. 드래그 앤 드롭이에요.",en:"Drag a file over the Trash and let go to throw it away. That is drag and drop."},
+    setup(done){
+      const {trashItem}=makeDock();
+      const win=makeWindow({title:{ko:"바탕화면",en:"Desktop"},icon:"🖥️",x:60,y:52,w:300,h:200,
+        items:[{name:{ko:"광고.png",en:"ad.png"},ic:"🗑️"},{name:{ko:"안내문.txt",en:"notice.txt"},ic:"📄"}]});
+      const junk=[...win.querySelectorAll(".fileItem")].find(f=>f.dataset.name==="광고.png");
+      enableFileDrag(junk,{
+        highlight(x,y){ trashItem.classList.toggle("dropok", pointInRect(x,y,trashItem)); },
+        onDrop(x,y){ trashItem.classList.remove("dropok");
+          if(pointInRect(x,y,trashItem)){
+            junk.style.transition="transform .2s, opacity .2s"; junk.style.transform="scale(.2)"; junk.style.opacity="0";
+            const ti=trashItem.querySelector(".dockIcon"); ti.textContent="🗑️";
+            setTimeout(()=>{ junk.remove(); ti.textContent="🗑️"; beep(400,.12); done("🗑️",T({ko:"필요 없는 파일을 버렸어요!",en:"You threw away the unneeded file!"})); },210);
+          }
+        }
+      });
+    }
+  }
+];
+
+function makeDock(){
+  const dock=document.createElement("div"); dock.id="dock";
+  dock.innerHTML=`<div id="dockInner">
+    <div class="dockItem"><div class="dockIcon">🧭</div><div class="dockLabel">${T({ko:"사파리",en:"Safari"})}</div></div>
+    <div class="dockItem"><div class="dockIcon">✉️</div><div class="dockLabel">${T({ko:"메일",en:"Mail"})}</div></div>
+    <div class="dockItem" id="dockTrash"><div class="dockIcon">🗑️</div><div class="dockLabel">${T({ko:"휴지통",en:"Trash"})}</div></div>
+  </div>`;
+  desktop.appendChild(dock);
+  return {dock, trashItem:dock.querySelector("#dockTrash")};
+}
+
+/* ---------- engine ---------- */
+let current=0;
+const els={
+  bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn"),
+};
+
+function loadLevel(i){
+  clearDesktop();
+  topZ=10;
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title);
+  banner.i.textContent=T(lv.instr);
+  banner.h.textContent="💡 "+T(lv.hint);
+  els.step.textContent=T(UI.step)(i+1, levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  // slight delay so desktop has correct size for first level
+  requestAnimationFrame(()=>lv.setup(onLevelDone));
+}
+function onLevelDone(emoji,msg){
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  els.msg.textContent=msg||praise();
+  els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex";
+  confetti(); chime();
+  setTimeout(()=>{
+    els.overlay.style.display="none";
+    current++;
+    if(current>=levels.length) showFinal(); else loadLevel(current);
+  },1600);
+}
+function skipLevel(){ current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){
+  els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:window","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep);
+  confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime();
+}
+function restart(){ current=0; els.main.style.display="block"; els.skip.style.display="block";
+  els.final.style.display="none"; loadLevel(0); }
+
+// live clock in the fake menubar
+function tickClock(){ const d=new Date(); let h=d.getHours(); const m=String(d.getMinutes()).padStart(2,"0");
+  const ap=h<12?T({ko:"오전",en:"AM"}):T({ko:"오후",en:"PM"}); h=h%12; if(h===0)h=12; document.getElementById("clock").textContent=`${ap} ${h}:${m}`; }
+applyStatic();
+tickClock(); setInterval(tickClock,10000);
+
+// prevent browser back-swipe / page zoom
+document.addEventListener("gesturestart",e=>e.preventDefault());
+document.addEventListener("wheel",e=>{ if(e.ctrlKey) e.preventDefault(); },{passive:false});
+
+loadLevel(0);
+</script>
+</body>
+</html>

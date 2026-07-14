@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 노래를 소리로 듣기</title>
+<style>
+  :root{--bg1:#eef2ff;--bg2:#fdf2f8;--ink:#1f2937;--soft:#6b7280;--accent:#6366f1;--accent2:#ec4899;
+    --good:#22c55e;--macblue:#0a63ff;--desk1:#2b6cff;--desk2:#8a5cf6;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+  #banner .extra{margin-top:8px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;}
+  #replayBtn{font-size:14px;font-weight:700;color:var(--accent);background:#eef2ff;border:1px solid #dfe4ff;
+    border-radius:999px;padding:7px 16px;cursor:pointer;display:none;}
+  #stage{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;
+    background:linear-gradient(135deg,var(--desk1),var(--desk2));display:flex;align-items:center;justify-content:center;padding:18px;}
+
+  .bwin{background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.30);width:min(580px,96%);overflow:hidden;
+    display:flex;flex-direction:column;}
+  .btool{height:46px;background:linear-gradient(#f6f6f7,#e9e9eb);display:flex;align-items:center;gap:8px;padding:0 12px;
+    border-bottom:1px solid #e1e1e4;}
+  .dots{display:flex;gap:7px;margin-right:4px;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dot.r{background:#ff5f57;}.dot.y{background:#febc2e;}.dot.g{background:#28c840;}
+  .navbtn{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5b6270;
+    font-size:17px;cursor:pointer;flex:0 0 auto;}
+  .navbtn:hover{background:rgba(0,0,0,.06);}
+  .navbtn.off{opacity:.32;pointer-events:none;}
+  .addrbar{flex:1;height:32px;background:#fff;border:1px solid #d5d5da;border-radius:8px;display:flex;align-items:center;
+    padding:0 10px;gap:7px;font-size:14px;color:#374151;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);min-width:0;}
+  .addrbar .lock{font-size:11px;color:#9ca3af;}
+  .addrbar input{border:none;outline:none;flex:1;font-size:14px;background:transparent;min-width:0;color:#374151;}
+  .addrbar.focusRing{border-color:var(--macblue);box-shadow:0 0 0 3px rgba(10,99,255,.25);}
+  .tabstrip{height:34px;background:#e6e6e9;display:flex;align-items:flex-end;gap:2px;padding:0 8px;}
+  .tab{height:29px;background:#d3d3d8;border-radius:8px 8px 0 0;padding:0 12px;display:flex;align-items:center;gap:8px;
+    font-size:13px;color:#4b5563;max-width:170px;white-space:nowrap;overflow:hidden;}
+  .tab.active{background:#fff;color:#1f2937;}
+  .tabx{font-size:13px;color:#9ca3af;cursor:pointer;border-radius:4px;padding:0 3px;}
+  .tabx:hover{background:rgba(0,0,0,.1);}
+  .bcontent{background:#fff;flex:1;min-height:150px;padding:24px;text-align:center;overflow:hidden;transition:font-size .2s;}
+  .bcontent h2{margin:6px 0;}
+  .bcontent p{color:#6b7280;line-height:1.5;margin:8px 0;}
+  .fav{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+  .favIcon{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;
+    box-shadow:0 3px 8px rgba(0,0,0,.12);}
+
+  @keyframes tpulse{0%,100%{box-shadow:0 0 0 0 rgba(10,99,255,.55);}50%{box-shadow:0 0 0 7px rgba(10,99,255,0);}}
+  .target{animation:tpulse 1.4s infinite;border-radius:8px;position:relative;z-index:5;}
+  .miniToast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(43,47,54,.92);color:#fff;
+    font-size:13px;font-weight:600;padding:8px 15px;border-radius:999px;z-index:35;box-shadow:0 6px 16px rgba(0,0,0,.3);transition:opacity .2s;}
+
+  .demoCursor{position:absolute;width:26px;height:26px;z-index:40;pointer-events:none;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));transition:left .5s ease,top .5s ease,opacity .2s;}
+  .demoCursor.click{animation:clickPulse .35s ease;}
+  @keyframes clickPulse{0%{transform:scale(1);}50%{transform:scale(.8);}100%{transform:scale(1);}}
+  .clickRipple{position:absolute;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
+    z-index:39;pointer-events:none;animation:ripple .5s ease-out forwards;}
+  @keyframes ripple{from{transform:scale(.3);opacity:.85;}to{transform:scale(2.4);opacity:0;}}
+
+  #successOverlay{position:absolute;inset:0;background:rgba(255,255,255,.93);display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:12px;z-index:60;}
+  #successOverlay .be{font-size:76px;animation:pop .5s ease;}
+  #successOverlay .msg{font-size:24px;font-weight:800;color:var(--good);text-align:center;padding:0 20px;line-height:1.35;}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:95;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+
+  /* ===== chatbot-game specifics ===== */
+  /* slideshow */
+  .slide{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;width:100%;height:100%;}
+  .slideArt{background:#fff;border-radius:24px;box-shadow:0 16px 44px rgba(0,0,0,.20);padding:26px 34px;
+    display:flex;align-items:center;justify-content:center;min-width:min(360px,86%);min-height:158px;}
+  .cbArt{display:flex;align-items:center;justify-content:center;gap:16px;text-align:center;}
+  .cbBot{position:relative;font-size:78px;line-height:1;}
+  .cbBot .badge{position:absolute;right:-10px;bottom:-6px;font-size:34px;}
+  .cbFlow{font-size:40px;color:#9aa0ad;}
+  .cbStack{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:52px;line-height:1;}
+  .cbStack .cap{font-size:13px;font-weight:700;color:#6b7280;}
+  .cbCross{position:relative;display:inline-block;font-size:60px;line-height:1;}
+  .cbCross::after{content:"🚫";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:64px;opacity:.9;}
+  .cbBubble{background:#eef2ff;border:1px solid #dfe4ff;border-radius:16px 16px 16px 4px;padding:10px 14px;
+    font-size:16px;font-weight:700;color:#3730a3;max-width:190px;}
+  .cbOut{display:flex;flex-direction:column;gap:6px;font-size:40px;line-height:1;}
+  .appRow{display:flex;gap:18px;align-items:stretch;justify-content:center;flex-wrap:wrap;}
+  .appCard{background:#fff;border:2px solid #e5e7eb;border-radius:16px;padding:14px 18px;min-width:150px;max-width:200px;
+    text-align:center;box-shadow:0 8px 22px rgba(0,0,0,.12);}
+  .appCard .ic{font-size:46px;line-height:1;}
+  .appCard .nm{font-size:20px;font-weight:800;margin-top:6px;color:#3730a3;}
+  .appCard .tg{font-size:13px;font-weight:600;color:#6b7280;margin-top:4px;line-height:1.35;}
+  .howRow{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
+  .howStep{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:40px;line-height:1;}
+  .howStep .cap{font-size:12px;font-weight:700;color:#6b7280;max-width:92px;}
+  .howArrow{font-size:26px;color:#9aa0ad;}
+  /* slideshow buttons */
+  .slideNav{display:flex;gap:14px;align-items:center;}
+  .slideBtn{font-size:20px;font-weight:800;color:#fff;border:none;cursor:pointer;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:14px 32px;
+    box-shadow:0 6px 16px rgba(99,102,241,.35);}
+  .slideBtn:hover{filter:brightness(1.04);}
+  .slideBtn.back{background:#fff;color:var(--accent);border:1px solid #dfe4ff;box-shadow:0 3px 8px rgba(0,0,0,.08);padding:14px 22px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+        <div class="extra"><button id="replayBtn" onclick="replayDemo()"></button></div>
+      </div>
+      <div id="stage"></div>
+    </div>
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div></div>
+  </div>
+</div>
+
+<script>
+/* ===== language ===== */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"🎧 노래를 소리로 듣기",en:"🎧 Hear Your Song"},
+  sub:{ko:"ChatGPT로 만든 가사를, 진짜 들을 수 있는 노래로 바꾸는 방법을 알아봐요 🎶",
+       en:"Learn how to turn the lyrics from ChatGPT into a song you can actually hear 🎶"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  replay:{ko:"👀 다시 보여주기",en:"👀 Show me again"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"노래를 들을 수 있어요!",en:"You can hear your song!"},
+  finalMsg:{ko:"<b>ChatGPT로 가사</b>를 만들고, <b>Suno 같은 음악 앱</b>에 붙여넣으면 진짜 노래가 돼요. 이제 처음부터 끝까지 만들 수 있어요 🎧💛",
+            en:"Write the <b>lyrics with ChatGPT</b>, paste them into a <b>music app like Suno</b>, and you get a real song. Now you can make one from start to finish 🎧💛"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  next:{ko:"다음 ›",en:"Next ›"},
+  back:{ko:"‹ 이전",en:"‹ Back"},
+  finishBtn:{ko:"완료 🎊",en:"Finish 🎊"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("replayBtn").textContent=T(UI.replay);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").innerHTML=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else { loadLevel(current); } }
+
+/* ===== praise + sound + confetti ===== */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ===== cursors ===== */
+const SVG_ARROW=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 3 L5 20 L9.5 15.8 L12.6 22 L15.2 20.8 L12.1 14.8 L18 14.8 Z" fill="#111" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const SVG_IBEAM=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g><g fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g></svg>`;
+function makeCursor(kind){ const c=document.createElement("div"); c.className="demoCursor";
+  c.innerHTML=kind==="ibeam"?SVG_IBEAM:SVG_ARROW; return c; }
+
+/* ===== state + helpers ===== */
+const stage=document.getElementById("stage");
+let locked=false,currentDemo=null;
+function clearStage(){ stage.innerHTML=""; }
+function stageXY(el){ const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect();
+  return {x:r.left-s.left+r.width/2,y:r.top-s.top+r.height/2}; }
+function ripple(x,y){ const r=document.createElement("div"); r.className="clickRipple";
+  r.style.left=(x-13)+"px"; r.style.top=(y-13)+"px"; stage.appendChild(r); setTimeout(()=>r.remove(),520); }
+function markTarget(el){ if(el) el.classList.add("target"); }
+function showToast(msg){ let t=stage.querySelector(".miniToast");
+  if(!t){ t=document.createElement("div"); t.className="miniToast"; stage.appendChild(t); }
+  t.textContent=msg; t.style.opacity="1"; clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>{ t.style.opacity="0"; },1800); }
+
+/* ===== trackpad click sound ===== */
+function clack(){ try{ actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="square";
+  o.frequency.setValueAtTime(1500,actx.currentTime);o.frequency.exponentialRampToValueAtTime(180,actx.currentTime+.045);
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.3,actx.currentTime+.004);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.06);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+.06);}catch(e){} }
+
+/* ===== demos ===== */
+function replayDemo(){ if(currentDemo) currentDemo(); }
+function showReplay(on){ document.getElementById("replayBtn").style.display=on?"inline-flex":"none"; }
+function autoDemo(fn,delay){ currentDemo=fn; showReplay(!!fn); if(fn) setTimeout(()=>{ if(!locked) fn(); },delay||800); }
+function demoTap(getTarget,atClick,reset,holdMs,kind){
+  return function run(){ if(locked) return; locked=true;
+    const target=getTarget(); if(!target){ locked=false; return; }
+    const cur=makeCursor(kind); stage.appendChild(cur);
+    const {x,y}=stageXY(target);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+34)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-4)+"px"; cur.style.top=(kind==="ibeam"?y-13:y-2)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(560,.05); if(atClick)atClick(target); },760);
+    setTimeout(()=>{ if(reset)reset(target); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },760+(holdMs||900));
+  };
+}
+function demoType(getInput,word,holdMs){
+  return function run(){ if(locked) return; locked=true;
+    const f=getInput(); if(!f){ locked=false; return; }
+    const bar=f.closest(".addrbar"); const {x,y}=stageXY(f);
+    const cur=makeCursor("ibeam"); stage.appendChild(cur);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+28)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-6)+"px"; cur.style.top=(y-13)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(540,.05); if(bar)bar.classList.add("focusRing"); f.value="";
+      let i=0; const iv=setInterval(()=>{ f.value=word.slice(0,++i); beep(700,.03); if(i>=word.length) clearInterval(iv); },170);
+    },780);
+    setTimeout(()=>{ f.value=""; if(bar)bar.classList.remove("focusRing"); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },780+(holdMs||1600));
+  };
+}
+
+/* ===== chatbot art ===== */
+function renderArt(art){
+  if(art==="recap"){
+    return `<div class="cbArt">
+      <div class="cbBot">🤖<span class="badge">✍️</span></div>
+      <div class="cbFlow">➡️</div>
+      <div class="cbStack">📝<span class="cap">${T({ko:"가사 (글)",en:"lyrics (words)"})}</span></div></div>`;
+  }
+  if(art==="cantsing"){
+    return `<div class="cbArt">
+      <div class="cbStack">📝<span class="cap">${T({ko:"가사는 완성",en:"lyrics done"})}</span></div>
+      <div class="cbFlow">➡️</div>
+      <div class="cbCross">🔊</div>
+      <div class="cbStack" style="margin-left:6px;">🤐<span class="cap">${T({ko:"부르진 못해요",en:"can't sing them"})}</span></div></div>`;
+  }
+  if(art==="musicapp"){
+    return `<div class="cbArt">
+      <div class="cbStack">📝<span class="cap">${T({ko:"가사 붙여넣기",en:"paste lyrics"})}</span></div>
+      <div class="cbFlow">➡️</div>
+      <div class="cbBot">🎵<span class="badge">🔊</span></div>
+      <div class="cbStack" style="margin-left:6px;"><span class="cap">${T({ko:"들을 수 있는 노래!",en:"a song you can hear!"})}</span></div></div>`;
+  }
+  if(art==="options"){
+    return `<div class="appRow">
+      <div class="appCard"><div class="ic">🎵</div><div class="nm">Suno</div>
+        <div class="tg">${T({ko:"수노 · 가사 붙여넣고 노래 만들기",en:"“Soo-no” · paste lyrics, get a song"})}</div></div>
+      <div class="appCard"><div class="ic">🎶</div><div class="nm">Udio</div>
+        <div class="tg">${T({ko:"유디오 · 비슷한 음악 앱",en:"“Oo-dee-oh” · a similar music app"})}</div></div></div>`;
+  }
+  if(art==="how"){
+    const s=(e,c)=>`<div class="howStep">${e}<span class="cap">${c}</span></div>`;
+    const a=`<div class="howArrow">➡️</div>`;
+    return `<div class="howRow">
+      ${s("📋",T({ko:"가사 복사",en:"copy lyrics"}))}${a}
+      ${s("📲",T({ko:"음악 앱 열기",en:"open the app"}))}${a}
+      ${s("📥",T({ko:"붙여넣기",en:"paste"}))}${a}
+      ${s("▶️",T({ko:"만들기 누르기",en:"tap create"}))}${a}
+      ${s("🎧",T({ko:"노래 듣기!",en:"listen!"}))}</div>`;
+  }
+  if(art==="safe"){
+    return `<div class="cbArt">
+      <div class="cbCross">🪪</div>
+      <div class="cbCross">📞</div>
+      <div class="cbStack" style="margin-left:6px;">🎵<span class="cap">${T({ko:"즐거운 노래만",en:"just happy songs"})}</span></div></div>`;
+  }
+  if(art==="wrap"){
+    return `<div class="cbArt">
+      <div class="cbBot">🤖<span class="badge">✍️</span></div>
+      <div class="cbFlow">➕</div>
+      <div class="cbBot">🎵<span class="badge">🔊</span></div>
+      <div class="cbFlow">🟰</div>
+      <div class="cbStack">🎧<span class="cap">${T({ko:"진짜 노래!",en:"a real song!"})}</span></div></div>`;
+  }
+  return `<div class="cbBot">🎧</div>`;
+}
+
+/* ===== slides ===== */
+const levels=[
+  { art:"recap",
+    title:{ko:"가사는 다 만들었어요!",en:"You made the lyrics!"},
+    instr:{ko:"지난 게임에서 ChatGPT로 노래 <b>가사</b>를 만들었죠 — 정말 잘하셨어요! 그런데 그건 노래의 <b>글</b>이에요. 이제 그 글을 <b>소리</b>로 들어볼 차례예요.",
+           en:"Last game, you wrote song <b>lyrics</b> with ChatGPT — wonderful! But those are the <b>words</b> of the song. Now let's turn the words into <b>sound</b> you can hear."},
+    hint:{ko:"가사 = 글, 노래 = 소리. 딱 한 단계만 더 하면 돼요.",en:"Lyrics = words, song = sound. Just one more step to go."} },
+
+  { art:"cantsing",
+    title:{ko:"ChatGPT는 노래를 부르진 못해요",en:"ChatGPT can't sing it"},
+    instr:{ko:"ChatGPT는 가사를 <b>아주 잘 써요</b> ✍️. 하지만 그 자체로는 멜로디를 붙이거나 <b>소리 내어 불러주진 못해요</b>. 글까지만 만들어 줘요.",
+           en:"ChatGPT is <b>great at writing lyrics</b> ✍️ — but on its own it can't add a melody or <b>sing them out loud</b>. It only makes the words."},
+    hint:{ko:"그래서 노래를 <b>듣기</b> 위해선 도우미가 하나 더 필요해요.",en:"So to <b>hear</b> the song, we need one more helper."} },
+
+  { art:"musicapp",
+    title:{ko:"음악 앱이 소리로 바꿔줘요",en:"A music app turns it into sound"},
+    instr:{ko:"‘음악 앱’에 가사를 <b>붙여넣으면</b>, 앱이 멜로디를 붙이고 <b>노래로 불러줘요</b>. 그러면 진짜 들을 수 있는 노래가 완성돼요! 🔊",
+           en:"When you <b>paste</b> the lyrics into a ‘music app,’ the app adds a melody and <b>sings them</b>. Out comes a real song you can play! 🔊"},
+    hint:{ko:"ChatGPT가 글을 쓰고, 음악 앱이 노래로 만들어요 — 둘이 팀이에요.",en:"ChatGPT writes the words, the music app sings them — they're a team."} },
+
+  { art:"options",
+    title:{ko:"어떤 앱이 있을까요?",en:"What are the options?"},
+    instr:{ko:"가장 많이 쓰는 건 <b>Suno(수노)</b>와 <b>Udio(유디오)</b>예요. 둘 다 가사를 붙여넣고 버튼만 누르면 노래를 만들어 줘요. <b>무료로 시작</b>할 수 있어요.",
+           en:"The most popular are <b>Suno</b> and <b>Udio</b>. With both, you paste the lyrics, press a button, and get a song. You can <b>start for free</b>."},
+    hint:{ko:"이름이 어렵지 않아요 — ‘수노’, ‘유디오’. 폰 앱 스토어에서도 찾을 수 있어요.",en:"The names are easy — ‘Suno,’ ‘Udio.’ You can find them in your phone's app store too."} },
+
+  { art:"how",
+    title:{ko:"이렇게 하면 돼요",en:"Here's how"},
+    instr:{ko:"① ChatGPT에서 가사를 <b>복사</b> → ② Suno 같은 앱 <b>열기</b> → ③ 가사 <b>붙여넣기</b> → ④ <b>만들기</b> 누르기 → ⑤ 완성된 노래 <b>듣기</b>! 🎧",
+           en:"① <b>Copy</b> the lyrics from ChatGPT → ② <b>Open</b> an app like Suno → ③ <b>Paste</b> the lyrics → ④ Tap <b>create</b> → ⑤ <b>Listen</b> to your song! 🎧"},
+    hint:{ko:"복사·붙여넣기는 이미 배웠죠 — 그 솜씨를 여기서 써먹어요!",en:"You already learned copy & paste — this is where it pays off!"} },
+
+  { art:"safe",
+    title:{ko:"여기서도 조심할 점",en:"Stay safe here too"},
+    instr:{ko:"이 음악 앱들도 <b>회사가 만든 것</b>이에요. 그러니 노래 가사에 <b>진짜 이름·주소·전화번호</b>는 넣지 마세요. 강아지·무지개처럼 <b>즐거운 노래</b>면 충분해요 💛",
+           en:"These music apps are also <b>made by companies</b>. So don't put your <b>real name, address, or phone number</b> into the song. Happy songs about puppies and rainbows are plenty 💛"},
+    hint:{ko:"앞에서 배운 것과 같아요 — 개인 정보는 나만 간직해요.",en:"Same as before — keep private information to yourself."} },
+
+  { art:"wrap",
+    title:{ko:"이제 다 알아요!",en:"Now you know it all!"},
+    instr:{ko:"<b>ChatGPT = 가사(글)</b>, <b>음악 앱(Suno·Udio) = 소리</b>. 둘을 합치면 손주에게 들려줄 <b>진짜 노래</b>가 완성돼요 🎶💛",
+           en:"<b>ChatGPT = the lyrics (words)</b>, <b>a music app (Suno / Udio) = the sound</b>. Put them together and you get a <b>real song</b> to play for your grandkids 🎶💛"},
+    hint:{ko:"참 잘하셨어요. ‘완료’를 눌러요!",en:"Wonderfully done. Press ‘finish’!"} }
+];
+
+/* ===== engine ===== */
+let current=0;
+const els={ bar:document.getElementById("progressBar"),step:document.getElementById("stepText"),
+  main:document.getElementById("mainView"),final:document.getElementById("finalScreen"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+function loadLevel(i){
+  clearStage(); locked=false;
+  const lv=levels[i], last=(i===levels.length-1);
+  banner.t.textContent=T(lv.title); banner.i.innerHTML=T(lv.instr); banner.h.innerHTML="💡 "+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=((i+1)/levels.length*100)+"%";
+  const slide=document.createElement("div"); slide.className="slide";
+  slide.innerHTML=`<div class="slideArt">${renderArt(lv.art)}</div>`;
+  const nav=document.createElement("div"); nav.className="slideNav";
+  if(i>0){ const back=document.createElement("button"); back.className="slideBtn back";
+    back.textContent=T(UI.back); back.onclick=()=>{ current=i-1; loadLevel(current); }; nav.appendChild(back); }
+  const next=document.createElement("button"); next.className="slideBtn";
+  next.textContent=last?T(UI.finishBtn):T(UI.next);
+  next.onclick=()=>{ beep(660,.06); if(last){ showFinal(); } else { current=i+1; loadLevel(current); } };
+  nav.appendChild(next); slide.appendChild(nav); stage.appendChild(slide);
+}
+function showFinal(){ els.main.style.display="none"; els.final.style.display="block"; try{localStorage.setItem("momHub:done:audio","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ current=0; els.main.style.display="flex"; els.final.style.display="none"; loadLevel(0); }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+els.skip.style.display="none";
+applyStatic(); loadLevel(0);
+</script>
+</body>
+</html>

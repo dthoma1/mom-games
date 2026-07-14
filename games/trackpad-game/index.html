@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>엄마의 탭과 트랙패드 연습</title>
+<style>
+  :root {
+    --bg1: #fdf2f8;
+    --bg2: #eef2ff;
+    --card: #ffffff;
+    --ink: #1f2937;
+    --soft: #6b7280;
+    --accent: #ec4899;
+    --accent2: #6366f1;
+    --good: #22c55e;
+    --ring: #fce7f3;
+  }
+  * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    color: var(--ink);
+    background: linear-gradient(135deg, var(--bg1), var(--bg2));
+    overflow: hidden;
+    touch-action: none;
+    /* Stop Chrome/Safari two-finger swipe from navigating browser history */
+    overscroll-behavior: none;
+    overscroll-behavior-x: none;
+  }
+  #app {
+    height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+    padding: 18px;
+    max-width: 900px; margin: 0 auto;
+  }
+  header { width: 100%; text-align: center; position: relative; }
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  h1 { font-size: 26px; margin: 4px 0 2px; }
+  .sub { color: var(--soft); font-size: 15px; margin: 0 0 12px; }
+  #progressWrap {
+    width: 100%; height: 14px; background: var(--ring);
+    border-radius: 999px; overflow: hidden; margin-bottom: 6px;
+  }
+  #progressBar {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width .45s ease;
+  }
+  #stepText { font-size: 13px; color: var(--soft); margin-bottom: 12px; }
+
+  #card {
+    position: relative;
+    background: var(--card);
+    border-radius: 28px;
+    box-shadow: 0 18px 40px rgba(99,102,241,.14);
+    width: 100%; flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 22px; overflow: hidden;
+    min-height: 0;
+  }
+  .emoji { font-size: 68px; line-height: 1; margin-bottom: 6px; }
+  .lessonTitle { font-size: 30px; font-weight: 800; margin: 4px 0; }
+  .instruction { font-size: 20px; color: var(--ink); margin: 6px 0 2px; max-width: 640px; }
+  .hint { font-size: 15px; color: var(--soft); margin-top: 6px; }
+
+  /* Interactive playground per level */
+  #stage {
+    position: relative;
+    width: 100%; flex: 1;
+    margin-top: 12px;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 0;
+  }
+
+  .target {
+    width: 120px; height: 120px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 60px; cursor: pointer;
+    transition: transform .12s ease, box-shadow .2s ease;
+  }
+  .pulse { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+  }
+  .goalRing {
+    position: absolute; width: 150px; height: 150px; border-radius: 50%;
+    border: 5px dashed var(--accent); opacity: .55;
+  }
+
+  /* scroll level */
+  #scrollBox {
+    width: 260px; height: 220px; overflow-y: scroll; border-radius: 20px;
+    border: 3px solid var(--ring); background: #fff; padding: 0;
+  }
+  #scrollBox .row { height: 70px; display:flex; align-items:center; justify-content:center; font-size:34px; border-bottom:1px solid #f1f5f9; }
+
+  /* gallery / pinch */
+  #photo {
+    font-size: 120px; transition: transform .08s ease-out;
+    will-change: transform;
+  }
+
+  button.big {
+    margin-top: 14px;
+    font-size: 18px; font-weight: 700; color: #fff;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border: none; border-radius: 999px; padding: 12px 26px;
+    cursor: pointer; box-shadow: 0 8px 18px rgba(236,72,153,.35);
+  }
+  button.ghost {
+    position: absolute; right: 14px; bottom: 12px;
+    font-size: 13px; color: var(--soft); background: #f8fafc;
+    border: 1px solid #e5e7eb; border-radius: 999px; padding: 7px 14px; cursor: pointer;
+  }
+
+  #successOverlay {
+    position: absolute; inset: 0;
+    background: rgba(255,255,255,.92);
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px;
+    border-radius: 28px; z-index: 5;
+  }
+  #successOverlay .big-emoji { font-size: 90px; animation: pop .5s ease; }
+  #successOverlay .msg { font-size: 28px; font-weight: 800; color: var(--good); }
+  @keyframes pop { 0% { transform: scale(.3); opacity:0;} 70%{transform:scale(1.15);} 100%{transform:scale(1); opacity:1;} }
+
+  .confetti {
+    position: fixed; top: -20px; font-size: 22px; z-index: 50;
+    animation: fall linear forwards; pointer-events: none;
+  }
+  @keyframes fall {
+    to { transform: translateY(105vh) rotate(540deg); opacity: .9; }
+  }
+
+  #finalScreen { display:none; text-align:center; }
+  #finalScreen .trophy { font-size: 110px; animation: pop .6s ease; }
+
+  /* Teaching illustration steps (merged from the taps lesson) */
+  .teachWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;width:100%;height:100%;}
+  .teachArt{background:#fff;border:1px solid #eef2ff;border-radius:22px;box-shadow:0 12px 32px rgba(99,102,241,.16);
+    padding:14px 24px;display:flex;align-items:center;justify-content:center;min-width:min(300px,84%);}
+  .teachArt svg{width:190px;height:auto;}
+  .gring{transform-box:fill-box;transform-origin:center;animation:gpulse 1.7s ease-out infinite;}
+  .gring.g2{animation-delay:.45s;}
+  @keyframes gpulse{0%{transform:scale(.5);opacity:.9;}80%{opacity:0;}100%{transform:scale(2.4);opacity:0;}}
+  .mouseWrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .mouse{width:86px;height:132px;border:3px solid #c7cad1;border-radius:44px 44px 40px 40px;position:relative;
+    background:linear-gradient(#ffffff,#f1f2f5);box-shadow:0 6px 16px rgba(0,0,0,.14);}
+  .mouse::before{content:"";position:absolute;left:50%;top:14px;width:2px;height:34px;background:#d7d9df;transform:translateX(-50%);}
+  .teachNext{margin-top:2px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <div id="lessonView">
+      <div class="emoji" id="lessonEmoji">👆</div>
+      <div class="lessonTitle" id="lessonTitle"></div>
+      <div class="instruction" id="lessonInstruction"></div>
+      <div class="hint" id="lessonHint"></div>
+      <div id="stage"></div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="trophy">🏆</div>
+      <div class="lessonTitle" id="finalTitle"></div>
+      <div class="instruction" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+
+    <div id="successOverlay">
+      <div class="big-emoji">🎉</div>
+      <div class="msg" id="successMsg"></div>
+    </div>
+
+    <button class="ghost" id="skipBtn" onclick="skipLevel()"></button>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"🖐️ 탭과 트랙패드 연습",en:"🖐️ Taps & Trackpad Practice"},
+  sub:{ko:"손가락으로 하는 여러 동작을 하나씩 배우고 바로 연습해요. 천천히 따라 하면 돼요 😊",en:"Learn each finger gesture and practice it right away, one at a time. Just follow along 😊"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"트랙패드 박사님! 🏆",en:"Trackpad expert! 🏆"},
+  finalMsg:{ko:"커서 움직이기부터 탭·더블 탭·드래그·두 손가락 메뉴·스크롤·쓸어넘기기·확대까지 다 배우셨어요. 정말 대단해요! 💖",en:"From moving the cursor to tapping, double-tapping, dragging, two-finger menus, scrolling, swiping, and zooming — you learned it all. Wonderful! 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  teachNext:{ko:"다음 ›",en:"Next ›"},
+  finishBtn:{ko:"완료 🎊",en:"Finish 🎊"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  els.overlay.style.display="none";
+  if(els.finalScreen.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else { loadLevel(current); }
+}
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+
+/* ---------- Encouraging praise ---------- */
+const PRAISE={ko:["잘했어요! 🎉", "완벽해요! 👏", "최고예요! ⭐", "멋져요! 💖", "정확해요! ✨", "훌륭해요! 🌟"],
+              en:["Well done! 🎉", "Perfect! 👏", "Great! ⭐", "Lovely! 💖", "Exactly! ✨", "Wonderful! 🌟"]};
+function randomPraise(){ const a=PRAISE[LANG]||PRAISE.ko; return a[Math.floor(Math.random()*a.length)]; }
+
+/* ---------- Sound (gentle) ---------- */
+let audioCtx = null;
+function beep(freq=660, dur=0.14){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type='sine'; o.frequency.value=freq;
+    g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
+}
+function happyChime(){ beep(660,.12); setTimeout(()=>beep(880,.16),110); }
+
+/* ---------- Confetti ---------- */
+function confetti(){
+  const emojis = ["🎉","✨","💖","⭐","🌸","🎊","💛"];
+  for(let i=0;i<28;i++){
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    c.style.left = Math.random()*100+"vw";
+    c.style.animationDuration = (1.6+Math.random()*1.4)+"s";
+    c.style.fontSize = (18+Math.random()*20)+"px";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(), 3200);
+  }
+}
+
+/* ---------- Level definitions ----------
+   Each level: title, emoji, instruction, hint, and setup(stage, done)
+   setup attaches listeners; returns a cleanup function. Call done() on success. */
+
+const stage = document.getElementById("stage");
+
+/* ---------- Teaching illustrations (SVG) ---------- */
+function gestureArt(type){
+  const gring=(cx,cy,cls)=>`<circle class="gring${cls?' '+cls:''}" cx="${cx}" cy="${cy}" r="9" fill="none" stroke="#0a63ff" stroke-width="3"/>`;
+  const finger=(cx,tipY)=>`
+    <rect x="${cx-16}" y="-34" width="32" height="${tipY+34}" rx="16" fill="#f3c9a6" stroke="#e0ad8c" stroke-width="1.5"/>
+    <ellipse cx="${cx}" cy="-18" rx="9" ry="7" fill="#fbe3d4"/>`;
+  const tipY=96, padTop=70;
+  let body="";
+  if(type==="two"){ body=finger(97,tipY)+finger(143,tipY)+gring(97,tipY+6)+gring(143,tipY+6); }
+  else if(type==="drag"){
+    body=`<path d="M92 ${tipY+6} H166" stroke="#0a63ff" stroke-width="3.5" stroke-dasharray="7 6" fill="none"/>
+      <path d="M166 ${tipY+6} l-11 -7 v14 z" fill="#0a63ff"/>
+      <ellipse cx="176" cy="${tipY+6}" rx="13" ry="8" fill="rgba(10,99,255,.14)"/>`
+      +finger(92,tipY)+gring(92,tipY+6);
+  }
+  else if(type==="double"){
+    body=finger(120,tipY)+gring(120,tipY+6)+gring(120,tipY+6,"g2")
+      +`<text x="150" y="${tipY-4}" font-size="20" font-weight="800" fill="#0a63ff">×2</text>`;
+  }
+  else if(type==="scroll"){
+    body=finger(103,tipY)+finger(137,tipY)+gring(103,tipY+6)+gring(137,tipY+6)
+      +`<path d="M188 ${tipY-26} V${tipY+30}" stroke="#0a63ff" stroke-width="3.5" fill="none"/>
+        <path d="M188 ${tipY-26} l-6 9 h12 z" fill="#0a63ff"/>
+        <path d="M188 ${tipY+30} l-6 -9 h12 z" fill="#0a63ff"/>`;
+  }
+  else if(type==="swipe"){
+    body=finger(103,tipY)+finger(137,tipY)+gring(103,tipY+6)+gring(137,tipY+6)
+      +`<path d="M58 ${tipY+34} H182" stroke="#0a63ff" stroke-width="3.5" fill="none"/>
+        <path d="M58 ${tipY+34} l9 -6 v12 z" fill="#0a63ff"/>
+        <path d="M182 ${tipY+34} l-9 -6 v12 z" fill="#0a63ff"/>`;
+  }
+  else if(type==="pinch"){
+    body=finger(94,tipY)+finger(146,tipY)+gring(94,tipY+6)+gring(146,tipY+6)
+      +`<path d="M86 ${tipY+34} H56" stroke="#0a63ff" stroke-width="3.5" fill="none"/>
+        <path d="M56 ${tipY+34} l9 -6 v12 z" fill="#0a63ff"/>
+        <path d="M154 ${tipY+34} H184" stroke="#0a63ff" stroke-width="3.5" fill="none"/>
+        <path d="M184 ${tipY+34} l-9 -6 v12 z" fill="#0a63ff"/>`;
+  }
+  else { body=finger(120,tipY)+gring(120,tipY+6); }
+  return `<svg viewBox="0 0 240 150" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eff0f3"/><stop offset="1" stop-color="#d9dade"/></linearGradient></defs>
+    <rect x="16" y="70" width="208" height="70" rx="16" fill="url(#pg)" stroke="#cfd1d6" stroke-width="2"/>
+    ${body}</svg>`;
+}
+function renderArt(art){
+  if(art==="mouse"){
+    return `<div class="mouseWrap"><div class="mouse"></div>
+      <div style="font-size:14px;font-weight:700;color:#9ca3af;">${T({ko:"옛날 마우스 🖱️",en:"an old mouse 🖱️"})}</div></div>`;
+  }
+  return gestureArt(art);
+}
+
+const PLAY = [
+  {
+    title: {ko:"커서 움직이기",en:"Move the cursor"},
+    emoji: "🐞",
+    instruction: {ko:"트랙패드 위에서 손가락을 움직여, 무당벌레를 나뭇잎으로 데려가세요.",en:"Move one finger on the trackpad and guide the ladybug to the leaf."},
+    hint: {ko:"손가락 하나로 살살 움직이면 화살표(커서)가 움직여요.",en:"Gently move one finger to move the arrow, called the cursor."},
+    setup(done){
+      stage.innerHTML = `
+        <div style="position:relative;width:100%;height:100%;">
+          <div id="leaf" style="position:absolute;right:12%;top:30%;font-size:70px;">🍃</div>
+        </div>`;
+      const leaf = document.getElementById("leaf");
+      leaf.classList.add("pulse");
+      function onEnter(){ finish(); }
+      leaf.addEventListener("mouseenter", onEnter);
+      function finish(){ leaf.removeEventListener("mouseenter", onEnter); done("🐞",T({ko:"무당벌레 도착!",en:"The ladybug arrived!"})); }
+      return ()=> leaf.removeEventListener("mouseenter", onEnter);
+    }
+  },
+  {
+    title: {ko:"탭하여 클릭하기",en:"Tap to click"},
+    emoji: "🎈",
+    instruction: {ko:"풍선을 손가락으로 톡 눌러(클릭) 터뜨리세요. 3개 모두요!",en:"Tap the balloons with one finger to pop them. All three!"},
+    hint: {ko:"트랙패드를 손가락 하나로 가볍게 누르면 ‘클릭’이에요.",en:"A light press with one finger is a click."},
+    setup(done){
+      let popped = 0, total = 3;
+      stage.innerHTML = `<div id="balloons" style="display:flex;gap:22px;flex-wrap:wrap;justify-content:center;"></div>`;
+      const wrap = document.getElementById("balloons");
+      const colors = ["🎈","🎈","🎈"];
+      colors.forEach((b,i)=>{
+        const el = document.createElement("div");
+        el.className="target pulse"; el.textContent=b;
+        el.onclick=()=>{
+          if(el.dataset.done) return;
+          el.dataset.done="1"; el.textContent="💥"; el.classList.remove("pulse");
+          beep(520,.1); popped++;
+          if(popped>=total) setTimeout(()=>done("🎈",T({ko:"풍선을 다 터뜨렸어요!",en:"You popped all the balloons!"})),350);
+        };
+        wrap.appendChild(el);
+      });
+      return ()=>{};
+    }
+  },
+  {
+    title: {ko:"두 번 탭하기 (더블 클릭)",en:"Tap twice (double-click)"},
+    emoji: "📦",
+    instruction: {ko:"상자를 빠르게 두 번 눌러(더블 클릭) 열어 보세요.",en:"Press the box twice quickly to open it."},
+    hint: {ko:"톡톡! 빠르게 두 번 누르면 폴더나 앱이 열려요.",en:"Tap-tap! Two quick presses can open a folder or app."},
+    setup(done){
+      stage.innerHTML = `<div id="box" class="target pulse" style="background:#fef3c7;">📦</div>`;
+      const box = document.getElementById("box");
+      box.ondblclick = ()=>{ box.textContent="🎁"; box.classList.remove("pulse"); happyChime(); setTimeout(()=>done("📦",T({ko:"상자를 열었어요!",en:"You opened the box!"})),350); };
+      return ()=>{};
+    }
+  },
+  {
+    title: {ko:"드래그하기 (끌기)",en:"Drag"},
+    emoji: "🐢",
+    instruction: {ko:"거북이를 꾹 누른 채로 움직여서 연못 안에 넣어 주세요.",en:"Press and hold the turtle, then move it into the pond."},
+    hint: {ko:"누른 채로 손가락을 미는 것을 ‘드래그’라고 해요.",en:"Holding down while you move your finger is called dragging."},
+    setup(done){
+      stage.innerHTML = `
+        <div style="position:relative;width:100%;height:100%;">
+          <div id="pond" style="position:absolute;right:8%;top:22%;width:150px;height:150px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:46px;">💧</div>
+          <div id="turtle" style="position:absolute;left:8%;top:34%;font-size:60px;cursor:grab;touch-action:none;">🐢</div>
+        </div>`;
+      const turtle = document.getElementById("turtle");
+      const pond = document.getElementById("pond");
+      let dragging=false, ox=0, oy=0;
+      function pt(e){ return e.touches? e.touches[0] : e; }
+      function start(e){ dragging=true; turtle.style.cursor="grabbing";
+        const r=turtle.getBoundingClientRect(); const p=pt(e); ox=p.clientX-r.left; oy=p.clientY-r.top; e.preventDefault(); }
+      function move(e){ if(!dragging) return; const p=pt(e);
+        const parent=turtle.parentElement.getBoundingClientRect();
+        turtle.style.left=(p.clientX-parent.left-ox)+"px";
+        turtle.style.top=(p.clientY-parent.top-oy)+"px"; e.preventDefault(); check(); }
+      function end(){ dragging=false; turtle.style.cursor="grab"; }
+      function check(){
+        const t=turtle.getBoundingClientRect(), pr=pond.getBoundingClientRect();
+        const tx=t.left+t.width/2, ty=t.top+t.height/2;
+        if(tx>pr.left&&tx<pr.right&&ty>pr.top&&ty<pr.bottom){
+          cleanup(); pond.textContent="🐢"; turtle.style.display="none"; done("🐢",T({ko:"연못에 들어갔어요!",en:"The turtle is in the pond!"}));
+        }
+      }
+      turtle.addEventListener("mousedown",start); window.addEventListener("mousemove",move); window.addEventListener("mouseup",end);
+      turtle.addEventListener("touchstart",start,{passive:false}); window.addEventListener("touchmove",move,{passive:false}); window.addEventListener("touchend",end);
+      function cleanup(){
+        window.removeEventListener("mousemove",move); window.removeEventListener("mouseup",end);
+        window.removeEventListener("touchmove",move); window.removeEventListener("touchend",end);
+      }
+      return cleanup;
+    }
+  },
+  {
+    title: {ko:"보조 클릭 (두 손가락 클릭)",en:"Secondary click (two-finger click)"},
+    emoji: "🖱️",
+    instruction: {ko:"두 손가락으로 동시에 트랙패드를 누르세요. 숨은 메뉴가 나와요!",en:"Press the trackpad with two fingers at the same time. A hidden menu appears!"},
+    hint: {ko:"‘오른쪽 클릭’이라고도 해요. 두 손가락으로 톡!",en:"This is also called right-click. Tap with two fingers!"},
+    setup(done){
+      stage.innerHTML = `<div class="target pulse" style="background:#ede9fe;">🗂️</div>
+        <div style="position:absolute;bottom:8px;font-size:13px;color:#9ca3af;">${T({ko:"두 손가락으로 여기 아무 곳이나 눌러 보세요",en:"Press anywhere here with two fingers"})}</div>`;
+      function onCtx(e){ e.preventDefault(); cleanup(); happyChime(); done("🖱️",T({ko:"숨은 메뉴를 찾았어요!",en:"You found the hidden menu!"})); }
+      function cleanup(){ document.getElementById("card").removeEventListener("contextmenu", onCtx); }
+      document.getElementById("card").addEventListener("contextmenu", onCtx);
+      return cleanup;
+    }
+  },
+  {
+    title: {ko:"스크롤하기 (두 손가락 밀기)",en:"Scroll (two-finger swipe)"},
+    emoji: "📜",
+    instruction: {ko:"두 손가락을 위아래로 밀어서, 목록을 끝까지 내려 별을 찾으세요.",en:"Slide two fingers up and down to scroll to the end and find the star."},
+    hint: {ko:"웹페이지를 읽을 때 이렇게 위아래로 움직여요.",en:"This is how you move up and down while reading a web page."},
+    setup(done){
+      let rows = ["🍎","🍊","🍋","🍇","🍉","🍓","🍑","🍒","⭐"];
+      stage.innerHTML = `<div id="scrollBox">${rows.map(r=>`<div class="row">${r}</div>`).join("")}</div>
+        <div style="position:absolute;bottom:2px;font-size:13px;color:#9ca3af;">${T({ko:"아래로 쭉 내려 보세요",en:"Scroll all the way down"})}</div>`;
+      const box = document.getElementById("scrollBox");
+      function onScroll(){
+        if(box.scrollTop + box.clientHeight >= box.scrollHeight - 6){
+          box.removeEventListener("scroll",onScroll); beep(700,.12); done("📜",T({ko:"별을 찾았어요!",en:"You found the star!"}));
+        }
+      }
+      box.addEventListener("scroll", onScroll);
+      return ()=> box.removeEventListener("scroll", onScroll);
+    }
+  },
+  {
+    title: {ko:"페이지 쓸어넘기기 (두 손가락 좌우)",en:"Swipe between pages (two fingers left and right)"},
+    emoji: "🖼️",
+    instruction: {ko:"두 손가락으로 좌우로 쓸어서 사진을 넘겨 보세요. 3장을 넘기면 성공!",en:"Swipe left or right with two fingers to move through photos. Three swipes wins!"},
+    hint: {ko:"책장을 넘기듯 두 손가락을 옆으로 밀어요.",en:"Move two fingers sideways like turning a page."},
+    setup(done){
+      const pics = ["🌷","🌻","🌊","🏔️","🌈"];
+      let idx=0, swipes=0, cooldown=false;
+      stage.innerHTML = `<div id="photo">${pics[0]}</div>
+        <div style="position:absolute;bottom:2px;font-size:13px;color:#9ca3af;">${T({ko:"두 손가락으로 왼쪽/오른쪽 ←→",en:"Two fingers left / right ←→"})}</div>`;
+      const photo = document.getElementById("photo");
+      function onWheel(e){
+        if(Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 8){
+          e.preventDefault();
+          if(cooldown) return; cooldown=true; setTimeout(()=>cooldown=false,450);
+          idx = (idx + (e.deltaX>0?1:pics.length-1)) % pics.length;
+          photo.textContent = pics[idx]; photo.style.transform="scale(1.15)";
+          setTimeout(()=>photo.style.transform="scale(1)",120);
+          beep(600,.08); swipes++;
+          if(swipes>=3){ window.removeEventListener("wheel",onWheel,{passive:false}); done("🖼️",T({ko:"사진을 잘 넘겼어요!",en:"You moved through the photos beautifully!"})); }
+        }
+      }
+      window.addEventListener("wheel", onWheel, {passive:false});
+      return ()=> window.removeEventListener("wheel", onWheel, {passive:false});
+    }
+  },
+  {
+    title: {ko:"확대 / 축소하기 (핀치)",en:"Zoom in and out (pinch)"},
+    emoji: "🔍",
+    instruction: {ko:"두 손가락을 쫙 펼쳐서 꽃을 크게 확대해 보세요.",en:"Spread two fingers apart to make the flower bigger."},
+    hint: {ko:"손가락을 벌리면 커지고, 오므리면 작아져요. 사진 볼 때 좋아요.",en:"Spread fingers to zoom in; pinch together to zoom out. It is great for photos."},
+    setup(done){
+      let scale = 1;
+      stage.innerHTML = `<div id="photo">🌸</div>
+        <div style="position:absolute;bottom:2px;font-size:13px;color:#9ca3af;">${T({ko:"두 손가락을 바깥으로 벌려요",en:"Spread two fingers outward"})}</div>`;
+      const photo = document.getElementById("photo");
+      // Safari pinch
+      function onGesture(e){ e.preventDefault(); apply(e.scale); }
+      // Chrome/other: ctrl+wheel
+      function onWheel(e){ if(e.ctrlKey){ e.preventDefault(); apply(scale * (1 - e.deltaY*0.01)); } }
+      function apply(s){
+        scale = Math.max(0.6, Math.min(3, s));
+        photo.style.transform = `scale(${scale})`;
+        if(scale >= 2.2){ cleanup(); happyChime(); done("🔍",T({ko:"크게 확대했어요!",en:"You zoomed in nice and big!"})); }
+      }
+      function cleanup(){
+        window.removeEventListener("gesturechange", onGesture);
+        window.removeEventListener("gesturestart", prevent);
+        window.removeEventListener("wheel", onWheel, {passive:false});
+      }
+      function prevent(e){ e.preventDefault(); }
+      window.addEventListener("gesturestart", prevent);
+      window.addEventListener("gesturechange", onGesture);
+      window.addEventListener("wheel", onWheel, {passive:false});
+      return cleanup;
+    }
+  }
+];
+
+const TEACH = {
+  tap:{ type:"teach", emoji:"👆", art:"tap",
+    title:{ko:"가볍게 톡 — 탭(클릭)",en:"A light tap (a click)"},
+    instruction:{ko:"손가락 하나로 <b>가볍게 한 번 톡</b> 하면 ‘클릭’이에요. 무언가를 고르거나 누를 때 쓰는 가장 기본 동작이에요.",en:"<b>One light tap</b> with a finger is a ‘click’ — the most basic way to choose or press something."},
+    hint:{ko:"세게 누를 필요 없어요. 손끝으로 살짝 톡 하면 돼요.",en:"No need to press hard — a gentle fingertip tap is enough."} },
+  double:{ type:"teach", emoji:"👆", art:"double",
+    title:{ko:"빠르게 두 번 톡 — 더블 클릭",en:"Two quick taps — double-click"},
+    instruction:{ko:"<b>빠르게 두 번 톡톡</b> 하면 폴더나 앱이 ‘열려요’.",en:"<b>Two quick taps</b> — tap-tap — opens a folder or an app."},
+    hint:{ko:"톡톡! 너무 천천히 하면 따로따로 두 번의 탭이 돼요. 빠르게 두 번이에요.",en:"Tap-tap! Too slow counts as two separate taps — make it two quick taps."} },
+  drag:{ type:"teach", emoji:"✋", art:"drag",
+    title:{ko:"길게 눌러 끌기 — 드래그",en:"Press and hold to drag"},
+    instruction:{ko:"<b>꾹 누른 채로</b> 손가락을 움직이면 물건을 ‘끌 수’ 있어요. 사진이나 파일을 옮길 때 써요.",en:"<b>Press and hold</b>, then move your finger — you can drag things, like moving a photo or a file."},
+    hint:{ko:"누른 채로 밀면 따라와요. 원하는 곳에서 손을 떼면 놓여요.",en:"Hold and push — it follows. Let go where you want it to drop."} },
+  two:{ type:"teach", emoji:"✌️", art:"two",
+    title:{ko:"두 손가락 탭 — 메뉴 열기",en:"Two-finger tap — open a menu"},
+    instruction:{ko:"손가락 <b>두 개</b>로 톡 하면 ‘메뉴(고를 수 있는 목록)’가 열려요. 아이폰에서 <b>꾹 누르면</b> 나오던 것과 비슷해요.",en:"Tap with <b>two fingers</b> to open a menu of choices — like <b>press-and-hold</b> on your iPhone."},
+    hint:{ko:"열기·복사·삭제 같은 것을 고를 수 있어요.",en:"You can pick things like Open, Copy, or Delete."} },
+  scroll:{ type:"teach", emoji:"📜", art:"scroll",
+    title:{ko:"두 손가락으로 스크롤 — 위아래로 밀기",en:"Scroll — slide two fingers up and down"},
+    instruction:{ko:"손가락 <b>두 개</b>를 트랙패드 위에서 <b>위아래로</b> 밀면 화면이 오르내려요. 긴 글이나 웹페이지를 읽을 때 써요.",en:"Slide <b>two fingers up and down</b> on the trackpad to move the page. This is how you read long text or web pages."},
+    hint:{ko:"손가락을 위로 밀면 위로, 아래로 밀면 아래로 움직여요.",en:"Push up to go up, push down to go down."} },
+  swipe:{ type:"teach", emoji:"🖼️", art:"swipe",
+    title:{ko:"두 손가락으로 쓸어넘기기 — 좌우로",en:"Swipe — two fingers left and right"},
+    instruction:{ko:"손가락 <b>두 개</b>를 <b>좌우로</b> 쓸면 사진이나 페이지를 넘길 수 있어요. 책장을 넘기는 것과 비슷해요.",en:"Slide <b>two fingers left or right</b> to move between photos or pages — like turning the page of a book."},
+    hint:{ko:"오른쪽으로 밀면 다음, 왼쪽으로 밀면 이전이에요.",en:"Push right for next, left for previous."} },
+  pinch:{ type:"teach", emoji:"🔍", art:"pinch",
+    title:{ko:"두 손가락으로 확대·축소 — 핀치",en:"Zoom — pinch with two fingers"},
+    instruction:{ko:"손가락 <b>두 개</b>를 <b>바깥으로 벌리면 커지고</b>, <b>오므리면 작아져요</b>. 사진이나 글씨를 크게 볼 때 아주 좋아요.",en:"<b>Spread two fingers apart to zoom in</b>, and <b>pinch them together to zoom out</b>. Great for making photos or text bigger."},
+    hint:{ko:"글씨가 작아서 안 보일 때 벌려서 크게 보세요.",en:"When text is too small, spread your fingers to make it bigger."} },
+  mouse:{ type:"teach", emoji:"🖱️", art:"mouse",
+    title:{ko:"왜 ‘클릭’이라고 할까요?",en:"Why do we say “click”?"},
+    instruction:{ko:"트랙패드가 생기기 전엔 <b>‘마우스’</b>를 손으로 밀어 화살표를 옮기고 단추를 눌렀어요. 그때 나던 <b>‘딸깍(click)’</b> 소리 때문에 지금도 ‘클릭’이라고 해요.",en:"Before trackpads, people slid a <b>‘mouse’</b> to move the arrow and pressed its button. It made a <b>‘click’</b> sound — that’s why we still say ‘click’ today."},
+    hint:{ko:"탭이든 꾹 누르든, ‘클릭’은 다 같은 뜻이에요. 이제 다 배우셨어요! 💖",en:"Tap or press — ‘click’ means the same thing. You’ve learned it all now! 💖"} },
+};
+
+/* Interleave: practice → matching illustration → practice ... */
+const levels = [
+  PLAY[0],            /* move the cursor */
+  TEACH.tap,   PLAY[1],   /* how to tap → balloons */
+  TEACH.double,PLAY[2],   /* tap twice → box */
+  TEACH.drag,  PLAY[3],   /* press & hold to drag → turtle */
+  TEACH.two,   PLAY[4],   /* two-finger tap → secondary click */
+  TEACH.scroll,PLAY[5],   /* scroll → scroll box */
+  TEACH.swipe, PLAY[6],   /* swipe → photo pages */
+  TEACH.pinch, PLAY[7],   /* pinch → zoom photo */
+  TEACH.mouse             /* why we say "click" */
+];
+
+/* ---------- Engine ---------- */
+let current = 0;
+let cleanupFn = ()=>{};
+
+const els = {
+  bar: document.getElementById("progressBar"),
+  step: document.getElementById("stepText"),
+  emoji: document.getElementById("lessonEmoji"),
+  title: document.getElementById("lessonTitle"),
+  instr: document.getElementById("lessonInstruction"),
+  hint: document.getElementById("lessonHint"),
+  lessonView: document.getElementById("lessonView"),
+  finalScreen: document.getElementById("finalScreen"),
+  overlay: document.getElementById("successOverlay"),
+  successMsg: document.getElementById("successMsg"),
+  skip: document.getElementById("skipBtn"),
+};
+
+function loadLevel(i){
+  cleanupFn && cleanupFn(); cleanupFn=()=>{};
+  const lv = levels[i];
+  els.emoji.textContent = lv.emoji;
+  els.title.textContent = T(lv.title);
+  els.instr.innerHTML = T(lv.instruction);
+  els.hint.textContent = "💡 " + T(lv.hint);
+  els.step.textContent = T(UI.step)(i+1, levels.length);
+  els.bar.style.width = ((i)/levels.length*100) + "%";
+  stage.innerHTML = "";
+  if(lv.type==="teach"){
+    const last = (i===levels.length-1);
+    stage.innerHTML = `<div class="teachWrap"><div class="teachArt">${renderArt(lv.art)}</div>`+
+      `<button class="big teachNext" id="teachNext"></button></div>`;
+    const btn=document.getElementById("teachNext");
+    btn.textContent = last ? T(UI.finishBtn) : T(UI.teachNext);
+    btn.onclick=()=>{ beep(660,.07); if(last){ showFinal(); } else { current=i+1; loadLevel(current); } };
+  } else {
+    cleanupFn = lv.setup(onLevelDone) || (()=>{});
+  }
+}
+
+function onLevelDone(emoji, msg){
+  cleanupFn && cleanupFn(); cleanupFn=()=>{};
+  els.bar.style.width = ((current+1)/levels.length*100) + "%";
+  els.successMsg.textContent = msg || randomPraise();
+  els.overlay.querySelector(".big-emoji").textContent = emoji || "🎉";
+  els.overlay.style.display = "flex";
+  confetti(); happyChime();
+  setTimeout(()=>{
+    els.overlay.style.display = "none";
+    current++;
+    if(current >= levels.length){ showFinal(); }
+    else { loadLevel(current); }
+  }, 1500);
+}
+
+function skipLevel(){
+  cleanupFn && cleanupFn(); cleanupFn=()=>{};
+  current++;
+  if(current >= levels.length) showFinal();
+  else loadLevel(current);
+}
+
+function showFinal(){
+  els.lessonView.style.display = "none";
+  els.skip.style.display = "none";
+  els.finalScreen.style.display = "block";
+  try{localStorage.setItem("momHub:done:trackpad","1");localStorage.setItem("momHub:done:taps","1");}catch(e){}
+  els.bar.style.width = "100%";
+  els.step.textContent = T(UI.finalStep);
+  confetti(); setTimeout(confetti, 500); setTimeout(confetti, 1000);
+  happyChime();
+}
+
+function restart(){
+  current = 0;
+  els.lessonView.style.display = "block";
+  els.skip.style.display = "block";
+  els.finalScreen.style.display = "none";
+  loadLevel(0);
+}
+
+// Prevent browser back/forward on horizontal swipe & pinch-zoom of the page itself.
+document.addEventListener("gesturestart", e=>e.preventDefault());
+document.addEventListener("wheel", e=>{ if(e.ctrlKey) e.preventDefault(); }, {passive:false});
+
+applyStatic();
+loadLevel(0);
+</script>
+</body>
+</html>

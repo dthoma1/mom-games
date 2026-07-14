@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 고르기 연습 (선택과 취소)</title>
+<style>
+  :root{--bg1:#eef2ff;--bg2:#fdf2f8;--ink:#1f2937;--soft:#6b7280;--accent:#6366f1;--accent2:#ec4899;
+    --good:#22c55e;--macblue:#0a63ff;--desk1:#2b6cff;--desk2:#8a5cf6;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+  #banner .extra{margin-top:8px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;}
+  #replayBtn{font-size:14px;font-weight:700;color:var(--accent);background:#eef2ff;border:1px solid #dfe4ff;
+    border-radius:999px;padding:7px 16px;cursor:pointer;display:none;}
+  #stage{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;
+    background:linear-gradient(135deg,var(--desk1),var(--desk2));display:flex;align-items:center;justify-content:center;padding:18px;}
+
+  .bwin{background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.30);width:min(580px,96%);overflow:hidden;
+    display:flex;flex-direction:column;}
+  .btool{height:46px;background:linear-gradient(#f6f6f7,#e9e9eb);display:flex;align-items:center;gap:8px;padding:0 12px;
+    border-bottom:1px solid #e1e1e4;}
+  .dots{display:flex;gap:7px;margin-right:4px;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dot.r{background:#ff5f57;}.dot.y{background:#febc2e;}.dot.g{background:#28c840;}
+  .navbtn{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5b6270;
+    font-size:17px;cursor:pointer;flex:0 0 auto;}
+  .navbtn:hover{background:rgba(0,0,0,.06);}
+  .navbtn.off{opacity:.32;pointer-events:none;}
+  .addrbar{flex:1;height:32px;background:#fff;border:1px solid #d5d5da;border-radius:8px;display:flex;align-items:center;
+    padding:0 10px;gap:7px;font-size:14px;color:#374151;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);min-width:0;}
+  .addrbar .lock{font-size:11px;color:#9ca3af;}
+  .addrbar input{border:none;outline:none;flex:1;font-size:14px;background:transparent;min-width:0;color:#374151;}
+  .addrbar.focusRing{border-color:var(--macblue);box-shadow:0 0 0 3px rgba(10,99,255,.25);}
+  .tabstrip{height:34px;background:#e6e6e9;display:flex;align-items:flex-end;gap:2px;padding:0 8px;}
+  .tab{height:29px;background:#d3d3d8;border-radius:8px 8px 0 0;padding:0 12px;display:flex;align-items:center;gap:8px;
+    font-size:13px;color:#4b5563;max-width:170px;white-space:nowrap;overflow:hidden;}
+  .tab.active{background:#fff;color:#1f2937;}
+  .tabx{font-size:13px;color:#9ca3af;cursor:pointer;border-radius:4px;padding:0 3px;}
+  .tabx:hover{background:rgba(0,0,0,.1);}
+  .bcontent{background:#fff;flex:1;min-height:150px;padding:24px;text-align:center;overflow:hidden;transition:font-size .2s;}
+  .bcontent h2{margin:6px 0;}
+  .bcontent p{color:#6b7280;line-height:1.5;margin:8px 0;}
+  .fav{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+  .favIcon{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;
+    box-shadow:0 3px 8px rgba(0,0,0,.12);}
+
+  @keyframes tpulse{0%,100%{box-shadow:0 0 0 0 rgba(10,99,255,.55);}50%{box-shadow:0 0 0 7px rgba(10,99,255,0);}}
+  .target{animation:tpulse 1.4s infinite;border-radius:8px;position:relative;z-index:5;}
+  .miniToast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(43,47,54,.92);color:#fff;
+    font-size:13px;font-weight:600;padding:8px 15px;border-radius:999px;z-index:35;box-shadow:0 6px 16px rgba(0,0,0,.3);transition:opacity .2s;}
+
+  .demoCursor{position:absolute;width:26px;height:26px;z-index:40;pointer-events:none;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));transition:left .5s ease,top .5s ease,opacity .2s;}
+  .demoCursor.click{animation:clickPulse .35s ease;}
+  @keyframes clickPulse{0%{transform:scale(1);}50%{transform:scale(.8);}100%{transform:scale(1);}}
+  .clickRipple{position:absolute;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
+    z-index:39;pointer-events:none;animation:ripple .5s ease-out forwards;}
+  @keyframes ripple{from{transform:scale(.3);opacity:.85;}to{transform:scale(2.4);opacity:0;}}
+
+  #successOverlay{position:absolute;inset:0;background:rgba(255,255,255,.93);display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:12px;z-index:60;}
+  #successOverlay .be{font-size:76px;animation:pop .5s ease;}
+  #successOverlay .msg{font-size:24px;font-weight:800;color:var(--good);text-align:center;padding:0 20px;line-height:1.35;}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:95;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+
+  /* ===== select-game specifics ===== */
+  .tpad{width:min(560px,96%);background:#fff;border-radius:22px;box-shadow:0 18px 50px rgba(0,0,0,.30);
+    padding:22px 22px 26px;display:flex;flex-direction:column;align-items:center;gap:14px;position:relative;}
+  .tpad .padlabel{font-size:13px;font-weight:700;color:#9ca3af;}
+  .surface{width:100%;min-height:170px;border-radius:16px;background:linear-gradient(#f4f5f7,#e9eaee);
+    border:1px solid #dcdde2;display:flex;align-items:center;justify-content:center;gap:26px;flex-wrap:wrap;padding:24px;position:relative;}
+  .item{width:104px;height:104px;border-radius:18px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.12);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:48px;cursor:pointer;
+    user-select:none;transition:transform .12s,box-shadow .12s;}
+  .item .cap{font-size:13px;color:#4b5563;font-weight:600;}
+  .item:active{transform:scale(.96);}
+  .item.selected{box-shadow:0 0 0 4px var(--macblue),0 3px 10px rgba(0,0,0,.12);background:#eaf1ff;}
+  .helperBubble{position:absolute;top:12px;left:50%;transform:translateX(-50%) translateY(-6px);background:#fff;
+    border:1px solid #d7d8dd;border-radius:14px;box-shadow:0 8px 22px rgba(0,0,0,.18);padding:9px 15px;font-size:14px;
+    font-weight:600;color:#1f2937;display:flex;align-items:center;gap:8px;max-width:88%;opacity:0;transition:.25s;z-index:38;pointer-events:none;}
+  .helperBubble.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .helperBubble .hf{font-size:22px;}
+  .recap{width:min(560px,96%);background:#fff;border-radius:20px;box-shadow:0 16px 44px rgba(0,0,0,.22);padding:24px 26px;text-align:center;}
+  .recap h2{margin:4px 0 8px;font-size:21px;}
+  .recap p{color:#4b5563;line-height:1.6;font-size:15px;margin:8px 0;}
+  .helperHero{font-size:40px;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:4px;}
+  .helperHero .arw{font-size:26px;color:var(--macblue);}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+        <div class="extra"><button id="replayBtn" onclick="replayDemo()"></button></div>
+      </div>
+      <div id="stage"></div>
+    </div>
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div></div>
+  </div>
+</div>
+
+<script>
+/* ===== language ===== */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"🎯 엄마의 고르기 연습",en:"🎯 Selecting Practice"},
+  sub:{ko:"컴퓨터에게 ‘이걸 봐줘’ 하고 고르기(선택), 그리고 ‘됐어’ 하고 취소하기를 익혀요 😊",
+       en:"Learn to tell the computer ‘focus on this’ (select) and ‘never mind’ (deselect) 😊"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  replay:{ko:"👀 다시 보여주기",en:"👀 Show me again"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"고르기 달인!",en:"Selecting expert!"},
+  finalMsg:{ko:"이제 무언가를 <b>선택</b>하고, 다시 <b>취소</b>하고, 다른 걸로 <b>바꿔</b> 고르는 법까지 다 아셨어요. 컴퓨터에게 무엇에 집중할지 알려줄 수 있어요 💖",
+            en:"You can now <b>select</b> something, <b>deselect</b> it, and <b>switch</b> to another. You can tell the computer what to focus on 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  next:{ko:"다음 ›",en:"Next ›"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("replayBtn").textContent=T(UI.replay);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").innerHTML=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(!doneLock){ loadLevel(current); } }
+
+/* ===== praise + sound + confetti ===== */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ===== cursors ===== */
+const SVG_ARROW=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 3 L5 20 L9.5 15.8 L12.6 22 L15.2 20.8 L12.1 14.8 L18 14.8 Z" fill="#111" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const SVG_IBEAM=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g><g fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g></svg>`;
+function makeCursor(kind){ const c=document.createElement("div"); c.className="demoCursor";
+  c.innerHTML=kind==="ibeam"?SVG_IBEAM:SVG_ARROW; return c; }
+
+/* ===== state + helpers ===== */
+const stage=document.getElementById("stage");
+let locked=false,currentDemo=null;
+function clearStage(){ stage.innerHTML=""; }
+function stageXY(el){ const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect();
+  return {x:r.left-s.left+r.width/2,y:r.top-s.top+r.height/2}; }
+function ripple(x,y){ const r=document.createElement("div"); r.className="clickRipple";
+  r.style.left=(x-13)+"px"; r.style.top=(y-13)+"px"; stage.appendChild(r); setTimeout(()=>r.remove(),520); }
+function markTarget(el){ if(el) el.classList.add("target"); }
+function showToast(msg){ let t=stage.querySelector(".miniToast");
+  if(!t){ t=document.createElement("div"); t.className="miniToast"; stage.appendChild(t); }
+  t.textContent=msg; t.style.opacity="1"; clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>{ t.style.opacity="0"; },1800); }
+
+/* ===== select builders ===== */
+function makePad(){
+  const pad=document.createElement("div"); pad.className="tpad";
+  pad.innerHTML=`<div class="helperBubble" id="helperBubble"><span class="hf">🤖</span><span id="helperTxt"></span></div>
+    <div class="surface" id="surface"></div>
+    <div class="padlabel">${T({ko:"트랙패드 · 손가락으로 톡 눌러 고르기",en:"Trackpad · tap with your finger to select"})}</div>`;
+  stage.appendChild(pad);
+  return pad;
+}
+function makeItem(emoji,cap){
+  const it=document.createElement("div"); it.className="item"; it.tabIndex=0;
+  it.innerHTML=`<div>${emoji}</div><div class="cap">${T(cap)}</div>`;
+  return it;
+}
+function helperSay(msg){
+  const b=document.getElementById("helperBubble"); if(!b) return;
+  document.getElementById("helperTxt").textContent=T(msg);
+  b.classList.add("show");
+}
+function helperHide(){ const b=document.getElementById("helperBubble"); if(b) b.classList.remove("show"); }
+
+/* ===== demos ===== */
+function replayDemo(){ if(currentDemo) currentDemo(); }
+function showReplay(on){ document.getElementById("replayBtn").style.display=on?"inline-flex":"none"; }
+function autoDemo(fn,delay){ currentDemo=fn; showReplay(!!fn); if(fn) setTimeout(()=>{ if(!locked) fn(); },delay||800); }
+function demoTap(getTarget,atClick,reset,holdMs,kind){
+  return function run(){ if(locked) return; locked=true;
+    const target=getTarget(); if(!target){ locked=false; return; }
+    const cur=makeCursor(kind); stage.appendChild(cur);
+    const {x,y}=stageXY(target);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+34)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-4)+"px"; cur.style.top=(kind==="ibeam"?y-13:y-2)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(560,.05); if(atClick)atClick(target); },760);
+    setTimeout(()=>{ if(reset)reset(target); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },760+(holdMs||900));
+  };
+}
+function demoType(getInput,word,holdMs){
+  return function run(){ if(locked) return; locked=true;
+    const f=getInput(); if(!f){ locked=false; return; }
+    const bar=f.closest(".addrbar"); const {x,y}=stageXY(f);
+    const cur=makeCursor("ibeam"); stage.appendChild(cur);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+28)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-6)+"px"; cur.style.top=(y-13)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(540,.05); if(bar)bar.classList.add("focusRing"); f.value="";
+      let i=0; const iv=setInterval(()=>{ f.value=word.slice(0,++i); beep(700,.03); if(i>=word.length) clearInterval(iv); },170);
+    },780);
+    setTimeout(()=>{ f.value=""; if(bar)bar.classList.remove("focusRing"); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },780+(holdMs||1600));
+  };
+}
+
+/* ===== levels ===== */
+const levels=[
+  { title:{ko:"컴퓨터는 도우미예요",en:"The computer is your helper"},
+    instr:{ko:"화살표(커서)는 <b>손가락의 연장</b>이에요. 컴퓨터는 아주 부지런한 도우미라서, 무엇에 <b>집중</b>할지 우리가 알려줘야 해요. 사진을 톡 눌러 ‘이걸 봐줘’ 하고 골라 보세요.",
+           en:"The arrow (cursor) is <b>an extension of your hand</b>. The computer is an eager helper — we tell it what to <b>focus</b> on. Tap a photo to say ‘look at this one’."},
+    hint:{ko:"가운데 사진을 한 번 톡 누르면 파란 테두리가 생겨요.",en:"Tap the photo once — a blue outline appears."},
+    build(done){
+      const pad=makePad(); const surf=document.getElementById("surface");
+      const it=makeItem("🌻",{ko:"해바라기",en:"Sunflower"}); surf.appendChild(it); markTarget(it);
+      it.addEventListener("click",()=>{ if(locked)return;
+        it.classList.add("selected"); helperSay({ko:"네! 이 사진에 집중할게요 🔎",en:"Got it! I'll focus on this photo 🔎"});
+        setTimeout(()=>done("✅",{ko:"컴퓨터에게 무엇을 볼지 알려줬어요!",en:"You told the computer what to look at!"}),650); });
+      autoDemo(demoTap(()=>document.querySelector(".item")),1000);
+    } },
+  { title:{ko:"고르기 = 선택",en:"Selecting = choosing"},
+    instr:{ko:"무언가를 <b>선택</b>하면 파란 테두리로 ‘지금 이걸 골랐어요’ 하고 표시돼요. 원하는 사진을 눌러 선택해 보세요.",
+           en:"When you <b>select</b> something, a blue outline shows ‘this is chosen now’. Tap a photo to select it."},
+    hint:{ko:"사진 하나를 톡 누르면 파랗게 선택돼요.",en:"Tap one photo to select it (it turns blue)."},
+    build(done){
+      const pad=makePad(); const surf=document.getElementById("surface");
+      [["🐱",{ko:"고양이",en:"Cat"}],["🌷",{ko:"튤립",en:"Tulip"}]].forEach(([e,c])=>{
+        const it=makeItem(e,c); surf.appendChild(it);
+        it.addEventListener("click",()=>{ if(locked)return;
+          surf.querySelectorAll(".item").forEach(x=>x.classList.remove("selected"));
+          it.classList.add("selected"); helperSay({ko:"이 사진을 골랐어요 ✨",en:"I've chosen this photo ✨"});
+          setTimeout(()=>done("🎯",{ko:"선택했어요!",en:"You selected it!"}),650); });
+      });
+      autoDemo(demoTap(()=>document.querySelector(".item")),1000);
+    } },
+  { title:{ko:"취소 = 선택 풀기",en:"Deselect = un-choosing"},
+    instr:{ko:"고른 걸 그만두고 싶을 땐 <b>빈 곳</b>을 톡 누르면 ‘취소(선택 풀기)’가 돼요. 파란 테두리가 사라져요. 먼저 사진을 고른 뒤, 빈 곳을 눌러 취소해 보세요.",
+           en:"To un-choose, tap an <b>empty spot</b> to <b>deselect</b>. The blue outline disappears. Select the photo first, then tap empty space to deselect."},
+    hint:{ko:"사진을 고른 다음, 사진이 없는 회색 빈 곳을 톡 누르세요.",en:"Select the photo, then tap the empty gray area."},
+    build(done){
+      const pad=makePad(); const surf=document.getElementById("surface");
+      const it=makeItem("🍎",{ko:"사과",en:"Apple"}); surf.appendChild(it);
+      let selected=false;
+      it.addEventListener("click",e=>{ e.stopPropagation(); if(locked)return;
+        it.classList.add("selected"); selected=true; helperSay({ko:"이 사진에 집중 중이에요 🔎",en:"Focusing on this photo 🔎"}); markTarget(surf); });
+      surf.addEventListener("click",e=>{ if(locked)return; if(e.target.closest(".item"))return;
+        if(!selected){ helperSay({ko:"먼저 사진을 하나 골라 주세요 🙂",en:"Please select the photo first 🙂"}); return; }
+        it.classList.remove("selected"); surf.classList.remove("target"); helperSay({ko:"알겠어요, 이제 아무것도 안 볼게요 🙌",en:"Okay, I'll stop focusing on anything 🙌"});
+        setTimeout(()=>done("🫧",{ko:"선택을 취소했어요!",en:"You deselected it!"}),650); });
+      autoDemo(null);
+    } },
+  { title:{ko:"다른 걸로 바꿔 고르기",en:"Switch your selection"},
+    instr:{ko:"다른 사진을 누르면 컴퓨터는 자동으로 <b>이전 선택을 취소</b>하고 새 사진에 집중해요. 한 번에 하나만 고를 수 있어요. 오른쪽 사진을 눌러 바꿔 보세요.",
+           en:"Tap another photo and the computer <b>deselects the old one</b> and focuses on the new one. Only one at a time. Tap the right photo to switch."},
+    hint:{ko:"지금 왼쪽이 골라져 있어요. 오른쪽 사진을 눌러 바꿔 보세요.",en:"The left one is selected. Tap the right photo to switch."},
+    build(done){
+      const pad=makePad(); const surf=document.getElementById("surface");
+      const a=makeItem("🌊",{ko:"바다",en:"Ocean"}); const b=makeItem("⛰️",{ko:"산",en:"Mountain"});
+      surf.appendChild(a); surf.appendChild(b); a.classList.add("selected");
+      helperSay({ko:"지금은 왼쪽 사진에 집중 중이에요.",en:"Right now I'm focusing on the left photo."});
+      markTarget(b);
+      b.addEventListener("click",()=>{ if(locked)return;
+        a.classList.remove("selected"); b.classList.add("selected"); b.classList.remove("target");
+        helperSay({ko:"이전 건 취소하고, 이제 이 사진에 집중해요! 🔄",en:"Deselected the old one — now focusing on this one! 🔄"});
+        setTimeout(()=>done("🔀",{ko:"선택을 바꿨어요!",en:"You switched selection!"}),650); });
+      autoDemo(demoTap(()=>document.querySelectorAll(".item")[1]),1200);
+    } }
+];
+
+/* ===== engine ===== */
+let current=0,doneLock=false;
+const els={ bar:document.getElementById("progressBar"),step:document.getElementById("stepText"),
+  main:document.getElementById("mainView"),final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"),msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+function loadLevel(i){
+  clearStage(); locked=false; currentDemo=null; showReplay(false);
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.innerHTML=T(lv.instr); banner.h.textContent="💡 "+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  requestAnimationFrame(()=>lv.build(onLevelDone));
+}
+function onLevelDone(emoji,msg){
+  if(doneLock) return; doneLock=true; locked=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(()=>{
+    els.msg.textContent=msg?T(msg):praise();
+    els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime();
+  },650);
+  setTimeout(()=>{
+    els.overlay.style.display="none"; doneLock=false;
+    current++; if(current>=levels.length) showFinal(); else loadLevel(current);
+  },2250);
+}
+function skipLevel(){ if(doneLock) return; current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block"; try{localStorage.setItem("momHub:done:select","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ current=0; doneLock=false; els.main.style.display="flex"; els.skip.style.display="block";
+  els.final.style.display="none"; loadLevel(0); }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+applyStatic(); loadLevel(0);
+</script>
+</body>
+</html>

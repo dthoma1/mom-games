@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 맥북 글자 연습</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#6366f1; --accent2:#ec4899; --good:#22c55e;
+    --macblue:#0a63ff;
+    --desk1:#2b6cff; --desk2:#8a5cf6;
+    --titlebar:#ececee;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+
+  /* lesson banner */
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+  #banner .extra{margin-top:8px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;}
+  #replayBtn{font-size:14px;font-weight:700;color:var(--accent);background:#eef2ff;border:1px solid #dfe4ff;
+    border-radius:999px;padding:7px 16px;cursor:pointer;display:none;}
+  /* mini MacBook keyboard hint */
+  .keycaps{display:none;justify-content:center;}
+  .mbk{display:inline-flex;flex-direction:column;gap:4px;background:linear-gradient(#d9dade,#c4c6cc);
+    padding:8px 9px 9px;border-radius:11px;border:1px solid #b6b8bf;
+    box-shadow:0 3px 0 #a9abb2,0 8px 18px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.6);}
+  .kbrow{display:flex;gap:4px;justify-content:center;}
+  .kbkey{min-width:26px;height:26px;padding:0 5px;display:inline-flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:600;color:#f4f4f5;background:linear-gradient(#4a4a4d,#2c2c2e);
+    border:1px solid #1c1c1e;border-radius:5px;box-shadow:0 1px 0 rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.12);
+    transition:transform .08s,background .12s,box-shadow .12s,color .12s;}
+  .kbkey.mod{font-size:11px;color:#c9c9cc;}
+  .kbkey.cmd{min-width:34px;}
+  .kbkey.space{min-width:90px;}
+  .kbkey.hot{background:linear-gradient(var(--accent),#4f52d6);color:#fff;border-color:#4045c8;
+    box-shadow:0 0 0 2px rgba(99,102,241,.35),0 1px 0 rgba(0,0,0,.4);animation:hotGlow 1.5s ease-in-out infinite;}
+  @keyframes hotGlow{0%,100%{box-shadow:0 0 0 2px rgba(99,102,241,.3),0 1px 0 rgba(0,0,0,.4);}
+    50%{box-shadow:0 0 0 4px rgba(99,102,241,.55),0 1px 0 rgba(0,0,0,.4);}}
+  .kbkey.down{transform:translateY(2px);background:linear-gradient(#eef,#c9ccff);color:var(--accent);
+    border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.5);}
+
+  /* desktop */
+  #desktop{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;
+    background:linear-gradient(160deg,var(--desk1),var(--desk2));
+    box-shadow:inset 0 0 60px rgba(0,0,0,.15), 0 18px 40px rgba(0,0,0,.20);}
+
+  /* macOS menu bar */
+  #menubar{position:absolute;top:0;left:0;right:0;height:26px;background:rgba(250,250,252,.72);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);display:flex;align-items:center;gap:2px;
+    padding:0 8px;font-size:13.5px;color:#111;z-index:20;box-shadow:0 1px 0 rgba(0,0,0,.06);}
+  .mi{padding:2px 9px;border-radius:5px;cursor:default;line-height:1;}
+  .mi.app{font-weight:700;}
+  .mi.apple{font-size:15px;}
+  .mi.hot{cursor:pointer;}
+  .mi.open{background:var(--macblue);color:#fff;}
+  #menubar .clock{margin-left:auto;font-variant-numeric:tabular-nums;padding-right:4px;}
+  /* dropdown */
+  .menuDrop{position:absolute;top:26px;background:rgba(246,246,248,.98);-webkit-backdrop-filter:blur(20px);
+    backdrop-filter:blur(20px);border:1px solid rgba(0,0,0,.12);border-radius:8px;box-shadow:0 12px 34px rgba(0,0,0,.28);
+    padding:5px;min-width:230px;z-index:30;display:none;font-size:13.5px;}
+  .drow{display:flex;justify-content:space-between;gap:24px;padding:5px 10px;border-radius:5px;cursor:pointer;color:#111;}
+  .drow .sc{color:#8a8a8e;}
+  .drow:hover:not(.dis){background:var(--macblue);color:#fff;}
+  .drow:hover:not(.dis) .sc{color:#e5e5e5;}
+  .drow.dis{color:#b9b9bd;cursor:default;}
+  .dsep{height:1px;background:rgba(0,0,0,.12);margin:5px 8px;}
+
+  /* macOS window */
+  .window{position:absolute;background:#fff;border-radius:11px;overflow:hidden;
+    box-shadow:0 22px 60px rgba(0,0,0,.36);display:flex;flex-direction:column;border:0.5px solid rgba(0,0,0,.25);}
+  .titlebar{height:38px;background:linear-gradient(#f6f6f7,#e9e9eb);display:flex;align-items:center;padding:0 12px;
+    flex:0 0 auto;position:relative;border-bottom:0.5px solid #cfcfd2;}
+  .lights{display:flex;gap:8px;}
+  .light{width:12px;height:12px;border-radius:50%;border:.5px solid rgba(0,0,0,.12);}
+  .light.r{background:#ff5f57;} .light.y{background:#febc2e;} .light.g{background:#28c840;}
+  .winTitle{position:absolute;left:0;right:0;text-align:center;font-size:13.5px;font-weight:600;
+    color:#3f3f43;pointer-events:none;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .winBody{flex:1;min-height:0;position:relative;background:#fffef9;}
+
+  /* the real editable text (native macOS selection & shortcuts) */
+  .docText{position:absolute;inset:0;width:100%;height:100%;border:0;outline:0;resize:none;
+    background:transparent;color:#1f2937;font-family:inherit;font-size:22px;line-height:2.0;
+    padding:22px 24px;caret-color:var(--macblue);-webkit-user-select:text;user-select:text;cursor:text;}
+  .docText::selection{background:#b3d7ff;}
+
+  /* demo cursor (drawn macOS pointer) */
+  .demoCursor{position:absolute;width:26px;height:26px;z-index:14;pointer-events:none;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));transition:opacity .2s;}
+  .demoCursor.click{animation:clickPulse .35s ease;}
+  @keyframes clickPulse{0%{transform:scale(1);}50%{transform:scale(.8);}100%{transform:scale(1);}}
+  .clickRipple{position:absolute;width:26px;height:26px;border-radius:50%;border:2px solid rgba(10,99,255,.7);
+    z-index:13;pointer-events:none;animation:ripple .5s ease-out forwards;}
+  @keyframes ripple{from{transform:scale(.3);opacity:.8;}to{transform:scale(2.4);opacity:0;}}
+  .demoKeycap{position:absolute;left:50%;top:12px;transform:translateX(-50%) scale(.82);opacity:0;
+    display:flex;gap:6px;z-index:40;pointer-events:none;transition:opacity .18s,transform .18s;}
+  .demoKeycap.show{opacity:1;transform:translateX(-50%) scale(1);}
+  .demoKeycap .dk{background:linear-gradient(#4a4a4d,#2c2c2e);border:1px solid #1c1c1e;border-radius:9px;
+    box-shadow:0 3px 0 rgba(0,0,0,.45);padding:6px 13px;font-size:21px;font-weight:800;color:#f4f4f5;}
+  .demoKeycap.press .dk{transform:translateY(2px);box-shadow:0 0 0 rgba(0,0,0,.45);}
+  .demoMenu{position:absolute;background:rgba(250,250,252,.98);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    border:1px solid rgba(0,0,0,.12);border-radius:8px;box-shadow:0 12px 30px rgba(0,0,0,.24);padding:5px;min-width:132px;
+    opacity:0;transform:scale(.92);transform-origin:top left;transition:.16s;z-index:45;pointer-events:none;font-size:14px;}
+  .demoMenu.show{opacity:1;transform:scale(1);}
+  .demoMenu .drow{padding:5px 12px;border-radius:5px;color:#222;}
+  .demoMenu .drow.hl{background:#0a63ff;color:#fff;}
+  .demohl{background:#0a63ff !important;color:#fff !important;}
+
+  /* Lesson 1: cursor cards */
+  #cursorLesson{position:absolute;inset:26px 0 0 0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:16px;padding:16px;}
+  #cursorLesson .cintro{color:#fff;font-size:15px;text-shadow:0 1px 3px rgba(0,0,0,.35);text-align:center;}
+  .ccards{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+  .ccard{width:210px;background:rgba(255,255,255,.96);border-radius:14px;padding:16px 14px;text-align:center;
+    box-shadow:0 10px 26px rgba(0,0,0,.22);border:3px solid transparent;transition:border-color .2s,transform .12s;}
+  .ccard.arrow{cursor:default;} .ccard.hand{cursor:pointer;} .ccard.text{cursor:text;}
+  .ccard .cicon{height:52px;display:flex;align-items:center;justify-content:center;}
+  .ccard .cicon svg{width:44px;height:44px;}
+  .ccard .cname{font-weight:800;font-size:17px;margin-top:6px;color:#1f2937;}
+  .ccard .cwhen{font-size:13px;color:#6b7280;margin-top:3px;line-height:1.4;}
+  .ccard .seen{margin-top:8px;font-size:13px;font-weight:700;color:#9ca3af;}
+  .ccard.done{border-color:var(--good);transform:translateY(-3px);}
+  .ccard.done .seen{color:var(--good);}
+
+  #toast{position:absolute;top:34px;left:50%;transform:translateX(-50%);background:rgba(43,47,54,.92);
+    color:#fff;font-size:14px;font-weight:600;padding:8px 16px;border-radius:999px;z-index:35;
+    display:none;box-shadow:0 6px 16px rgba(0,0,0,.3);}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:60;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:95;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;
+    padding:11px 24px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+        <div class="extra">
+          <div class="keycaps" id="keycaps"></div>
+          <button id="replayBtn" onclick="replayDemo()"></button>
+        </div>
+      </div>
+
+      <div id="desktop">
+        <div id="menubar">
+          <span class="mi apple"></span>
+          <span class="mi app"></span>
+          <span class="mi"></span>
+          <span class="mi hot" id="miEdit"></span>
+          <span class="mi"></span>
+          <span class="clock" id="clock"></span>
+        </div>
+        <!-- level content injected here -->
+      </div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+  </div>
+</div>
+
+<script>
+/* ---------- drawn macOS cursors ---------- */
+const SVG_ARROW=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 3 L5 20 L9.5 15.8 L12.6 22 L15.2 20.8 L12.1 14.8 L18 14.8 Z" fill="#111" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const SVG_HAND=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 11 V4.2 a1.4 1.4 0 0 1 2.8 0 V9.5 h0.5 V5.6 a1.4 1.4 0 0 1 2.8 0 V9.6 h0.5 V7.2 a1.4 1.4 0 0 1 2.8 0 V12.9 c0 3.4-2 5.8-5.2 5.8 -1.9 0-3.2-.8-4.2-2.2 L4.7 12.9 a1.5 1.5 0 0 1 2.4-1.8 Z" fill="#fff" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const SVG_IBEAM=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g><g fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g></svg>`;
+
+
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  title:{ko:"엄마의 맥북 글자 연습",en:"Mom's MacBook Text Practice"},
+  h1:{ko:"💻 엄마의 맥북 글자 연습",en:"💻 Mom's MacBook Text Practice"},
+  sub:{ko:"맥북에서 글자를 선택하고, 복사하고, 붙여넣는 법을 하나씩 배워요.",en:"Learn how to select, copy, and paste text on a MacBook, one step at a time."},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  replay:{ko:"👀 다시 보여주기",en:"👀 Show me again"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"맥북 글자 다루기 마스터!",en:"MacBook text master!"},
+  finalMsg:{ko:"커서 알아보기부터 복사·붙여넣기까지 척척! 정말 잘하셨어요 💖",en:"From cursors to copy and paste — you handled it all beautifully 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  next:{ko:"다음 ›",en:"Next ›"},
+  menu:{app:{ko:"메모",en:"Notes"},file:{ko:"파일",en:"File"},edit:{ko:"편집",en:"Edit"},view:{ko:"보기",en:"View"},undo:{ko:"실행 취소",en:"Undo"},cut:{ko:"잘라내기",en:"Cut"},copy:{ko:"복사",en:"Copy"},paste:{ko:"붙여넣기",en:"Paste"},selectAll:{ko:"전체 선택",en:"Select All"}},
+  clock:{am:{ko:"오전",en:"AM"},pm:{ko:"오후",en:"PM"}},
+  noteTitle:{ko:"메모",en:"Notes"},
+  pasteKeyboard:{ko:"키보드에서 ⌘V 를 눌러 보세요",en:"Press ⌘V on the keyboard"},
+  deleted:{ko:"글자를 지웠어요",en:"Deleted some letters"},
+  undoToast:{ko:"되돌리기 ↩️",en:"Undo ↩️"},
+  demoMenu:{cut:{ko:"잘라내기",en:"Cut"},copy:{ko:"복사",en:"Copy"},paste:{ko:"붙여넣기",en:"Paste"}},
+  cursors:{intro:{ko:"각 칸 위에 마우스를 올려 보세요. 커서(화살표) 모양이 어떻게 바뀌는지 잘 보세요 👀",en:"Move the mouse over each card. Watch how the cursor shape changes 👀"},
+    arrowName:{ko:"화살표 커서",en:"Arrow cursor"},arrowWhen:{ko:"평소 기본 모양이에요. 아이콘이나 빈 곳 위에서 보여요.",en:"This is the normal shape. You see it over icons or empty space."},
+    handName:{ko:"손 모양 커서",en:"Hand cursor"},handWhen:{ko:"누를 수 있는 것(버튼·링크) 위에서 손 모양으로 바뀌어요.",en:"It turns into a hand over things you can click, like buttons and links."},
+    textName:{ko:"글자 선택 커서",en:"Text selection cursor"},textWhen:{ko:"글자 위에서는 이 ‘I’ 모양이 돼요. 이때 글자를 선택할 수 있어요.",en:"Over text, it becomes this I-beam. That means you can select text."},
+    try:{ko:"여기에 올려 보세요",en:"Move here"},seen:{ko:"✓ 봤어요!",en:"✓ Seen!"},done:{ko:"커서 3가지를 모두 익혔어요!",en:"You learned all 3 cursor shapes!"}},
+  toast:{copyDone:{ko:"복사됨 📋",en:"Copied 📋"},paste:{ko:"붙여넣기 📥",en:"Pasted 📥"},cut:{ko:"잘라내기 ✂️",en:"Cut ✂️"},selectAll:{ko:"전체 선택 🟦",en:"Select all 🟦"}}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.title=T(UI.title);
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("replayBtn").textContent=T(UI.replay);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.querySelector('.mi.app').textContent=T(UI.menu.app);
+  document.querySelectorAll('#menubar .mi')[2].textContent=T(UI.menu.file);
+  document.getElementById('miEdit').textContent=T(UI.menu.edit);
+  document.querySelectorAll('#menubar .mi')[4].textContent=T(UI.menu.view);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+  tickClock();
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic(); closeMenu();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(!doneLock){ loadLevel(current); }
+}
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Excellent! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ---------- desktop chrome ---------- */
+const desktop=document.getElementById("desktop");
+let ta=null, winBody=null, toast=null;
+let hooks={}, locked=false, currentDemo=null;
+
+function clearDesktop(){ [...desktop.children].forEach(ch=>{ if(ch.id==="menubar") return; ch.remove(); }); closeMenu(); }
+
+/* ---------- macOS Notes window with real editable text ---------- */
+function makeNotesWindow(value){
+  const d=desktop.getBoundingClientRect();
+  const win=document.createElement("div"); win.className="window";
+  const w=Math.min(560, d.width-40), h=d.height-64;
+  win.style.width=w+"px"; win.style.height=h+"px";
+  win.style.left=((d.width-w)/2)+"px"; win.style.top="42px";
+  win.innerHTML=`
+    <div class="titlebar">
+      <div class="lights"><span class="light r"></span><span class="light y"></span><span class="light g"></span></div>
+      <div class="winTitle"><span>📝</span><span>${T(UI.noteTitle)}</span></div>
+    </div>
+    <div class="winBody">
+      <textarea class="docText" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+    </div>
+    <div id="toast"></div>`;
+  desktop.appendChild(win);
+  winBody=win.querySelector(".winBody");
+  toast=win.querySelector("#toast");
+  ta=win.querySelector(".docText");
+  ta.value=T(value)||"";
+  attachEditorHandlers();
+  setTimeout(()=>ta.focus(),0);
+  return ta;
+}
+function showToast(msg){ if(!toast)return; toast.textContent=msg; toast.style.display="block";
+  clearTimeout(showToast._t); showToast._t=setTimeout(()=>toast.style.display="none",1100); }
+
+function selInfo(){ const s=ta.selectionStart,e=ta.selectionEnd; return {s,e,
+  t:ta.value.substring(s,e), collapsed:s===e, all:s===0&&e===ta.value.length&&ta.value.length>0}; }
+
+let wasSelected=false, ctxArmed=false;
+function attachEditorHandlers(){
+  const onSel=()=>{ if(locked)return; const i=selInfo();
+    if(hooks.onSelect) hooks.onSelect(i);
+    if(i.all && hooks.onSelectAll) hooks.onSelectAll(); };
+  ta.addEventListener("select", onSel);
+  ta.addEventListener("keyup", onSel);
+  ta.addEventListener("mouseup", onSel);
+  document.addEventListener("selectionchange", ()=>{ if(document.activeElement===ta) onSel(); });
+
+  ta.addEventListener("mousedown", ()=>{ const i=selInfo(); wasSelected=!i.collapsed; });
+  ta.addEventListener("click", ()=>{ if(locked)return; const i=selInfo();
+    if(i.collapsed){ if(hooks.onCaret) hooks.onCaret(i);
+      if(wasSelected && hooks.onDeselect) hooks.onDeselect(); }
+    wasSelected=false; });
+
+  ta.addEventListener("copy", ()=>{ if(locked)return;
+    if(ctxArmed && hooks.onContextCopy) hooks.onContextCopy();
+    if(menuArmed && hooks.onMenuCopy) hooks.onMenuCopy();
+    if(hooks.onCopy) hooks.onCopy(); });
+  ta.addEventListener("cut", ()=>{ if(locked)return; if(hooks.onCut) hooks.onCut(); });
+  ta.addEventListener("paste", ()=>{ if(locked)return; if(hooks.onPaste) hooks.onPaste(); });
+  ta.addEventListener("input", e=>{ if(locked)return; if(e.inputType==="historyUndo" && hooks.onUndo) hooks.onUndo(); });
+  ta.addEventListener("contextmenu", ()=>{ ctxArmed=true; setTimeout(()=>ctxArmed=false,5000);
+    if(hooks.onContext) hooks.onContext(); });
+
+  ta.addEventListener("keydown", e=>{ if(e.metaKey||e.ctrlKey) flashKeys(e.key.toLowerCase()); });
+}
+
+/* ---------- macOS Edit menu (편집) ---------- */
+let menuArmed=false;
+const miEdit=document.getElementById("miEdit");
+let editDrop=null;
+miEdit.addEventListener("click",e=>{ e.stopPropagation(); toggleEditMenu(); });
+document.addEventListener("click",()=>closeMenu());
+function closeMenu(){ if(editDrop){ editDrop.remove(); editDrop=null; } miEdit.classList.remove("open"); }
+function toggleEditMenu(){
+  if(editDrop){ closeMenu(); return; }
+  if(!ta){ return; }
+  miEdit.classList.add("open");
+  const r=miEdit.getBoundingClientRect(), dr=desktop.getBoundingClientRect();
+  editDrop=document.createElement("div"); editDrop.className="menuDrop"; editDrop.style.display="block";
+  editDrop.style.left=(r.left-dr.left)+"px";
+  const has=!selInfo().collapsed;
+  editDrop.innerHTML=`
+    <div class="drow" data-a="undo">${T(UI.menu.undo)}<span class="sc">⌘Z</span></div>
+    <div class="dsep"></div>
+    <div class="drow ${has?'':'dis'}" data-a="cut">${T(UI.menu.cut)}<span class="sc">⌘X</span></div>
+    <div class="drow ${has?'':'dis'}" data-a="copy">${T(UI.menu.copy)}<span class="sc">⌘C</span></div>
+    <div class="drow" data-a="paste">${T(UI.menu.paste)}<span class="sc">⌘V</span></div>
+    <div class="dsep"></div>
+    <div class="drow" data-a="selectAll">${T(UI.menu.selectAll)}<span class="sc">⌘A</span></div>`;
+  editDrop.addEventListener("click",e=>{ e.stopPropagation(); const row=e.target.closest(".drow");
+    if(!row||row.classList.contains("dis"))return; performEdit(row.dataset.a); closeMenu(); });
+  desktop.appendChild(editDrop);
+}
+function performEdit(a){
+  if(!ta) return; ta.focus();
+  menuArmed=(a==="copy");
+  try{
+    if(a==="copy") document.execCommand("copy");
+    else if(a==="cut") document.execCommand("cut");
+    else if(a==="undo") document.execCommand("undo");
+    else if(a==="paste"){ if(!document.execCommand("paste")) showToast(T(UI.pasteKeyboard)); }
+    else if(a==="selectAll"){ ta.select(); const i=selInfo(); if(i.all&&hooks.onSelectAll)hooks.onSelectAll(); }
+  }catch(_){}
+  if(a==="copy" && hooks.onMenuCopy) hooks.onMenuCopy();
+  setTimeout(()=>menuArmed=false,300);
+}
+
+/* ---------- mini MacBook keyboard hint ---------- */
+const keycapsEl=document.getElementById("keycaps");
+const KB_ROWS=[
+  ["Q","W","E","R","T","Y","U","I","O","P"],
+  ["A","S","D","F","G","H","J","K","L"],
+  ["Z","X","C","V","B","N","M"]
+];
+function showKeycaps(letter){ // letter like "C" or null to hide
+  if(!letter){ keycapsEl.style.display="none"; keycapsEl.innerHTML=""; return; }
+  const L=letter.toUpperCase();
+  let h='<div class="mbk">';
+  KB_ROWS.forEach(row=>{ h+='<div class="kbrow">';
+    row.forEach(k=>{ h+=`<span class="kbkey${k===L?" hot":""}" data-k="${k.toLowerCase()}">${k}</span>`; });
+    h+='</div>'; });
+  h+='<div class="kbrow">'
+    +'<span class="kbkey mod">fn</span>'
+    +'<span class="kbkey mod">⌃</span>'
+    +'<span class="kbkey mod">⌥</span>'
+    +'<span class="kbkey mod cmd hot" data-k="meta">⌘</span>'
+    +'<span class="kbkey space"></span>'
+    +'<span class="kbkey mod cmd">⌘</span>'
+    +'<span class="kbkey mod">⌥</span>'
+    +'</div></div>';
+  keycapsEl.innerHTML=h;
+  keycapsEl.style.display="flex";
+}
+function flashKeys(k){ keycapsEl.querySelectorAll(".kbkey").forEach(el=>{
+  if(el.dataset.k==="meta" || el.dataset.k===k){ el.classList.add("down"); setTimeout(()=>el.classList.remove("down"),220);} }); }
+
+/* ---------- animated macOS cursor demo ---------- */
+function makeCursor(kind){ const c=document.createElement("div"); c.className="demoCursor";
+  c.innerHTML = kind==="ibeam"?SVG_IBEAM : kind==="hand"?SVG_HAND : SVG_ARROW; return c; }
+function ripple(x,y){ const r=document.createElement("div"); r.className="clickRipple";
+  r.style.left=(x-13)+"px"; r.style.top=(y-13)+"px"; winBody.appendChild(r); setTimeout(()=>r.remove(),520); }
+
+// measure x position of character index on its line, in winBody coords
+function caretX(idx){
+  const cs=getComputedStyle(ta); const cnv=caretX._c||(caretX._c=document.createElement("canvas").getContext("2d"));
+  cnv.font=`${cs.fontSize} ${cs.fontFamily}`;
+  const val=ta.value.slice(0,idx); const lineStart=val.lastIndexOf("\n")+1;
+  const pre=val.slice(lineStart);
+  return parseFloat(cs.paddingLeft)+cnv.measureText(pre).width;
+}
+function caretY(idx){
+  const cs=getComputedStyle(ta); const lh=parseFloat(cs.lineHeight)||parseFloat(cs.fontSize)*2;
+  const line=ta.value.slice(0,idx).split("\n").length-1;
+  return parseFloat(cs.paddingTop)+(line+0.5)*lh;
+}
+function demoDrag(startIdx,endIdx){
+  return function run(){
+    if(locked||!ta) return; locked=true; closeMenu();
+    ta.focus(); ta.setSelectionRange(startIdx,startIdx);
+    const cur=makeCursor("ibeam"); winBody.appendChild(cur);
+    const x0=caretX(startIdx), x1=caretX(endIdx), y=caretY(startIdx);
+    let t0=null; const dur=1500;
+    const place=(x,yy)=>{ cur.style.left=(x-6)+"px"; cur.style.top=(yy-13)+"px"; };
+    place(x0,y); ripple(x0,y); beep(520,.06);
+    cur.classList.add("click");
+    function frame(tp){ if(!t0)t0=tp; const k=Math.min(1,(tp-t0)/dur);
+      const x=x0+(x1-x0)*k; place(x,y);
+      const idx=Math.round(startIdx+(endIdx-startIdx)*k); ta.setSelectionRange(startIdx,idx);
+      if(k<1) requestAnimationFrame(frame);
+      else setTimeout(()=>{ cur.style.opacity="0";
+        setTimeout(()=>{ cur.remove(); ta.setSelectionRange(startIdx,startIdx); ta.focus(); locked=false; },220); },600);
+    }
+    requestAnimationFrame(frame);
+  };
+}
+function demoClick(idx, times, sel){
+  return function run(){
+    if(locked||!ta) return; locked=true; closeMenu();
+    ta.focus(); ta.setSelectionRange(idx,idx);
+    const cur=makeCursor("ibeam"); winBody.appendChild(cur);
+    const x=caretX(idx), y=caretY(idx); cur.style.left=(x-6)+"px"; cur.style.top=(y-13)+"px";
+    let n=0;
+    (function clickOnce(){ cur.classList.remove("click"); void cur.offsetWidth; cur.classList.add("click");
+      ripple(x,y); beep(560,.05); n++;
+      if(n<times) setTimeout(clickOnce,230);
+      else setTimeout(()=>{
+        if(sel){ ta.setSelectionRange(sel[0],sel[1]); beep(720,.06); }
+        setTimeout(()=>{ cur.style.opacity="0";
+          setTimeout(()=>{ cur.remove(); ta.setSelectionRange(idx,idx); ta.focus(); locked=false; },220);
+        }, sel?800:500);
+      },350);
+    })();
+  };
+}
+function demoKeycap(letter){
+  const kc=document.createElement("div"); kc.className="demoKeycap";
+  kc.innerHTML=`<span class="dk">⌘</span><span class="dk">${letter}</span>`;
+  winBody.appendChild(kc);
+  requestAnimationFrame(()=>kc.classList.add("show"));
+  setTimeout(()=>kc.classList.add("press"),380);
+  setTimeout(()=>kc.classList.remove("press"),620);
+  setTimeout(()=>{ kc.classList.remove("show"); setTimeout(()=>kc.remove(),260); },1250);
+  return kc;
+}
+function pressKeys(letter,cb){
+  flashKeys(letter); demoKeycap(letter); beep(560,.06);
+  setTimeout(()=>{ flashKeys(letter); beep(640,.05); },420);
+  setTimeout(cb,1250);
+}
+// Generic ⌘+letter demo: press the keys, then run effect(finish) which shows the result and calls finish().
+function demoShortcut(letter,effect){
+  return function run(){ if(locked||!ta) return; locked=true; closeMenu(); ta.focus();
+    pressKeys(letter, ()=>effect(()=>{ locked=false; })); };
+}
+function demoDeselect(idx){
+  return function run(){ if(locked||!ta) return; locked=true; closeMenu(); ta.focus();
+    ta.setSelectionRange(0,ta.value.length);
+    const cur=makeCursor("ibeam"); winBody.appendChild(cur);
+    const x=caretX(idx), y=caretY(idx); cur.style.left=(x-6)+"px"; cur.style.top=(y-13)+"px";
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(560,.05);
+      ta.setSelectionRange(idx,idx);
+      setTimeout(()=>{ cur.style.opacity="0"; setTimeout(()=>{ cur.remove(); locked=false; },220); },750);
+    },800);
+  };
+}
+function demoUndo(){
+  return function run(){ if(locked||!ta) return; locked=true; closeMenu(); ta.focus();
+    const orig=ta.value; const short=orig.slice(0,Math.max(0,orig.length-3));
+    ta.setSelectionRange(short.length,orig.length);
+    setTimeout(()=>{ ta.value=short; ta.setSelectionRange(short.length,short.length); beep(320,.07); showToast(T(UI.deleted));
+      setTimeout(()=>pressKeys("Z", ()=>{ ta.value=orig; ta.setSelectionRange(orig.length,orig.length);
+        showToast(T(UI.undoToast)); setTimeout(()=>{ locked=false; },700); }),800);
+    },800);
+  };
+}
+function demoRightClick(){
+  return function run(){ if(locked||!ta) return; locked=true; closeMenu(); ta.focus();
+    ta.setSelectionRange(0,ta.value.length);
+    const idx=Math.floor(ta.value.length/2), x=caretX(idx), y=caretY(idx);
+    const cur=makeCursor("arrow"); winBody.appendChild(cur);
+    cur.style.left=x+"px"; cur.style.top=(y-6)+"px";
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(500,.05);
+      const menu=document.createElement("div"); menu.className="demoMenu";
+      menu.innerHTML=`<div class="drow">${T(UI.demoMenu.cut)}</div><div class="drow hl">${T(UI.demoMenu.copy)}</div><div class="drow">${T(UI.demoMenu.paste)}</div>`;
+      menu.style.left=(x+6)+"px"; menu.style.top=(y+6)+"px"; winBody.appendChild(menu);
+      requestAnimationFrame(()=>menu.classList.add("show"));
+      setTimeout(()=>{ menu.classList.remove("show"); cur.style.opacity="0";
+        setTimeout(()=>{ menu.remove(); cur.remove(); locked=false; },260); },1400);
+    },700);
+  };
+}
+function demoEditMenu(){
+  return function run(){ if(locked||!ta) return; locked=true; closeMenu(); ta.focus();
+    ta.setSelectionRange(0,ta.value.length);
+    const dr=desktop.getBoundingClientRect(), r=miEdit.getBoundingClientRect();
+    const cur=makeCursor("arrow"); cur.style.zIndex=60; desktop.appendChild(cur);
+    cur.style.left=(r.left-dr.left+6)+"px"; cur.style.top=(r.bottom-dr.top+2)+"px";
+    setTimeout(()=>{ cur.classList.add("click"); beep(500,.05); toggleEditMenu();
+      setTimeout(()=>{ const row=editDrop&&editDrop.querySelector('[data-a="copy"]');
+        if(row){ row.classList.add("demohl"); const rr=row.getBoundingClientRect();
+          cur.style.left=(rr.left-dr.left+16)+"px"; cur.style.top=(rr.top-dr.top+4)+"px"; }
+        setTimeout(()=>{ closeMenu(); cur.style.opacity="0"; setTimeout(()=>{ cur.remove(); locked=false; },220); },1300);
+      },500);
+    },600);
+  };
+}
+function replayDemo(){ if(currentDemo) currentDemo(); }
+function showReplay(on){ document.getElementById("replayBtn").style.display=on?"inline-flex":"none"; }
+function autoDemo(fn,delay){ currentDemo=fn; showReplay(true); setTimeout(()=>{ if(!locked) fn(); }, delay||600); }
+
+/* ---------- Lesson 1: meet the cursors ---------- */
+function makeCursorLesson(done){
+  const wrap=document.createElement("div"); wrap.id="cursorLesson";
+  wrap.innerHTML=`
+    <div class="cintro">${T(UI.cursors.intro)}</div>
+    <div class="ccards">
+      <div class="ccard arrow" data-c="arrow">
+        <div class="cicon">${SVG_ARROW}</div>
+        <div class="cname">${T(UI.cursors.arrowName)}</div>
+        <div class="cwhen">${T(UI.cursors.arrowWhen)}</div>
+        <div class="seen">${T(UI.cursors.try)}</div>
+      </div>
+      <div class="ccard hand" data-c="hand">
+        <div class="cicon">${SVG_HAND}</div>
+        <div class="cname">${T(UI.cursors.handName)}</div>
+        <div class="cwhen">${T(UI.cursors.handWhen)}</div>
+        <div class="seen">${T(UI.cursors.try)}</div>
+      </div>
+      <div class="ccard text" data-c="text">
+        <div class="cicon">${SVG_IBEAM}</div>
+        <div class="cname">${T(UI.cursors.textName)}</div>
+        <div class="cwhen">${T(UI.cursors.textWhen)}</div>
+        <div class="seen">${T(UI.cursors.try)}</div>
+      </div>
+    </div>`;
+  desktop.appendChild(wrap);
+  const seen=new Set();
+  wrap.querySelectorAll(".ccard").forEach(card=>{
+    const mark=()=>{ if(card.classList.contains("done"))return; card.classList.add("done");
+      card.querySelector(".seen").textContent=T(UI.cursors.seen); seen.add(card.dataset.c); beep(700,.08);
+      if(seen.size===3){ setTimeout(()=>done("🖱️",UI.cursors.done),300); } };
+    card.addEventListener("mouseenter",mark);
+    card.addEventListener("click",mark);
+  });
+}
+
+/* ---------- levels ---------- */
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+
+const COPY_TEXT={ko:"이 문장을 복사해 볼게요",en:"Let's copy this sentence"};
+const PASTE_PREFIX={ko:"복사한 글을 여기 끝에 붙여넣기: ",en:"Paste the copied text at the end here: "};
+const PASTE_DEMO={ko:"복사한 문장",en:"copied sentence"};
+const CUT_TEXT={ko:"필요없는 이 문장을 잘라내요",en:"Cut this unneeded sentence"};
+const UNDO_TEXT={ko:"이 문장에서 글자를 지워 보세요",en:"Delete a few letters from this sentence"};
+const SELECT_ALL_TEXT={ko:"이 글을 통째로\n한 번에 모두 선택해요",en:"Select all of this text\nat once"};
+const RIGHT_CLICK_TEXT={ko:"오른쪽 클릭으로 복사해요",en:"Copy with right-click"};
+const EDIT_MENU_TEXT={ko:"위쪽 ‘편집’ 메뉴로 복사해요",en:"Copy from the top ‘Edit’ menu"};
+const COFFEE_WORD={ko:"커피",en:"coffee"};
+const DRAG_PHRASE={ko:"드래그해서 선택",en:"Drag to select"};
+const TRIPLE_LINE={ko:"이 줄을 세 번 클릭해 보세요",en:"Triple-click this line"};
+
+const levels=[
+  { mode:"cursors", title:{ko:"커서 3가지 알아보기",en:"Meet 3 cursor shapes"},
+    instr:{ko:"맥북 화면 속 화살표를 ‘커서’라고 해요. 각 칸 위에 올려 커서가 어떻게 바뀌는지 봐요.",en:"The arrow on your MacBook screen is called the cursor. Move over each card and watch it change."},
+    hint:{ko:"화살표(기본) · 손 모양(누를 수 있는 것) · I 모양(글자 위) — 세 가지를 기억해요.",en:"Remember these three: arrow (normal), hand (clickable), and I-beam (over text)."},
+    setup(done){ makeCursorLesson(done); } },
+  { mode:"editor", value:{ko:"여기를 클릭해서 커서를 놓아 보세요",en:"Click here to place the cursor"},
+    title:{ko:"클릭해서 커서 놓기",en:"Click to place the cursor"},
+    instr:{ko:"글자 위에 마우스를 올리면 ‘I’ 모양이 돼요. 글자 사이를 한 번 클릭하면 깜빡이는 커서가 놓여요.",en:"Over text, the cursor becomes an I-beam. Click once between letters to place the blinking cursor."},
+    hint:{ko:"트랙패드를 한 번 ‘딸깍’ 누르는 게 클릭이에요.",en:"A single press on the trackpad is a click."},
+    setup(done){ autoDemo(demoClick(Math.floor(ta.value.length/2),1),700); hooks.onCaret=()=>done("🖙",{ko:"커서를 놓았어요!",en:"You placed the cursor!"}); } },
+  { mode:"editor", value:{ko:"오늘 커피 한 잔 어때요",en:"Would you like a cup of coffee today"},
+    title:{ko:"낱말 두 번 클릭해서 선택하기",en:"Double-click a word to select it"},
+    instr:{ko:"‘커피’ 위에서 빠르게 두 번 클릭(더블클릭)하면 그 낱말이 파랗게 선택돼요.",en:"Double-click quickly on ‘coffee’ to select that word in blue."},
+    hint:{ko:"딸깍-딸깍, 같은 자리를 빠르게 두 번 눌러요.",en:"Click-click, twice quickly in the same spot."},
+    setup(done){ const word=T(COFFEE_WORD); const idx=idxOf(word); autoDemo(demoClick(idx+1,2,[idx,idx+word.length]),700); hooks.onSelect=i=>{ if(i.t.trim()===word) done("🔵",{ko:"낱말을 선택했어요!",en:"You selected the word!"}); }; } },
+  { mode:"editor", value:{ko:"이 문장을 드래그해서 선택해요",en:"Drag to select this phrase"},
+    title:{ko:"눌러서 끌기(드래그)로 선택하기",en:"Press and drag to select"},
+    instr:{ko:"글자 앞을 누른 채로 손을 떼지 말고 옆으로 끌었다가(‘드래그’) 손을 떼면 여러 글자가 선택돼요.",en:"Press before the text, keep holding, drag sideways, then let go to select several letters."},
+    hint:{ko:"트랙패드를 꾹 누른 상태로 손가락을 움직이는 게 드래그예요. 큰 동작으로 천천히 해 봐요.",en:"Dragging means holding the trackpad down while moving your finger. Go slowly with a big motion."},
+    setup(done){ const phrase=T(DRAG_PHRASE); const s=idxOf(phrase), e=s+phrase.length; autoDemo(demoDrag(s,e),700); hooks.onSelect=i=>{ if(i.t.trim()===phrase) done("🟦",{ko:"드래그로 선택했어요!",en:"You selected by dragging!"}); }; } },
+  { mode:"editor", value:{ko:"윗줄이에요\n이 줄을 세 번 클릭해 보세요",en:"This is the top line\nTriple-click this line"},
+    title:{ko:"세 번 클릭해서 줄 전체 선택",en:"Triple-click to select a whole line"},
+    instr:{ko:"같은 자리를 빠르게 세 번 클릭하면 그 줄 전체가 한 번에 선택돼요. 아랫줄에서 해 보세요.",en:"Three quick clicks in the same spot selects the whole line. Try it on the lower line."},
+    hint:{ko:"맥북의 편리한 기능이에요. 딸깍-딸깍-딸깍!",en:"It's a handy MacBook trick. Click-click-click!"},
+    setup(done){ const line=T(TRIPLE_LINE); const s=idxOf(line), e=s+line.length; autoDemo(demoClick(s+4,3,[s,e]),700); hooks.onSelect=i=>{ if(i.t.trim()===line) done("🟪",{ko:"줄 전체를 선택했어요!",en:"You selected the whole line!"}); }; } },
+  { mode:"editor", value:{ko:"이 글자들이 선택되어 있어요",en:"These words are selected"},
+    title:{ko:"선택 풀기",en:"Deselect text"}, instr:{ko:"글자가 선택돼 있어요. 아무 곳이나 한 번 클릭하면 파란 선택이 풀려요.",en:"The text is selected. Click anywhere once to remove the blue selection."},
+    hint:{ko:"클릭 한 번이면 선택이 해제돼요.",en:"One click clears the selection."},
+    setup(done){ ta.focus(); ta.setSelectionRange(0,ta.value.length); autoDemo(demoDeselect(3),800); hooks.onDeselect=()=>done("⚪",{ko:"선택을 풀었어요!",en:"You cleared the selection!"}); } },
+  { mode:"editor", value:COPY_TEXT, title:{ko:"복사하기  ⌘ C",en:"Copy  ⌘ C"},
+    instr:{ko:"이미 파랗게 선택해 뒀어요. 키보드에서 ⌘(커맨드) 키를 누른 채 C 를 누르면 복사돼요.",en:"It's already selected in blue. Hold ⌘ Command and press C to copy it."},
+    hint:{ko:"⌘ 키는 스페이스바 양옆에 있어요. 누른 채로 C 를 톡.",en:"The ⌘ key is beside the space bar. Hold it and tap C."}, keys:"C",
+    setup(done){ ta.focus(); ta.setSelectionRange(0,ta.value.length); autoDemo(demoShortcut("C",fin=>{ ta.setSelectionRange(0,ta.value.length); showToast(T(UI.toast.copyDone)); setTimeout(fin,800); }),900); hooks.onCopy=()=>done("📋",{ko:"복사했어요!",en:"Copied!"}); } },
+  { mode:"editor", value:PASTE_PREFIX, title:{ko:"붙여넣기  ⌘ V",en:"Paste  ⌘ V"},
+    instr:{ko:"방금 복사한 글을 넣어요. 문장 끝을 클릭한 뒤 ⌘ 를 누른 채 V 를 누르면 붙여넣어져요.",en:"Now put in the text you copied. Click at the end, then hold ⌘ and press V to paste."},
+    hint:{ko:"복사(⌘C)한 것이 그대로 커서 자리에 들어가요.",en:"What you copied with ⌘C appears right where the cursor is."}, keys:"V",
+    setup(done){ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); autoDemo(demoShortcut("V",fin=>{ const orig=ta.value; ta.value=orig+T(PASTE_DEMO); ta.setSelectionRange(ta.value.length,ta.value.length); showToast(T(UI.toast.paste)); setTimeout(()=>{ ta.value=orig; ta.setSelectionRange(orig.length,orig.length); fin(); },1000); }),900); hooks.onPaste=()=>done("📥",{ko:"붙여넣었어요!",en:"Pasted!"}); } },
+  { mode:"editor", value:CUT_TEXT, title:{ko:"잘라내기  ⌘ X",en:"Cut  ⌘ X"},
+    instr:{ko:"파랗게 선택해 뒀어요. ⌘ 를 누른 채 X 를 누르면 글자가 잘려 나가요(지워져요).",en:"It's selected in blue. Hold ⌘ and press X to cut it out (remove it)."},
+    hint:{ko:"잘라내기는 그 자리에서 없애면서 복사도 같이 해 줘요.",en:"Cut removes the text from that spot and copies it at the same time."}, keys:"X",
+    setup(done){ ta.focus(); ta.setSelectionRange(0,ta.value.length); autoDemo(demoShortcut("X",fin=>{ const orig=ta.value; ta.setSelectionRange(0,orig.length); setTimeout(()=>{ ta.value=""; showToast(T(UI.toast.cut)); setTimeout(()=>{ ta.value=orig; ta.setSelectionRange(0,orig.length); fin(); },900); },250); }),900); hooks.onCut=()=>done("✂️",{ko:"잘라냈어요!",en:"Cut!"}); } },
+  { mode:"editor", value:UNDO_TEXT, title:{ko:"되돌리기  ⌘ Z",en:"Undo  ⌘ Z"},
+    instr:{ko:"끝에 있는 글자를 몇 개 지운(Delete) 다음, ⌘ 를 누른 채 Z 를 누르면 방금 한 일이 되돌려져요.",en:"Delete a few letters at the end, then hold ⌘ and press Z to undo what just happened."},
+    hint:{ko:"실수해도 괜찮아요. ⌘Z 는 마지막에 한 일을 원래대로 되돌려 줘요.",en:"Mistakes are okay. ⌘Z brings back the last thing you changed."}, keys:"Z",
+    setup(done){ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); autoDemo(demoUndo(),800); hooks.onUndo=()=>done("↩️",{ko:"되돌리기 성공! 원래대로 왔어요.",en:"Undo worked! It's back to normal."}); } },
+  { mode:"editor", value:SELECT_ALL_TEXT, title:{ko:"전체 선택  ⌘ A",en:"Select All  ⌘ A"},
+    instr:{ko:"⌘ 를 누른 채 A 를 누르면 글 전체가 한 번에 선택돼요.",en:"Hold ⌘ and press A to select all the text at once."},
+    hint:{ko:"길게 드래그하지 않아도 ⌘A 한 번이면 전부 선택돼요.",en:"No long dragging needed — ⌘A selects everything."}, keys:"A",
+    setup(done){ ta.focus(); autoDemo(demoShortcut("A",fin=>{ ta.setSelectionRange(0,ta.value.length); showToast(T(UI.toast.selectAll)); setTimeout(fin,800); }),900); hooks.onSelectAll=()=>done("🟦",{ko:"전체를 선택했어요!",en:"You selected everything!"}); } },
+  { mode:"editor", value:RIGHT_CLICK_TEXT, title:{ko:"오른쪽 클릭 메뉴 (보조 클릭)",en:"Right-click menu (secondary click)"},
+    instr:{ko:"선택한 글자 위에서 마우스 오른쪽 버튼(트랙패드는 두 손가락으로 클릭)을 누르면 메뉴가 떠요. ‘복사(Copy)’ 를 고르세요.",en:"Right-click the selected text (or two-finger click on the trackpad) to open a menu. Choose ‘Copy’."},
+    hint:{ko:"트랙패드 아무 곳이나 두 손가락으로 톡 누르면 ‘오른쪽 클릭’이에요.",en:"A two-finger tap anywhere on the trackpad is a right-click."},
+    setup(done){ ta.focus(); ta.setSelectionRange(0,ta.value.length); autoDemo(demoRightClick(),800); hooks.onContextCopy=()=>done("🖱️",{ko:"오른쪽 클릭으로 복사했어요!",en:"Copied with right-click!"}); } },
+  { mode:"editor", value:EDIT_MENU_TEXT, title:{ko:"메뉴 막대의 ‘편집’ 사용하기",en:"Use ‘Edit’ in the menu bar"},
+    instr:{ko:"화면 위쪽 막대에서 ‘편집’ 을 클릭해 메뉴를 열고, ‘복사’ 를 누르세요.",en:"Click ‘Edit’ in the top menu bar to open the menu, then click ‘Copy’."},
+    hint:{ko:"맥북은 위쪽 메뉴 막대에서도 복사·붙여넣기를 할 수 있어요.",en:"On a MacBook, you can also copy and paste from the top menu bar."},
+    setup(done){ ta.focus(); ta.setSelectionRange(0,ta.value.length); autoDemo(demoEditMenu(),800); hooks.onMenuCopy=()=>done("📋",{ko:"메뉴로 복사했어요!",en:"Copied from the menu!"}); } }
+];
+function idxOf(sub){ return ta.value.indexOf(sub); }
+
+/* ---------- engine ---------- */
+let current=0, doneLock=false;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+
+function loadLevel(i){
+  clearDesktop();
+  hooks={}; locked=false; currentDemo=null; ctxArmed=false; menuArmed=false; ta=null;
+  showReplay(false); showKeycaps(null);
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.textContent=T(lv.instr); banner.h.textContent="💡 "+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  if(lv.keys) showKeycaps(lv.keys);
+  requestAnimationFrame(()=>{
+    if(lv.mode==="editor") makeNotesWindow(lv.value);
+    lv.setup(onLevelDone);
+  });
+}
+function onLevelDone(emoji,msg){
+  if(doneLock) return; doneLock=true; locked=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  // Brief hold so she can see her result, then show the celebration overlay.
+  setTimeout(()=>{
+    els.msg.textContent=msg?T(msg):praise();
+    els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime();
+  },700);
+}
+function goNext(){ els.overlay.style.display="none"; doneLock=false;
+  current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function skipLevel(){ if(doneLock) return; current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block"; try{localStorage.setItem("momHub:done:text","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ current=0; doneLock=false; els.main.style.display="block"; els.skip.style.display="block";
+  els.final.style.display="none"; loadLevel(0); }
+
+// live clock in the menu bar
+function tickClock(){ const d=new Date(); let h=d.getHours(); const m=String(d.getMinutes()).padStart(2,"0");
+  const ap=h<12?T(UI.clock.am):T(UI.clock.pm); h=h%12; if(h===0)h=12; document.getElementById("clock").textContent=`${ap} ${h}:${m}`; }
+tickClock(); setInterval(tickClock,10000);
+
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+
+applyStatic(); loadLevel(0);
+</script>
+</body>
+</html>

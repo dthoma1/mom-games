@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 파인더 길찾기 (파인더 2편)</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#6366f1; --accent2:#ec4899; --good:#22c55e;
+    --win:#ffffff; --toolbar:#eceef1; --sel:#dbeafe; --selBorder:#3b82f6;
+  }
+  *{box-sizing:border-box; -webkit-user-select:none; user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;
+    overscroll-behavior:none;touch-action:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1000px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;
+    border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:120;}
+
+  /* intro */
+  #introView{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(99,102,241,.12);padding:26px;text-align:center;overflow:auto;}
+  #introArt{font-size:70px;line-height:1.15;margin-bottom:10px;}
+  #introTitle{font-size:26px;font-weight:800;margin:4px 0;}
+  #introText{font-size:17px;line-height:1.7;max-width:700px;color:#374151;}
+  #introText b{color:var(--accent);}
+  .introBtns{margin-top:20px;display:flex;gap:10px;}
+
+  /* lesson */
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;}
+  #banner .t{font-size:18px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .i b{color:var(--accent);}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  /* stage: menubar + finder window */
+  #stage{position:relative;flex:1;min-height:0;border-radius:14px;overflow:hidden;
+    background:linear-gradient(160deg,#5b8def,#a06cd5);box-shadow:0 18px 40px rgba(0,0,0,.18);
+    display:flex;flex-direction:column;}
+  #menubar{height:26px;background:rgba(255,255,255,.72);backdrop-filter:blur(10px);
+    display:flex;align-items:center;gap:1px;padding:0 8px;font-size:13px;z-index:30;}
+  .mbTitle{padding:2px 8px;border-radius:6px;font-weight:600;color:#111827;white-space:nowrap;cursor:default;}
+  .mbTitle.app{font-weight:800;}
+  .mbTitle.click{cursor:pointer;}
+  .mbTitle.click:hover,.mbTitle.open{background:var(--accent);color:#fff;}
+  #mbRight{margin-left:auto;display:flex;align-items:center;gap:6px;}
+  #clockBtn{font-size:12px;color:#111827;}
+
+  /* Finder window */
+  #finder{flex:1;min-height:0;margin:12px;background:var(--win);border-radius:12px;overflow:hidden;
+    box-shadow:0 16px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;border:1px solid #cfd2d8;}
+  #toolbar{height:46px;background:var(--toolbar);display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid #d8dade;}
+  .dots{display:flex;gap:7px;} .dot{width:12px;height:12px;border-radius:50%;}
+  .dot.r{background:#ff5f57;} .dot.y{background:#febc2e;} .dot.g{background:#28c840;}
+  .navBtn{width:28px;height:24px;border-radius:6px;border:1px solid #cfd2d8;background:#fff;font-size:15px;color:#6b7280;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .navBtn.off{opacity:.35;cursor:default;}
+  .navBtn.live{color:var(--accent);border-color:#c7d2fe;}
+  #crumb{font-weight:700;font-size:15px;display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow:hidden;}
+  #crumb .seg{color:#9ca3af;}
+  #crumb .seg.here{color:#111827;background:#eef2ff;border-radius:6px;padding:1px 8px;}
+  #crumb.flash .seg.here{animation:crumbPop .8s ease;}
+  @keyframes crumbPop{0%{background:#fde68a;}100%{background:#eef2ff;}}
+  #crumb .arrow{color:#c7cad1;font-size:12px;}
+  .spacer{flex:1;}
+  /* view segmented control */
+  #viewSeg{display:flex;border:1px solid #c7cad1;border-radius:8px;overflow:hidden;background:#fff;}
+  #viewSeg button{border:none;background:#fff;font-size:15px;width:36px;height:28px;cursor:pointer;color:#4b5563;border-right:1px solid #dfe1e6;line-height:1;}
+  #viewSeg button:last-child{border-right:none;}
+  #viewSeg button.on{background:var(--accent);color:#fff;}
+
+  #body{flex:1;min-height:0;display:flex;}
+  #content{flex:1;min-height:0;overflow:auto;position:relative;}
+  /* icon view */
+  .v-icon{display:grid;grid-template-columns:repeat(auto-fill,92px);grid-auto-rows:104px;gap:10px;padding:16px;align-content:start;}
+  .iconItem{width:92px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;border-radius:10px;cursor:pointer;}
+  .iconItem .ic{font-size:46px;line-height:1;pointer-events:none;}
+  .iconItem .nm{font-size:12px;text-align:center;word-break:break-word;max-width:88px;padding:1px 5px;border-radius:5px;pointer-events:none;}
+  .iconItem.selected{background:var(--sel);} .iconItem.selected .nm{background:var(--selBorder);color:#fff;}
+  /* list view */
+  .v-list{display:block;}
+  .listHead{display:grid;grid-template-columns:1fr 120px 88px;position:sticky;top:0;background:#f6f7f9;
+    border-bottom:1px solid #e2e4e9;font-size:12px;color:#6b7280;z-index:2;}
+  .listHead .lh{padding:7px 12px;border-right:1px solid #eceef1;font-weight:700;}
+  .lrow{display:grid;grid-template-columns:1fr 120px 88px;font-size:13px;border-bottom:1px solid #f1f2f4;cursor:pointer;}
+  .lrow:hover{background:#f6f8ff;}
+  .lrow.selected{background:var(--sel);}
+  .lrow>div{padding:7px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .lrow .c1{display:flex;align-items:center;gap:6px;}
+  .lrow .c1 .ic{font-size:19px;}
+  .lrow .c2,.lrow .c3{color:#6b7280;}
+  .tri{display:inline-flex;flex:0 0 18px;width:18px;height:18px;align-items:center;justify-content:center;
+    color:#9aa0aa;font-size:11px;border-radius:5px;cursor:pointer;}
+  .tri:hover{color:#fff;background:var(--accent);}
+  .tri.spacer{cursor:default;}
+  .tri.spacer:hover{background:transparent;color:#9aa0aa;}
+  .tri.pulse{animation:triPulse 1.1s ease infinite;}
+  @keyframes triPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.0);}50%{box-shadow:0 0 0 5px rgba(99,102,241,.28);}}
+
+  /* dropdown menus */
+  .menu{position:absolute;background:rgba(250,250,252,.98);border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.4);
+    padding:5px;display:none;z-index:80;min-width:180px;font-size:14px;}
+  .menu.open{display:block;}
+  .menu .mi{padding:7px 12px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:8px;}
+  .menu .mi:hover{background:var(--accent);color:#fff;}
+  .menu .mi.on::after{content:"✓";margin-left:auto;}
+  .menu .sep{height:1px;background:#e5e7eb;margin:5px 8px;}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:60;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:130;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+  button.big.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+  .toast{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;
+    padding:9px 18px;border-radius:14px;font-size:14px;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;max-width:82%;text-align:center;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipStep()"></button>
+
+    <div id="introView" style="display:none;">
+      <div id="introArt">🧭</div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button class="big soft" id="introBack" onclick="prevIntro()"></button>
+        <button class="big" id="introNext" onclick="nextIntro()"></button>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+      </div>
+
+      <div id="stage">
+        <div id="menubar">
+          <span class="mbTitle app">Finder</span>
+          <span class="mbTitle" id="menuFile"></span>
+          <span class="mbTitle" id="menuEdit"></span>
+          <span class="mbTitle click" id="viewMenuBtn"></span>
+          <span id="mbRight"><span>🔋</span><span>📶</span><span>🔍</span><span id="clockBtn"></span></span>
+        </div>
+
+        <div id="finder">
+          <div id="toolbar">
+            <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+            <button class="navBtn off" id="backBtn">‹</button>
+            <button class="navBtn off" id="fwdBtn">›</button>
+            <div id="crumb"></div>
+            <div class="spacer"></div>
+            <div id="viewSeg">
+              <button data-v="icon">▦</button>
+              <button data-v="list">☰</button>
+            </div>
+          </div>
+          <div id="body">
+            <div id="content" class="v-icon"></div>
+          </div>
+        </div>
+
+        <div id="viewMenu" class="menu"></div>
+        <div class="toast" id="toast"></div>
+      </div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  pageTitle:{ko:"엄마의 파인더 길찾기 (파인더 2편)",en:"Mom's Finder Navigation (Finder Part 2)"},
+  h1:{ko:'🧭 엄마의 파인더 길찾기 <span style="font-size:14px;color:#6b7280;">(파인더 2편)</span>',en:'🧭 Mom\'s Finder Navigation <span style="font-size:14px;color:#6b7280;">(Finder Part 2)</span>'},
+  sub:{ko:"폴더 안으로 들어가기 · 다시 나오기 · 삼각형으로 폴더 속 들여다보기",en:"Go into folders · Come back out · Peek inside with disclosure triangles"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"}, introBack:{ko:"‹ 이전",en:"‹ Back"}, introNext:{ko:"다음 ▶",en:"Next ▶"}, introStart:{ko:"시작하기 ▶",en:"Start ▶"},
+  file:{ko:"파일",en:"File"}, edit:{ko:"편집",en:"Edit"}, view:{ko:"보기",en:"View"}, back:{ko:"뒤로 가기",en:"Go back"}, forward:{ko:"앞으로",en:"Forward"}, iconView:{ko:"아이콘으로 보기",en:"Icon View"}, listView:{ko:"목록으로 보기",en:"List View"},
+  finalTitle:{ko:"파인더 길찾기 달인!",en:"Finder navigation expert!"},
+  finalMsg:{ko:"이제 폴더 안으로 <b>들어가고</b>, 다시 <b>나오고</b>, 삼각형으로 <b>살짝 들여다보는</b> 법까지 다 알아요. 파인더에서 길을 잃지 않을 거예요 💖",en:"Now you know how to <b>go into</b> folders, <b>come back out</b>, and <b>peek inside</b> with triangles. You will not get lost in Finder 💖"},
+  next:{ko:"다음 ›",en:"Next ›"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"}, hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  firstToast:{ko:"여기가 맨 처음이에요 🙂",en:"This is the very beginning 🙂"}, fileToastLong:{ko:n=>`‘${n}’은(는) 파일이에요 — 폴더가 아니라 안으로 들어갈 순 없어요 🙂`,en:n=>`‘${n}’ is a file — it is not a folder, so you cannot go inside 🙂`}, fileToast:{ko:n=>`‘${n}’은(는) 파일이에요 🙂`,en:n=>`‘${n}’ is a file 🙂`},
+  nameHead:{ko:"이름",en:"Name"}, dateHead:{ko:"수정일",en:"Modified"}, sizeHead:{ko:"크기",en:"Size"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`}, finalStep:{ko:"완료! 🎊",en:"Done! 🎊"}, am:{ko:"오전",en:"AM"}, pm:{ko:"오후",en:"PM"},
+  names:{"내 폴더":{ko:"내 폴더",en:"My Folder"},"문서":{ko:"문서",en:"Documents"},"가계부.xlsx":{ko:"가계부.xlsx",en:"Budget.xlsx"},"영수증":{ko:"영수증",en:"Receipts"},"1월영수증.pdf":{ko:"1월영수증.pdf",en:"January Receipt.pdf"},"2월영수증.pdf":{ko:"2월영수증.pdf",en:"February Receipt.pdf"},"메모.txt":{ko:"메모.txt",en:"Memo.txt"},"사진":{ko:"사진",en:"Photos"},"여행":{ko:"여행",en:"Travel"},"제주도.jpg":{ko:"제주도.jpg",en:"Jeju.jpg"},"부산.jpg":{ko:"부산.jpg",en:"Busan.jpg"},"가족사진.jpg":{ko:"가족사진.jpg",en:"Family Photo.jpg"},"생일.jpg":{ko:"생일.jpg",en:"Birthday.jpg"},"다운로드":{ko:"다운로드",en:"Downloads"},"안내문.pdf":{ko:"안내문.pdf",en:"Notice.pdf"},"쿨앱_설치.dmg":{ko:"쿨앱_설치.dmg",en:"CoolApp_Installer.dmg"},"여행계획.txt":{ko:"여행계획.txt",en:"Travel Plan.txt"}},
+  dates:{"6월 1일":{ko:"6월 1일",en:"Jun 1"},"5월 30일":{ko:"5월 30일",en:"May 30"},"4월 2일":{ko:"4월 2일",en:"Apr 2"},"1월 5일":{ko:"1월 5일",en:"Jan 5"},"2월 8일":{ko:"2월 8일",en:"Feb 8"},"7월 4일":{ko:"7월 4일",en:"Jul 4"},"6월 20일":{ko:"6월 20일",en:"Jun 20"},"6월 18일":{ko:"6월 18일",en:"Jun 18"},"6월 12일":{ko:"6월 12일",en:"Jun 12"},"6월 14일":{ko:"6월 14일",en:"Jun 14"},"5월 2일":{ko:"5월 2일",en:"May 2"},"7월 2일":{ko:"7월 2일",en:"Jul 2"},"7월 1일":{ko:"7월 1일",en:"Jul 1"},"6월 15일":{ko:"6월 15일",en:"Jun 15"}}
+};
+function N(name){ return T(UI.names[name]||name); }
+function D(date){ return T(UI.dates[date]||date||""); }
+function applyStatic(){ document.documentElement.lang=LANG; document.title=T(UI.pageTitle); document.getElementById("h1").innerHTML=T(UI.h1); document.getElementById("sub").textContent=T(UI.sub); document.getElementById("skipBtn").textContent=T(UI.skip); document.getElementById("introBack").textContent=T(UI.introBack); document.getElementById("nextBtn").textContent=T(UI.next); document.getElementById("menuFile").textContent=T(UI.file); document.getElementById("menuEdit").textContent=T(UI.edit); document.getElementById("viewMenuBtn").textContent=T(UI.view); document.getElementById("backBtn").title=T(UI.back); document.getElementById("fwdBtn").title=T(UI.forward); document.querySelector('#viewSeg button[data-v="icon"]').title=T(UI.iconView); document.querySelector('#viewSeg button[data-v="list"]').title=T(UI.listView); document.getElementById("finalTitle").textContent=T(UI.finalTitle); document.getElementById("finalMsg").innerHTML=T(UI.finalMsg); document.getElementById("restartBtn").textContent=T(UI.restart); document.getElementById("hubLink").textContent=T(UI.hub); document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG)); }
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic(); if(typeof els!=="undefined"&&els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); } else if(typeof phase!=="undefined"){ if(phase==="intro") showIntro(); else if(!doneGuard) loadLesson(lidx); } }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+const clickSnd=()=>beep(520,.05);
+const whoosh=()=>{beep(400,.09);setTimeout(()=>beep(620,.09),70);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+let toastT=null;
+function toast(msg,ms=2400){ const t=document.getElementById("toast"); t.innerHTML=msg; t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),ms); }
+
+/* ---------- filesystem (nested tree) ---------- */
+const FS={ id:"root", name:"내 폴더", icon:"🏠", type:"folder", children:[
+  { name:"문서", icon:"📁", type:"folder", date:"6월 1일", size:"—", children:[
+      { name:"가계부.xlsx", icon:"📊", type:"file", date:"5월 30일", size:"88 KB" },
+      { name:"영수증", icon:"📁", type:"folder", date:"4월 2일", size:"—", children:[
+          { name:"1월영수증.pdf", icon:"📕", type:"file", date:"1월 5일", size:"210 KB" },
+          { name:"2월영수증.pdf", icon:"📕", type:"file", date:"2월 8일", size:"180 KB" },
+      ]},
+      { name:"메모.txt", icon:"📝", type:"file", date:"7월 4일", size:"3 KB" },
+  ]},
+  { name:"사진", icon:"📁", type:"folder", date:"6월 20일", size:"—", children:[
+      { name:"여행", icon:"📁", type:"folder", date:"6월 18일", size:"—", children:[
+          { name:"제주도.jpg", icon:"🖼️", type:"file", date:"6월 12일", size:"2.1 MB" },
+          { name:"부산.jpg", icon:"🖼️", type:"file", date:"6월 14일", size:"1.8 MB" },
+      ]},
+      { name:"가족사진.jpg", icon:"🖼️", type:"file", date:"6월 20일", size:"2.4 MB" },
+      { name:"생일.jpg", icon:"🖼️", type:"file", date:"5월 2일", size:"1.9 MB" },
+  ]},
+  { name:"다운로드", icon:"📁", type:"folder", date:"7월 2일", size:"—", children:[
+      { name:"안내문.pdf", icon:"📕", type:"file", date:"7월 1일", size:"320 KB" },
+      { name:"쿨앱_설치.dmg", icon:"📦", type:"file", date:"7월 2일", size:"45 MB" },
+  ]},
+  { name:"여행계획.txt", icon:"📄", type:"file", date:"6월 15일", size:"12 KB" },
+]};
+let _uid=0;
+(function assignIds(node,parent){ if(!node.id) node.id="n"+(++_uid); node._parent=parent||null;
+  (node.children||[]).forEach(c=>assignIds(c,node)); })(FS,null);
+function findByName(name,node){ node=node||FS; if(node.name===name) return node;
+  for(const c of (node.children||[])){ const r=findByName(name,c); if(r) return r; } return null; }
+
+/* ---------- state ---------- */
+let viewMode="icon";           // "icon" | "list"
+let pathStack=[FS];            // path from root to current folder
+let expanded=new Set();        // folder ids expanded in list view
+let selected=null;             // id of selected item
+let listener=null; function notifyGame(type,payload){ if(listener) listener(type,payload); }
+function current(){ return pathStack[pathStack.length-1]; }
+
+const content=document.getElementById("content");
+const crumb=document.getElementById("crumb");
+const viewSeg=document.getElementById("viewSeg");
+const viewMenu=document.getElementById("viewMenu");
+const menubarView=document.getElementById("viewMenuBtn");
+const backBtn=document.getElementById("backBtn");
+const fwdBtn=document.getElementById("fwdBtn");
+const stage=document.getElementById("stage");
+
+function resetStage(){ viewMode="icon"; pathStack=[FS]; expanded=new Set(); selected=null; closeMenus(); renderAll(); }
+
+/* ---------- navigation ---------- */
+function flashCrumb(){ crumb.classList.remove("flash"); void crumb.offsetWidth; crumb.classList.add("flash"); }
+function enterFolder(node){ if(!node||node.type!=="folder") return;
+  pathStack.push(node); selected=null; whoosh(); renderAll(); flashCrumb();
+  notifyGame("enter",{id:node.id,name:node.name}); }
+function goBack(){ if(pathStack.length<=1){ toast(T(UI.firstToast)); return; }
+  const left=pathStack.pop(); selected=null; whoosh(); renderAll(); flashCrumb();
+  notifyGame("back",{name:left.name,to:current().name}); }
+function toggleExpand(node){ if(node.type!=="folder") return;
+  if(expanded.has(node.id)){ expanded.delete(node.id); clickSnd(); renderContent();
+    notifyGame("collapse",{id:node.id,name:node.name}); }
+  else{ expanded.add(node.id); clickSnd(); renderContent();
+    notifyGame("expand",{id:node.id,name:node.name}); } }
+
+/* ---------- rendering ---------- */
+function renderCrumb(){
+  crumb.innerHTML="";
+  pathStack.forEach((n,i)=>{ if(i>0){ const a=document.createElement("span"); a.className="arrow"; a.textContent="›"; crumb.appendChild(a); }
+    const s=document.createElement("span"); s.className="seg"+(i===pathStack.length-1?" here":"");
+    s.textContent=(i===0?"🏠 ":"")+N(n.name); crumb.appendChild(s); });
+  backBtn.classList.toggle("off",pathStack.length<=1);
+  backBtn.classList.toggle("live",pathStack.length>1);
+}
+function renderContent(){ content.className="content v-"+viewMode;
+  if(viewMode==="icon") renderIcon(); else renderList(); }
+
+function renderIcon(){
+  content.innerHTML="";
+  current().children.forEach(f=>{ const el=document.createElement("div");
+    el.className="iconItem"+(f.id===selected?" selected":""); el.dataset.name=f.name; el.dataset.id=f.id;
+    el.innerHTML=`<div class="ic">${f.icon}</div><div class="nm">${N(f.name)}</div>`;
+    el.addEventListener("click",()=>{ selected=f.id; clickSnd(); renderIcon(); });
+    el.addEventListener("dblclick",()=>{ if(f.type==="folder") enterFolder(f);
+      else toast(T(UI.fileToastLong)(N(f.name))); });
+    content.appendChild(el); });
+}
+
+function renderList(){
+  content.innerHTML=`<div class="listHead"><div class="lh">${T(UI.nameHead)}</div><div class="lh">${T(UI.dateHead)}</div><div class="lh">${T(UI.sizeHead)}</div></div>`;
+  const addRows=(arr,depth)=>{ arr.forEach(node=>{ content.appendChild(listRow(node,depth));
+    if(node.type==="folder" && expanded.has(node.id)) addRows(node.children,depth+1); }); };
+  addRows(current().children,0);
+}
+function listRow(node,depth){
+  const row=document.createElement("div"); row.className="lrow"+(node.id===selected?" selected":"");
+  row.dataset.name=node.name; row.dataset.id=node.id;
+  const c1=document.createElement("div"); c1.className="c1"; c1.style.paddingLeft=(12+depth*20)+"px";
+  const tri=document.createElement("span");
+  if(node.type==="folder"){ tri.className="tri"; tri.dataset.tri=node.name;
+    tri.textContent=expanded.has(node.id)?"▼":"▶";
+    tri.addEventListener("click",e=>{ e.stopPropagation(); toggleExpand(node); }); }
+  else { tri.className="tri spacer"; tri.textContent=""; }
+  const ic=document.createElement("span"); ic.className="ic"; ic.textContent=node.icon;
+  const nm=document.createElement("span"); nm.textContent=N(node.name);
+  c1.appendChild(tri); c1.appendChild(ic); c1.appendChild(nm);
+  const c2=document.createElement("div"); c2.className="c2"; c2.textContent=D(node.date);
+  const c3=document.createElement("div"); c3.className="c3"; c3.textContent=node.size||"";
+  row.appendChild(c1); row.appendChild(c2); row.appendChild(c3);
+  row.addEventListener("click",()=>{ selected=node.id; clickSnd(); markSel(); });
+  row.addEventListener("dblclick",()=>{ if(node.type==="folder") enterFolder(node);
+    else toast(T(UI.fileToast)(N(node.name))); });
+  return row;
+}
+function markSel(){ content.querySelectorAll(".lrow").forEach(r=>r.classList.toggle("selected",r.dataset.id===selected)); }
+
+function renderAll(){ renderCrumb(); renderContent(); updateSeg(); renderViewMenu(); }
+function updateSeg(){ viewSeg.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.v===viewMode)); }
+
+/* ---------- view switching ---------- */
+function setView(mode,silent){ if(!["icon","list"].includes(mode)) return;
+  viewMode=mode; closeMenus(); renderContent(); updateSeg(); renderViewMenu(); if(!silent) clickSnd();
+  if(!silent) notifyGame("view",{mode}); }
+
+/* ---------- 보기 menu ---------- */
+function renderViewMenu(){
+  viewMenu.innerHTML=
+    `<div class="mi ${viewMode==='icon'?'on':''}" data-act="icon">${T(UI.iconView)}</div>
+     <div class="mi ${viewMode==='list'?'on':''}" data-act="list">${T(UI.listView)}</div>`;
+  viewMenu.querySelectorAll(".mi").forEach(mi=>mi.addEventListener("click",e=>{ e.stopPropagation();
+    const a=mi.dataset.act; closeMenus(); setView(a); }));
+}
+function openViewMenu(){ closeMenus(); renderViewMenu(); menubarView.classList.add("open");
+  const r=menubarView.getBoundingClientRect(), sr=stage.getBoundingClientRect();
+  viewMenu.style.left=(r.left-sr.left)+"px"; viewMenu.style.top=(r.bottom-sr.top+2)+"px"; viewMenu.classList.add("open"); clickSnd(); }
+menubarView.addEventListener("click",e=>{ e.stopPropagation(); viewMenu.classList.contains("open")?closeMenus():openViewMenu(); });
+function closeMenus(){ viewMenu.classList.remove("open"); menubarView.classList.remove("open"); }
+document.addEventListener("click",closeMenus);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeMenus(); });
+viewSeg.querySelectorAll("button").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); setView(b.dataset.v); }));
+backBtn.addEventListener("click",e=>{ e.stopPropagation(); goBack(); });
+fwdBtn.addEventListener("click",e=>e.stopPropagation());
+document.addEventListener("gesturestart",e=>e.preventDefault());
+function tickClock(){ const d=new Date(); let h=d.getHours(); const m=String(d.getMinutes()).padStart(2,"0");
+  const ap=h<12?T(UI.am):T(UI.pm); h=h%12; if(h===0)h=12; document.getElementById("clockBtn").textContent=`${ap} ${h}:${m}`; }
+
+/* ---------- content: intro + lessons ---------- */
+let introIdx=0, phase="intro";
+const INTRO=[
+  { art:"🧭", title:{ko:"파인더 2편 — 길찾기",en:"Finder Part 2 — Finding Your Way"},
+    html:{ko:`지난 시간엔 <b>파일과 폴더</b>를 배웠죠. 그런데 파인더에서 폴더를 <b>두 번 클릭</b>하면
+    화면이 확 바뀌면서 “<b>어? 내 물건들 어디 갔지?</b>” 하고 놀랄 때가 있어요.<br><br>
+    사실은 물건이 사라진 게 아니라, <b>엄마가 폴더 ‘안으로’ 들어간</b> 거예요.
+    오늘은 그 <b>드나드는 길</b>을 편하게 익혀 볼게요 😊`, en:`Last time we learned about <b>files and folders</b>. In Finder, when you <b>double-click</b> a folder,
+    the screen changes and it can feel like, “<b>Where did my things go?</b>”<br><br>
+    Nothing disappeared — you just went <b>inside</b> the folder. Today we will practice how to go in and come back out 😊`} },
+  { art:"🚪", title:{ko:"폴더는 ‘방’과 같아요",en:"A folder is like a room"},
+    html:{ko:`폴더를 <b>두 번 클릭</b>하는 건 그 <b>방 안으로 걸어 들어가는</b> 것과 같아요.
+    안에 들어가면 그 방 안의 물건만 보여요.<br><br>
+    다시 나오려면? 창 왼쪽 위의 <b>뒤로 가기 ‹ 버튼</b>을 누르면 방에서 <b>걸어 나와요</b>.<br><br>
+    지금 <b>어느 방</b>에 있는지는 창 위쪽의 <b>위치 이름</b>(🏠 내 폴더 › 문서)이 항상 알려줘요.`, en:`<b>Double-clicking</b> a folder is like <b>walking into that room</b>.
+    Once inside, you only see the things in that room.<br><br>
+    To come back out, press the <b>Back ‹ button</b> at the top left.<br><br>
+    The <b>location name</b> at the top (🏠 My Folder › Documents) always tells you where you are.`} },
+  { art:"🔺", title:{ko:"삼각형으로 ‘살짝’ 들여다보기",en:"Peek with the little triangle"},
+    html:{ko:`방에 <b>들어가지 않고도</b> 안을 슬쩍 볼 수 있어요.<br><br>
+    <b>목록 보기 ☰</b>로 바꾸면 폴더 옆에 작은 <b>삼각형 ▶</b>이 생겨요.
+    그걸 누르면 폴더 속 내용이 <b>바로 그 자리에서 아래로 펼쳐져요</b> — 방을 나가지 않고요!<br><br>
+    이렇게 하면 물건들이 <b>어떻게 층층이 담겨 있는지</b> 한눈에 보여서 길을 잃지 않아요.`, en:`You can peek inside a room <b>without going in</b>.<br><br>
+    Switch to <b>List View ☰</b> and a little <b>triangle ▶</b> appears next to folders.
+    Click it and the folder opens <b>right there in the list</b> — without leaving your place!<br><br>
+    This helps you see how things are nested, so you do not get lost.`} },
+];
+
+const LESSONS=[
+  { title:{ko:"① 폴더 안으로 들어가기",en:"① Go inside a folder"}, instr:{ko:"<b>문서 📁</b> 폴더를 <b>두 번 클릭</b>(더블클릭)해서 폴더 안으로 들어가 보세요.",en:"<b>Double-click</b> the <b>Documents 📁</b> folder to go inside."}, hint:{ko:"들어가면 창 위쪽 ‘위치’ 이름이 🏠 내 폴더 → 문서 로 바뀌어요. 그게 방을 옮긴 표시예요.",en:"When you go in, the location at the top changes from 🏠 My Folder to Documents. That shows you moved rooms."}, pre(){ viewMode="icon"; pathStack=[FS]; expanded=new Set(); selected=null; renderAll(); }, setup(done){ listener=(t,p)=>{ if(t==="enter") done("📂",{ko:"폴더 안으로 들어왔어요! 맨 위 ‘위치’ 이름이 바뀐 게 보이죠?",en:"You went inside the folder! See how the location at the top changed?"}); }; } },
+  { title:{ko:"② 다시 밖으로 나오기",en:"② Come back out"}, instr:{ko:"창 왼쪽 위의 <b>뒤로 가기 ‹</b> 버튼을 눌러, 원래 자리(<b>🏠 내 폴더</b>)로 나오세요.",en:"Press the <b>Back ‹</b> button at the top left to return to <b>🏠 My Folder</b>."}, hint:{ko:"뒤로 가기 버튼은 방에서 걸어 나오는 문이에요. 누르면 한 단계 밖으로 나와요.",en:"The Back button is the door out of the room. Press it to go back one level."}, pre(){ viewMode="icon"; pathStack=[FS,findByName("문서")]; expanded=new Set(); selected=null; renderAll(); }, setup(done){ listener=(t,p)=>{ if(t==="back") done("↩️",{ko:"밖으로 다시 나왔어요! 처음 자리로 돌아왔죠?",en:"You came back out! You are back where you started."}); }; } },
+  { title:{ko:"③ 목록 보기로 바꾸기",en:"③ Switch to List View"}, instr:{ko:"도구 막대 오른쪽의 <b>목록 ☰</b> 버튼을 누르세요. (또는 메뉴 막대 <b>보기 → 목록으로 보기</b>)",en:"Press the <b>List ☰</b> button on the right side of the toolbar. (Or use <b>View → List View</b>.)"}, hint:{ko:"목록 보기로 바꾸면 폴더 옆에 ‘살짝 열어 보는’ 삼각형 ▶ 이 생겨요.",en:"In List View, a little triangle ▶ appears next to folders so you can peek inside."}, pre(){ viewMode="icon"; pathStack=[FS]; expanded=new Set(); selected=null; renderAll(); }, setup(done){ listener=(t,p)=>{ if(t==="view"&&p.mode==="list") done("☰",{ko:"목록 보기로 바꿨어요! 이제 삼각형이 보여요.",en:"You switched to List View! Now you can see the triangles."}); }; } },
+  { title:{ko:"④ 삼각형으로 폴더 속 펼쳐 보기",en:"④ Open a folder with the triangle"}, instr:{ko:"<b>문서 📁</b> 왼쪽의 작은 <b>삼각형 ▶</b> 을 눌러, 들어가지 않고 폴더 속을 펼쳐 보세요.",en:"Click the little <b>triangle ▶</b> to the left of <b>Documents 📁</b> to open it without going inside."}, hint:{ko:"삼각형을 누르면 그 자리에서 아래로 내용이 펼쳐져요. ‘위치’ 이름은 그대로 — 방을 나가지 않았어요!",en:"Clicking the triangle expands the contents right there. The location stays the same — you did not leave the room!"}, pre(){ viewMode="list"; pathStack=[FS]; expanded=new Set(); selected=null; renderAll(); pulseTri("문서"); }, setup(done){ listener=(t,p)=>{ if(t==="expand") done("🔽",{ko:"폴더 속을 펼쳐 봤어요! 들어가지 않았는데 안이 보이죠?",en:"You expanded the folder! You can see inside without going in."}); }; } },
+  { title:{ko:"⑤ 폴더 속의 폴더 펼치기",en:"⑤ Expand a folder inside a folder"}, instr:{ko:"펼쳐진 문서 안에 <b>영수증 📁</b> 폴더가 또 있죠? 그 옆 <b>삼각형 ▶</b> 도 눌러 보세요.",en:"Inside Documents, there is a <b>Receipts 📁</b> folder. Click its <b>triangle ▶</b> too."}, hint:{ko:"폴더 안에 폴더가 들어 있어요. 삼각형을 하나씩 펼치면 층층이 담긴 모습이 보여요.",en:"Folders can hold more folders. Open the triangles one by one to see the layers."}, pre(){ viewMode="list"; pathStack=[FS]; expanded=new Set([findByName("문서").id]); selected=null; renderAll(); pulseTri("영수증"); }, setup(done){ listener=(t,p)=>{ if(t==="expand"&&p.name==="영수증") done("🌳",{ko:"폴더 속에 또 폴더! 이렇게 층층이 담겨 있어요.",en:"A folder inside a folder! This is how things are stored in layers."}); }; } },
+  { title:{ko:"⑥ 삼각형 다시 접기",en:"⑥ Close the triangle again"}, instr:{ko:"펼쳐진 <b>삼각형 ▼</b> 을 다시 눌러 접어 보세요. 살짝 열어 본 걸 다시 닫는 거예요.",en:"Click the open <b>triangle ▼</b> again to close it."}, hint:{ko:"▼ 를 누르면 ▶ 로 바뀌면서 다시 접혀요. 필요할 때만 열고, 다 보면 닫으면 돼요.",en:"Click ▼ and it changes back to ▶. Open it when you need it; close it when you are done."}, pre(){ viewMode="list"; pathStack=[FS]; expanded=new Set([findByName("문서").id,findByName("영수증").id]); selected=null; renderAll(); pulseTri("영수증"); }, setup(done){ listener=(t,p)=>{ if(t==="collapse") done("▶",{ko:"다시 접었어요! 열고 닫는 걸 마음대로 할 수 있어요.",en:"You closed it again! Now you can open and close folders anytime."}); }; } },
+  { title:{ko:"⑦ 정리: 살짝 보기 vs 들어가기",en:"⑦ Review: peek vs go inside"}, instr:{ko:"마지막! 이번엔 삼각형 말고 <b>사진 📁</b> 이름을 <b>두 번 클릭</b>해서 진짜로 폴더 안으로 들어가 보세요.",en:"Last one! Instead of the triangle, <b>double-click</b> the <b>Photos 📁</b> name to really go inside."}, hint:{ko:"삼각형 ▶ = 그 자리에서 살짝 보기,  더블클릭 = 폴더 안으로 진짜 들어가기. 이 둘의 차이가 핵심이에요!",en:"Triangle ▶ = peek right here. Double-click = really go inside. That difference is the key!"}, pre(){ viewMode="list"; pathStack=[FS]; expanded=new Set(); selected=null; renderAll(); }, setup(done){ listener=(t,p)=>{ if(t==="enter"&&p.name==="사진") done("🎯",{ko:"이번엔 진짜 안으로 들어갔어요! 삼각형=살짝 보기, 더블클릭=들어가기 ✨",en:"This time you really went inside! Triangle = peek, double-click = enter ✨"}); }; } },
+];
+function pulseTri(name){ setTimeout(()=>{ const el=content.querySelector(`.tri[data-tri="${name}"]`); if(el) el.classList.add("pulse"); },60); }
+
+/* ---------- engine ---------- */
+let lidx=0,doneGuard=false;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"), introArt:document.getElementById("introArt"),
+  introTitle:document.getElementById("introTitle"), introText:document.getElementById("introText"),
+  introBack:document.getElementById("introBack"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"), skip:document.getElementById("skipBtn"),
+  bTitle:document.getElementById("bTitle"), bInstr:document.getElementById("bInstr"), bHint:document.getElementById("bHint") };
+const totalSteps=INTRO.length+LESSONS.length;
+function doneCount(){ return phase==="intro"?introIdx:INTRO.length+lidx; }
+function updateProgress(){ els.step.textContent=T(UI.step)(doneCount()+1,totalSteps); els.bar.style.width=(doneCount()/totalSteps*100)+"%"; }
+
+function showIntro(){ phase="intro"; els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none";
+  const c=INTRO[introIdx]; els.introArt.textContent=c.art; els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
+  els.introBack.style.visibility=introIdx===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=introIdx===INTRO.length-1?T(UI.introStart):T(UI.introNext); updateProgress(); }
+function nextIntro(){ if(introIdx<INTRO.length-1){ introIdx++; showIntro(); } else startLessons(); }
+function prevIntro(){ if(introIdx>0){ introIdx--; showIntro(); } }
+function startLessons(){ phase="lessons"; lidx=0; doneGuard=false; els.intro.style.display="none"; els.main.style.display="flex"; resetStage(); loadLesson(0); }
+
+function loadLesson(i){
+  const lv=LESSONS[i];
+  els.bTitle.textContent=T(lv.title); els.bInstr.innerHTML=T(lv.instr); els.bHint.textContent="💡 "+T(lv.hint);
+  updateProgress(); listener=null; closeMenus();
+  if(lv.pre) lv.pre();
+  lv.setup(onDone);
+}
+function onDone(emoji,msg){
+  if(doneGuard) return; doneGuard=true;
+  listener=null;
+  els.bar.style.width=((INTRO.length+lidx+1)/totalSteps*100)+"%";
+  els.msg.textContent=msg?T(msg):praise(); els.overlay.querySelector(".be").textContent=emoji||"🎉";
+  els.overlay.style.display="flex"; confetti(); chime();
+}
+function goNext(){ els.overlay.style.display="none"; doneGuard=false; lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function skipStep(){ if(doneGuard) return; if(phase==="intro"){ nextIntro(); return; } listener=null;
+  lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:finder2","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ introIdx=0; lidx=0; doneGuard=false; els.skip.style.display="block"; els.final.style.display="none"; resetStage(); showIntro(); }
+
+applyStatic(); tickClock(); setInterval(tickClock,10000);
+resetStage();
+showIntro();
+</script>
+</body>
+</html>
