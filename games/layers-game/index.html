@@ -198,7 +198,7 @@ function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊"];for(let i=
 /* ---------- transform canvas engine ---------- */
 function makeCanvas(stage, defs, opts){
   opts=opts||{};
-  stage.innerHTML=`<div id="canvas"></div>`+(opts.tip?`<div class="tip" id="tipBox">${T(opts.tip)}</div>`:``)+(opts.toolbar?toolbarHTML():``);
+  stage.innerHTML=(opts.toolbar?toolbarHTML():``)+`<div id="canvas"></div>`+(opts.tip?`<div class="tip" id="tipBox">${T(opts.tip)}</div>`:``);
   const canvas=stage.querySelector("#canvas");
   const shapes=defs.map((d,i)=>({id:d.id||("s"+i),x:d.x,y:d.y,w:d.w,h:d.h,rot:d.rot||0,fill:d.fill,text:d.text||"",tc:d.tc||"#fff"}));
   let sel=opts.select||null, scope="shape";
