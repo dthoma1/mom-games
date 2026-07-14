@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>엄마의 오락실 · Mom's Arcade</title>
+<link rel="stylesheet" href="../app.css" />
+</head>
+<body>
+<div id="wrap">
+  <div id="topbar">
+    <div id="langToggle">
+      <button data-l="ko" class="on">한국어</button>
+      <button data-l="en">EN</button>
+    </div>
+  </div>
+
+  <div id="shelfView" style="display:none">
+    <header class="mast">
+      <div class="kicker" id="kicker"></div>
+      <h1 class="title" id="mastTitle"></h1>
+      <p class="lede" id="mastLede"></p>
+      <div class="rule"></div>
+    </header>
+    <div id="shelf"></div>
+    <footer id="foot"></footer>
+  </div>
+
+  <div id="detail">
+    <a class="backBtn" id="backBtn" href="../"></a>
+    <div class="hero" id="hero"></div>
+    <div class="tocWrap" id="toc"></div>
+    <footer id="foot2"></footer>
+  </div>
+</div>
+<script>window.__BOOK="computers";</script>
+<script src="../app.js"></script>
+</body>
+</html>
