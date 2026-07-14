@@ -28,6 +28,29 @@
   #introView{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;
     background:#fff;border-radius:18px;padding:26px 22px;box-shadow:0 12px 30px rgba(99,102,241,.14);}
   #introArt{font-size:74px;}
+  #introArt.artCustom{font-size:0;line-height:1;margin:10px 0 4px;}
+  /* CSS selected-shape illustration (replaces the emoji on the 'select' slide) */
+  .selArt{position:relative;width:138px;height:112px;margin:0 auto;}
+  .selArt .box{position:absolute;inset:0;background:linear-gradient(150deg,#ef9a92,#e07a72);
+    border:3px solid var(--accent);border-radius:6px;box-shadow:0 10px 22px rgba(99,102,241,.22);}
+  .selArt .hh{position:absolute;width:16px;height:16px;background:#fff;border:2.5px solid var(--accent);
+    box-shadow:0 2px 5px rgba(0,0,0,.18);z-index:2;}
+  .selArt .c{border-radius:4px;}
+  .selArt .s{border-radius:50%;border-color:var(--accent2);width:15px;height:15px;}
+  .selArt .tl{left:-9px;top:-9px;} .selArt .tr{right:-9px;top:-9px;}
+  .selArt .bl{left:-9px;bottom:-9px;} .selArt .br{right:-9px;bottom:-9px;}
+  .selArt .lm{left:-9px;top:50%;transform:translateY(-50%);}
+  .selArt .rm{right:-9px;top:50%;transform:translateY(-50%);}
+  .selArt .tm{top:-9px;left:50%;transform:translateX(-50%);}
+  .selArt .bm{bottom:-9px;left:50%;transform:translateX(-50%);}
+  .selArt .rotline{position:absolute;left:50%;top:-24px;width:2px;height:18px;background:var(--accent);transform:translateX(-50%);z-index:1;}
+  .selArt .rot{position:absolute;left:50%;top:-40px;width:22px;height:22px;border-radius:50%;
+    background:var(--accent);border:2.5px solid #fff;transform:translateX(-50%);box-shadow:0 3px 8px rgba(99,102,241,.4);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;z-index:2;}
+  .selArt .s{animation:handlePulse 1.8s ease-in-out infinite;}
+  .selArt .lm{animation-delay:.9s;}
+  @keyframes handlePulse{0%,100%{box-shadow:0 2px 5px rgba(0,0,0,.18);}
+    50%{box-shadow:0 0 0 7px rgba(236,72,153,.20),0 2px 5px rgba(0,0,0,.18);}}
   #introTitle{font-size:24px;font-weight:800;}
   #introText{font-size:17px;line-height:1.7;max-width:560px;color:#374151;}
   #introText b{color:var(--accent);}
@@ -313,7 +336,7 @@ const INTRO=[
     앱마다 생김새는 조금 달라도, <b>기본 사용법은 거의 똑같아요</b>. 하나만 익히면 다 쓸 수 있어요! 😊`,
     en:`In design apps like Canva, Photopea, and Photoshop, you place <b>objects</b> — boxes, text, photos — on a <b>canvas</b> and arrange them.<br><br>
     The apps look a little different, but the <b>basics are almost the same</b>. Learn it once and you can use them all! 😊`} },
-  { art:"🔲", title:{ko:"물체를 ‘선택’하기",en:"Selecting an object"},
+  { art:"🔲", artHTML:`<div class="selArt"><div class="box"></div><div class="rotline"></div><div class="rot">↻</div><div class="hh c tl"></div><div class="hh c tr"></div><div class="hh c bl"></div><div class="hh c br"></div><div class="hh s lm"></div><div class="hh s rm"></div><div class="hh s tm"></div><div class="hh s bm"></div></div>`, title:{ko:"물체를 ‘선택’하기",en:"Selecting an object"},
     html:{ko:`물체를 <b>한 번 누르면(클릭)</b> 둘레에 <b>작은 네모(손잡이, handles)</b>가 생겨요.<br><br>
     그건 <b>‘이 물체가 선택됐어요’</b>라는 뜻이에요. 이제 그걸 옮기거나 바꿀 수 있죠.<br><br>
     <b>빈 곳</b>을 누르면 선택이 풀려요.`,
@@ -405,7 +428,7 @@ function doneCount(){ return phase==="intro"?introIdx:INTRO.length+lidx; }
 function updateProgress(){ els.step.textContent=UI.step[LANG](doneCount()+1,totalSteps); els.bar.style.width=(doneCount()/totalSteps*100)+"%"; }
 
 function showIntro(){ phase="intro"; els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none";
-  const c=INTRO[introIdx]; els.introArt.textContent=c.art; els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
+  const c=INTRO[introIdx]; if(c.artHTML){els.introArt.innerHTML=c.artHTML;els.introArt.classList.add("artCustom");}else{els.introArt.textContent=c.art;els.introArt.classList.remove("artCustom");} els.introTitle.textContent=T(c.title); els.introText.innerHTML=T(c.html);
   els.introBack.style.visibility=introIdx===0?"hidden":"visible";
   document.getElementById("introNext").textContent=introIdx===INTRO.length-1?T(UI.start):T(UI.introNext); updateProgress(); }
 function nextIntro(){ if(introIdx<INTRO.length-1){ introIdx++; showIntro(); } else startLessons(); }
