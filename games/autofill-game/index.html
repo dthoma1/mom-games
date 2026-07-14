@@ -156,6 +156,19 @@
     background:#007aff;color:#fff;font-size:17px;font-weight:800;cursor:pointer;text-align:center;}
   .iosfill:disabled{opacity:.5;cursor:default;}
   .secban{width:340px;max-width:100%;background:#fff2f2;border:1px solid #fecaca;border-radius:14px;padding:12px 14px;color:#b91c1c;font-weight:700;font-size:15px;text-align:left;}
+
+  /* ---- autofill login form + suggestion popup ---- */
+  .lform{width:290px;background:#fff;border:1px solid #e5e5ea;border-radius:14px;padding:15px;text-align:left;box-shadow:0 8px 22px rgba(0,0,0,.08);}
+  .lform .site{font-weight:800;font-size:17px;text-align:center;margin-bottom:12px;color:#1c1c1e;}
+  .lfield{border:2px solid #e5e5ea;border-radius:10px;padding:12px 13px;margin:9px 0;font-size:16px;color:#8e8e93;background:#fafafc;cursor:pointer;position:relative;}
+  .lfield.focus{border-color:#007aff;background:#fff;}
+  .lfield.filled{color:#1c1c1e;font-weight:700;}
+  .lfield .keyic{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:17px;}
+  .afbar{width:290px;background:#fff;border:1px solid #cfe0ff;border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer;box-shadow:0 8px 20px rgba(0,110,255,.20);}
+  .afbar.hl{animation:nbpulse 1.4s ease-in-out infinite;}
+  .afbar .kk{width:38px;height:38px;border-radius:9px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .afbar .kt{flex:1;min-width:0;} .afbar .kt b{font-size:15px;color:#1c1c1e;} .afbar .kt span{display:block;font-size:13px;color:#8e8e93;}
+  .afbar .kgo{color:#007aff;font-weight:800;font-size:20px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -173,7 +186,7 @@
     <button class="ghostBtn" id="skipBtn" onclick="skipStep()"></button>
 
     <div id="introView" style="display:none;">
-      <div id="introArt">🗄️</div>
+      <div id="introArt">🔑</div>
       <div id="introTitle"></div>
       <div id="introText"></div>
       <div class="introBtns">
@@ -207,9 +220,9 @@
 let LANG=localStorage.getItem("momLang")||"ko";
 function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
 const UI={
-  title:{ko:"엄마의 비밀번호 관리자 배우기 (비밀번호 4편)",en:"Mom's Password Manager Lesson (Password Part 4)"},
-  h1:{ko:'🗄️ 엄마의 비밀번호 관리자 배우기 <span style="font-size:14px;color:#6b7280;">(비밀번호 4편)</span>',en:'🗄️ Learning Password Managers <span style="font-size:14px;color:#6b7280;">(Password Part 4)</span>'},
-  sub:{ko:"왜 필요할까 · 앱 열기 · 새로 만들기 · 다시 찾아보기 · 위험한 것 고치기",en:"Why it helps · Open the app · Make one · Look it up · Fix risky ones"},
+  title:{ko:"자동 채우기란? (Autofill)",en:"What Is Autofill?"},
+  h1:{ko:'🔑 자동 채우기란? <span style="font-size:14px;color:#6b7280;">(Autofill)</span>',en:'🔑 What Is Autofill?'},
+  sub:{ko:"자동 채우기란 · 어디서 나오나 · 눌러서 채우기 · 안전하게 쓰기",en:"What autofill is · Where it appears · Tap to fill · Use it safely"},
   skip:{ko:"건너뛰기 ›",en:"Skip ›"},
   prev:{ko:"‹ 이전",en:"‹ Back"},
   introNext:{ko:"다음 ▶",en:"Next ▶"},
@@ -217,8 +230,8 @@ const UI={
   next:{ko:"다음 ›",en:"Next ›"},
   restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
   hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
-  finalTitle:{ko:"비밀번호 관리자 마스터!",en:"Password manager master!"},
-  finalMsg:{ko:"이제 엄마는 알아요 —<br><b>마스터 비밀번호 하나</b>만 기억하면,<br>관리자가 <b>강한 비밀번호를 만들고·저장하고·자동으로 채워</b> 줘요.<br>위험한 비밀번호는 <b>알아서 알려주고 바꿔</b> 줘요 💖",en:"Now you know —<br>remember just <b>one master password</b>,<br>and the manager can <b>create, save, and autofill strong passwords</b> for you.<br>It can also <b>warn you about risky passwords and help change them</b> 💖"},
+  finalTitle:{ko:"자동 채우기 마스터!",en:"Autofill master!"},
+  finalMsg:{ko:"이제 엄마는 알아요 —<br>로그인 칸을 누르면 컴퓨터가 <b>저장된 비밀번호를 대신 채워</b> 줘요.<br><b>타이핑할 필요 없이</b> 제안을 누르고 얼굴로 확인하면 끝!<br>내 계정이 보이고 얼굴로 확인할 때만 누르면 <b>안전해요</b> 💖",en:"Now you know —<br>when you tap a login box, the computer can <b>fill your saved password for you</b>.<br><b>No typing</b> — just tap the suggestion and confirm with your face!<br>It's <b>safe</b> as long as it shows <b>your</b> account and asks for your face 💖"},
   step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
   finalStep:{ko:"완료! 🎊",en:"Done! 🎊"}
 };
@@ -268,147 +281,103 @@ function generateStrong(len){
 /* ---------- intro (why a manager) ---------- */
 let introIdx=0, phase="intro";
 const INTRO=[
-  { art:"😵", title:{ko:"비밀번호가 너무 많아요!",en:"There are too many passwords!"},
-    html:{ko:`좋은 규칙: <b>사이트마다 다른, 길고 강한 비밀번호</b>를 써야 해요.<br><br>
-    그런데 은행·쇼핑·이메일·병원… 그걸 <b>다 외우는 건 불가능</b>하죠! 😵‍💫<br><br>
-    그렇다고 <b>같은 비밀번호를 여기저기</b> 쓰면, 한 곳만 뚫려도 <b>모든 곳</b>이 위험해져요.`, en:`A good rule is: use a <b>different, long, strong password for every site</b>.<br><br>
-    But banking, shopping, email, clinics… <b>remembering them all is impossible</b>! 😵‍💫<br><br>
-    If you <b>reuse the same password everywhere</b>, one leak can put <b>every account</b> in danger.`} },
-  { art:"🗄️", title:{ko:"그래서 나온 것 — 비밀번호 관리자",en:"That's why password managers were made"},
-    html:{ko:`<div class="scene"><span class="fig">🔑🔑🔑</span><span class="arw">➜</span><span class="fig">🗄️</span><span class="arw">➜</span><span class="fig">🔑</span></div>
-    <b>비밀번호 관리자</b>는 <b>튼튼한 금고</b>예요.
-    엄마의 모든 비밀번호를 <b>대신 기억</b>해 줘요.<br><br>
-    엄마는 금고를 여는 <b>마스터 비밀번호 딱 하나</b>만 기억하면 돼요!<br><br>
-    아이폰·맥에 이미 들어 있어요 — 바로 <b>‘비밀번호’ 앱</b>이에요(아이클라우드 키체인). 😊`, en:`<div class="scene"><span class="fig">🔑🔑🔑</span><span class="arw">➜</span><span class="fig">🗄️</span><span class="arw">➜</span><span class="fig">🔑</span></div>
-    A <b>password manager</b> is like a <b>strong vault</b>.
-    It <b>remembers all your passwords</b> for you.<br><br>
-    You only need to remember <b>one master password</b> that opens the vault!<br><br>
-    It's already on your iPhone and Mac — the <b>Passwords app</b> (iCloud Keychain). 😊`} },
-  { art:"🔐", title:{ko:"이 금고, 안전한가요?",en:"Is this vault safe?"},
-    html:{ko:`아주 안전해요! 금고 안은 <b>암호로 꽁꽁 잠겨</b> 있어요.
-    엄마의 <b>마스터 비밀번호 + 얼굴(Face ID)</b>로만 열려요.<br><br>
-    만든 회사조차 <b>안을 들여다볼 수 없어요</b>.<br><br>
-    수첩에 적어 두거나 같은 비밀번호를 돌려쓰는 것보다 <b>훨씬 안전</b>해요. 이제 하나씩 해볼까요? 😊`, en:`Very safe! Everything inside the vault is <b>locked up with encryption</b>.
-    It opens only with your <b>master password plus your face (Face ID)</b>.<br><br>
-    Even the company that made it <b>can't peek inside</b>.<br><br>
-    It's <b>much safer</b> than writing passwords in a notebook or reusing one password. Let's try it step by step. 😊`} },
+  { art:"😣", title:{ko:"로그인마다 비밀번호를 쳐야 하나요?",en:"Do I have to type my password every time?"},
+    html:{ko:`은행·쇼핑·이메일에 들어갈 때마다 <b>길고 어려운 비밀번호</b>를 손으로 치는 건 힘들어요.<br><br>
+    한 글자만 틀려도 안 되고, 눈도 아프죠. 😵‍💫<br><br>
+    그런데 <b>안 쳐도 되는 방법</b>이 있어요!`, en:`Typing a <b>long, hard password</b> by hand every time you open banking, shopping, or email is tiring.<br><br>
+    One wrong letter and it fails, and it's hard on the eyes. 😵‍💫<br><br>
+    But there's a way <b>you don't have to type it at all</b>!`} },
+  { art:"✨", title:{ko:"자동 채우기(Autofill)란?",en:"What is autofill?"},
+    html:{ko:`<div class="scene"><span class="fig">👆</span><span class="arw">➜</span><span class="fig">🔑</span><span class="arw">➜</span><span class="fig">✅</span></div>
+    로그인 칸을 <b>한 번 누르면</b>, 컴퓨터가 <b>저장해 둔 비밀번호를 대신 채워</b> 주겠다고 <b>작은 제안</b>을 띄워요.<br><br>
+    엄마는 그 제안을 <b>톡 누르기만</b> 하면 돼요.<br><br>
+    비밀번호를 <b>기억하지도, 치지도</b> 않아도 되는 거예요! 😊`, en:`<div class="scene"><span class="fig">👆</span><span class="arw">➜</span><span class="fig">🔑</span><span class="arw">➜</span><span class="fig">✅</span></div>
+    When you <b>tap a login box</b>, the computer shows a <b>small suggestion</b> offering to <b>fill in your saved password</b> for you.<br><br>
+    You just <b>tap that suggestion</b>.<br><br>
+    You never have to <b>remember or type</b> the password! 😊`} },
+  { art:"🔒", title:{ko:"이거, 안전한가요?",en:"Is this safe?"},
+    html:{ko:`아주 안전해요. 자동 채우기는 <b>엄마가 저장해 둔 로그인</b>만 제안해요.<br><br>
+    그리고 채우기 전에 <b>얼굴(Face ID)로 한 번 더 확인</b>해요 — 그러니 다른 사람은 못 써요.<br><br>
+    한 가지만 기억하세요: 제안에 <b>내 계정(이메일)</b>이 보일 때만 누르세요. 이제 해볼까요? 😊`, en:`Very safe. Autofill only suggests <b>logins you've saved</b>.<br><br>
+    And before it fills, it <b>checks your face (Face ID)</b> — so no one else can use it.<br><br>
+    Just remember: only tap it when it shows <b>your own account (email)</b>. Let's try! 😊`} },
 ];
 
 /* ---------- lessons ---------- */
 const stage=document.getElementById("stage");
 let doneGuard=false;
 
-let vaultPw="";
-function appListHTML(rows,opts){
+const loginForm=(opts)=>{
   opts=opts||{};
-  const add=`<button class="aadd ${opts.addHl?'hl':''}" id="${opts.addId||'aadd'}">+</button>`;
-  const list=rows.map((r,i)=>`<div class="prow ${r.hl?'hl':''}" ${r.id?`id="${r.id}"`:''} data-i="${i}">
-      <div class="pico" style="background:${r.bg}">${r.ic}</div>
-      <div class="pmeta"><div class="pnm">${r.nm}</div><div class="pus">${r.us}</div></div>
-      <div class="pchev">\u203a</div></div>`).join("");
-  return `<div class="appwin">
-      <div class="abar"><div class="atitle">${T({ko:"\ube44\ubc00\ubc88\ud638",en:"Passwords"})}</div>${add}</div>
-      <div class="srch">\ud83d\udd0d ${T({ko:"\uac80\uc0c9",en:"Search"})}</div>
-      <div class="plist">${list}</div></div>`;
-}
+  return `<div class="lform">
+      <div class="site">🏦 ${T({ko:"은행 로그인",en:"Bank login"})}</div>
+      <div class="lfield filled">mom@icloud.com</div>
+      <div class="lfield ${opts.focus?'focus':''} ${opts.filled?'filled':''}" id="pwbox">${opts.filled?'••••••••••••':T({ko:"비밀번호",en:"Password"})}<span class="keyic">🔑</span></div>
+    </div>`;
+};
+const afbarHTML=(id,hl)=>`<div class="afbar ${hl?'hl':''}" id="${id||'af'}">
+    <div class="kk">🔑</div>
+    <div class="kt"><b>mom@icloud.com</b><span>${T({ko:"비밀번호 채우기",en:"Fill Password"})}</span></div>
+    <div class="kgo">▶</div></div>`;
 
 const LESSONS=[
-  { title:{ko:"\u2460 \ube44\ubc00\ubc88\ud638 \uc571 \uc5f4\uae30",en:"\u2460 Open the Passwords app"},
-    instr:{ko:"\ub9e5\uc5d0\ub294 <b>\u2018\ube44\ubc00\ubc88\ud638\u2019 \uc571</b>\uc774 \uc788\uc5b4\uc694. \uc800\uc7a5\ub41c \ub85c\uadf8\uc778\uc774 \ub2e4 \uc5ec\uae30 \uc788\uc8e0. \uc5bc\uad74(Face ID)\ub85c \uc5f4\uc5b4 \ubcf4\uc138\uc694.",en:"Your Mac has a <b>Passwords app</b> that holds all your logins. Open it with Face ID."},
-    hint:{ko:"\ub9c8\uc2a4\ud130 \ube44\ubc00\ubc88\ud638\ub098 \uc5bc\uad74\ub85c \ud55c \ubc88\ub9cc \ud655\uc778\ud558\uba74 \uc571\uc774 \uc5f4\ub824\uc694.",en:"Confirm once with your face (or master password) and the app opens."},
+  { title:{ko:"① 자동 채우기 제안 만나기",en:"① Meet the autofill suggestion"},
+    instr:{ko:"로그인 화면이에요. <b>비밀번호 칸</b>(🔑 표시)을 눌러 보세요. 컴퓨터가 <b>제안</b>을 띄워 줘요.",en:"Here's a login screen. Tap the <b>password box</b> (it has a 🔑). The computer will show a <b>suggestion</b>."},
+    hint:{ko:"칸을 누르면 저장된 비밀번호를 채워 주겠다는 제안이 위에 떠요. 그게 자동 채우기예요.",en:"Tapping the box makes a suggestion pop up offering to fill your saved password. That's autofill."},
     render(stage,done){
       stage.innerHTML=`<div class="panel">
-        <div class="appwin" style="text-align:center;padding:26px 18px;">
-          <div style="font-size:48px;">\ud83d\udd11</div>
-          <div style="font-weight:800;font-size:20px;margin-top:6px;color:#1c1c1e;">${T({ko:"\ube44\ubc00\ubc88\ud638",en:"Passwords"})}</div>
-          <div style="color:#8e8e93;font-size:15px;margin:4px 0 6px;">${T({ko:"\uc7a0\uaca8 \uc788\uc5b4\uc694",en:"Locked"})}</div>
-        </div>
-        <button class="fpBtn" id="fp">\ud83d\ude42</button>
-        <div class="note" id="nt">${T({ko:"\uc5bc\uad74(Face ID) \ub2e8\ucd94\ub97c \ub20c\ub7ec \uc571\uc744 \uc5f4\uc5b4 \ubcf4\uc138\uc694.",en:"Tap the Face ID button to open the app."})}</div>
+        <div class="note">${T({ko:"🔑 표시가 있는 <b>비밀번호 칸</b>을 눌러 보세요.",en:"Tap the <b>password box</b> that has a 🔑."})}</div>
+        ${loginForm({focus:false})}
+        <div id="afslot"></div>
+        <div class="note" id="nt">${T({ko:"비밀번호 칸을 누르면 무슨 일이 일어날까요?",en:"What happens when you tap the password box?"})}</div>
       </div>`;
-      const fp=stage.querySelector("#fp"), nt=stage.querySelector("#nt");
-      fp.onclick=()=>{ fp.disabled=true; fp.classList.add("scanning"); clickSnd(); nt.textContent=T({ko:"\uc5ec\ub294 \uc911\u2026",en:"Opening\u2026"});
-        setTimeout(()=>{ chime(); stage.innerHTML=`<div class="panel">${appListHTML([
-              {ic:"\ud83c\udfe6",bg:"#e8f7ee",nm:T({ko:"\uc740\ud589",en:"Bank"}),us:"mom@icloud.com"},
-              {ic:"\ud83d\udce7",bg:"#e6f0ff",nm:T({ko:"\uc774\uba54\uc77c",en:"Email"}),us:"mom@icloud.com"}
-            ])}<div class="note good">${T({ko:"<b>\uc571\uc774 \uc5f4\ub838\uc5b4\uc694!</b> \uc800\uc7a5\ub41c \ube44\ubc00\ubc88\ud638\uac00 \ub2e4 \uc5ec\uae30 \uc788\uc5b4\uc694 \ud83c\udf89",en:"<b>The app is open!</b> All your saved passwords are here \ud83c\udf89"})}</div></div>`;
-          setTimeout(()=>done("\ud83d\udd11",{ko:"\ube44\ubc00\ubc88\ud638 \uc571\uc744 \uc5f4\uc5c8\uc5b4\uc694!",en:"You opened the Passwords app!"}),1100);
+      const pwbox=stage.querySelector("#pwbox"), afslot=stage.querySelector("#afslot"), nt=stage.querySelector("#nt");
+      pwbox.onclick=()=>{ if(pwbox.dataset.on)return; pwbox.dataset.on="1"; pwbox.classList.add("focus"); clickSnd();
+        afslot.innerHTML=afbarHTML("af",true); chime(); nt.className="note good";
+        nt.innerHTML=T({ko:"<b>봤죠?</b> 컴퓨터가 저장된 비밀번호를 <b>채워 주겠다고</b> 제안했어요! 🎉",en:"<b>See?</b> The computer offered to <b>fill your saved password</b>! 🎉"});
+        setTimeout(()=>done("✨",{ko:"자동 채우기 제안이 나타났어요!",en:"The autofill suggestion appeared!"}),1200);
+      };
+    }},
+
+  { title:{ko:"② 제안을 눌러 채우기",en:"② Tap the suggestion to fill"},
+    instr:{ko:"이제 <b>제안을 톡</b> 누르고 <b>얼굴(Face ID)</b>로 확인하면 비밀번호가 저절로 채워져요. 타이핑은 없어요!",en:"Now <b>tap the suggestion</b> and confirm with <b>Face ID</b> — the password fills itself. No typing!"},
+    hint:{ko:"제안을 누르면 얼굴로 확인해요. 확인되면 비밀번호가 자동으로 채워지고 로그인돼요.",en:"Tapping the suggestion asks for your face. Once confirmed, the password fills in and you're logged in."},
+    render(stage,done){
+      stage.innerHTML=`<div class="panel">
+        ${loginForm({focus:true})}
+        ${afbarHTML("af",true)}
+        <button class="fpBtn" id="fp" style="display:none;">🙂</button>
+        <div class="note" id="nt">${T({ko:"파란 <b>자동 채우기 제안</b>을 눌러 보세요.",en:"Tap the blue <b>autofill suggestion</b>."})}</div>
+      </div>`;
+      const af=stage.querySelector("#af"), fp=stage.querySelector("#fp"), nt=stage.querySelector("#nt");
+      af.onclick=()=>{ clickSnd(); af.style.display="none"; fp.style.display="flex";
+        nt.innerHTML=T({ko:"얼굴(Face ID)로 확인하면 자동으로 채워져요.",en:"Confirm with Face ID and it fills automatically."}); };
+      fp.onclick=()=>{ fp.disabled=true; fp.classList.add("scanning"); clickSnd(); nt.textContent=T({ko:"확인 중…",en:"Checking…"});
+        setTimeout(()=>{ chime(); fp.textContent="✅";
+          const pb=stage.querySelector("#pwbox"); pb.innerHTML='••••••••••••<span class="keyic">🔑</span>'; pb.classList.add("filled");
+          nt.className="note good"; nt.innerHTML=T({ko:"<b>자동으로 채워졌어요 — 로그인 성공!</b> 타이핑 한 번 없이 끝! 🎉",en:"<b>Filled automatically — login successful!</b> Done with no typing 🎉"});
+          setTimeout(()=>done("⚡",{ko:"자동 채우기로 로그인했어요!",en:"You logged in with autofill!"}),1100);
         },1000);
       };
     }},
 
-  { title:{ko:"\u2461 \uc0c8 \ube44\ubc00\ubc88\ud638 \ub9cc\ub4e4\uae30",en:"\u2461 Make a new password"},
-    instr:{ko:"\uc0c8 \uc1fc\ud551 \uacc4\uc815\uc744 \uc800\uc7a5\ud574 \ubcfc\uae4c\uc694? <b>\u2795</b>\ub97c \ub204\ub974\uba74 \uc571\uc774 <b>\uac15\ud55c \ube44\ubc00\ubc88\ud638\ub97c \uc81c\uc548</b>\ud574\uc694. \uadf8\ub2e4\uc74c <b>\uc800\uc7a5</b>\uc744 \ub204\ub974\uc138\uc694.",en:"Let's save a new shopping login. Tap <b>\u2795</b> and the app <b>suggests a strong password</b>. Then tap <b>Save</b>."},
-    hint:{ko:"\uc5c4\ub9c8\uac00 \ube44\ubc00\ubc88\ud638\ub97c \uc9c0\uc5b4\ub0bc \ud544\uc694\uac00 \uc5c6\uc5b4\uc694. \uc571\uc774 \uc544\ubb34\ub3c4 \ubabb \ub9de\ud790 \uac15\ud55c \uac78 \ub9cc\ub4e4\uc5b4 \uc918\uc694.",en:"You don't invent the password \u2014 the app makes a strong one nobody can guess."},
-    render(stage,done){
-      stage.innerHTML=`<div class="panel">${appListHTML([
-          {ic:"\ud83c\udfe6",bg:"#e8f7ee",nm:T({ko:"\uc740\ud589",en:"Bank"}),us:"mom@icloud.com"},
-          {ic:"\ud83d\udce7",bg:"#e6f0ff",nm:T({ko:"\uc774\uba54\uc77c",en:"Email"}),us:"mom@icloud.com"}
-        ],{addHl:true,addId:"addBtn"})}
-        <div class="note" id="nt">${T({ko:"\uc624\ub978\ucABD \uc704 <b>\u2795</b>\ub97c \ub20c\ub7ec \uc0c8 \ube44\ubc00\ubc88\ud638\ub97c \ucd94\uac00\ud558\uc138\uc694.",en:"Tap the <b>\u2795</b> at the top right to add a new password."})}</div>
-      </div>`;
-      stage.querySelector("#addBtn").onclick=()=>{ clickSnd(); vaultPw=generateStrong(15);
-        stage.innerHTML=`<div class="panel"><div class="psheet">
-          <div class="shd"><div class="st">${T({ko:"\uc0c8 \ube44\ubc00\ubc88\ud638",en:"New Password"})}</div></div>
-          <div class="pfield"><div class="fl">${T({ko:"\uc6f9\uc0ac\uc774\ud2b8",en:"Website"})}</div><div class="fv">shopmart.com</div></div>
-          <div class="pfield"><div class="fl">${T({ko:"\uc0ac\uc6a9\uc790 \uc774\ub984",en:"User Name"})}</div><div class="fv">mom@icloud.com</div></div>
-          <div class="pfield"><div class="fl">${T({ko:"\ube44\ubc00\ubc88\ud638",en:"Password"})}</div><div class="fv mono">${vaultPw}<span class="strongTag">${T({ko:"\uac15\ub825\ud568",en:"Strong"})}</span></div></div>
-          <button class="iosfill" id="saveBtn">${T({ko:"\uc800\uc7a5",en:"Save"})}</button>
-        </div><div class="note" id="nt2">${T({ko:"\uc571\uc774 <b>\uac15\ud55c \ube44\ubc00\ubc88\ud638</b>\ub97c \uc81c\uc548\ud588\uc5b4\uc694. <b>\uc800\uc7a5</b>\uc744 \ub204\ub974\uc138\uc694.",en:"The app suggested a <b>strong password</b>. Tap <b>Save</b>."})}</div></div>`;
-        stage.querySelector("#saveBtn").onclick=()=>{ clickSnd(); chime();
-          stage.innerHTML=`<div class="panel">${appListHTML([
-              {ic:"\ud83d\uded2",bg:"#fff0e0",nm:"ShopMart",us:"mom@icloud.com",hl:true},
-              {ic:"\ud83c\udfe6",bg:"#e8f7ee",nm:T({ko:"\uc740\ud589",en:"Bank"}),us:"mom@icloud.com"},
-              {ic:"\ud83d\udce7",bg:"#e6f0ff",nm:T({ko:"\uc774\uba54\uc77c",en:"Email"}),us:"mom@icloud.com"}
-            ])}<div class="note good">${T({ko:"<b>\uc800\uc7a5\ub410\uc5b4\uc694!</b> ShopMart\uac00 \ubaa9\ub85d\uc5d0 \ucd94\uac00\ub410\uc5b4\uc694. \uc678\uc6b8 \ud544\uc694 \uc5c6\uc5b4\uc694 \ud83c\udf89",en:"<b>Saved!</b> ShopMart is now in your list. No need to memorize it \ud83c\udf89"})}</div></div>`;
-          setTimeout(()=>done("\ud83c\udd95",{ko:"\uac15\ud55c \uc0c8 \ube44\ubc00\ubc88\ud638\ub97c \ub9cc\ub4e4\uc5b4 \uc800\uc7a5\ud588\uc5b4\uc694!",en:"You created and saved a strong new password!"}),1200);
-        };
-      };
-    }},
-
-  { title:{ko:"\u2462 \ub098\uc911\uc5d0 \ub2e4\uc2dc \ucc3e\uc544\ubcf4\uae30",en:"\u2462 Look it up again later"},
-    instr:{ko:"\ub098\uc911\uc5d0 \ube44\ubc00\ubc88\ud638\uac00 \uad81\uae08\ud558\uba74 \uc5b8\uc81c\ub4e0 \ubcfc \uc218 \uc788\uc5b4\uc694. \ubaa9\ub85d\uc5d0\uc11c <b>ShopMart</b>\ub97c \ub20c\ub7ec \ube44\ubc00\ubc88\ud638\ub97c <b>\ubcf4\uae30</b> \ud558\uc138\uc694.",en:"You can always look a password up later. Tap <b>ShopMart</b> in the list, then <b>reveal</b> the password."},
-    hint:{ko:"\uc810(\u2022\u2022\u2022\u2022)\uc744 \ub204\ub974\uba74 \uc800\uc7a5\ub41c \uc9c4\uc9dc \ube44\ubc00\ubc88\ud638\uac00 \ubcf4\uc5ec\uc694. \ubcf5\uc0ac\ud574\uc11c \uc4f8 \uc218\ub3c4 \uc788\uc5b4\uc694.",en:"Tap the dots to reveal the real saved password. You can also copy it."},
-    render(stage,done){
-      if(!vaultPw) vaultPw=generateStrong(15);
-      stage.innerHTML=`<div class="panel">${appListHTML([
-          {ic:"\ud83d\uded2",bg:"#fff0e0",nm:"ShopMart",us:"mom@icloud.com",id:"rowShop"},
-          {ic:"\ud83c\udfe6",bg:"#e8f7ee",nm:T({ko:"\uc740\ud589",en:"Bank"}),us:"mom@icloud.com"},
-          {ic:"\ud83d\udce7",bg:"#e6f0ff",nm:T({ko:"\uc774\uba54\uc77c",en:"Email"}),us:"mom@icloud.com"}
-        ])}<div class="note" id="nt">${T({ko:"\ubaa9\ub85d\uc5d0\uc11c <b>ShopMart</b>\ub97c \ub20c\ub7ec \ubcf4\uc138\uc694.",en:"Tap <b>ShopMart</b> in the list."})}</div></div>`;
-      stage.querySelector("#rowShop").onclick=()=>{ clickSnd();
-        stage.innerHTML=`<div class="panel"><div class="psheet">
-          <div class="shd"><div class="st">\ud83d\uded2 ShopMart</div></div>
-          <div class="pfield"><div class="fl">${T({ko:"\uc0ac\uc6a9\uc790 \uc774\ub984",en:"User Name"})}</div><div class="fv">mom@icloud.com</div></div>
-          <div class="pfield"><div class="fl">${T({ko:"\ube44\ubc00\ubc88\ud638",en:"Password"})}</div>
-            <div class="pwreveal"><div class="fv mono" id="pwv">\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022</div><button class="eyeBtn" id="eye">\ud83d\udc41\ufe0f</button></div></div>
-        </div><div class="note" id="nt">${T({ko:"\ud83d\udc41\ufe0f \ub2e8\ucd94(\ub610\ub294 \uc810)\uc744 \ub20c\ub7ec \ube44\ubc00\ubc88\ud638\ub97c \ubcf4\uc138\uc694.",en:"Tap the \ud83d\udc41\ufe0f button to reveal the password."})}</div></div>`;
-        const pwv=stage.querySelector("#pwv"), eye=stage.querySelector("#eye"), nt=stage.querySelector("#nt");
-        const reveal=()=>{ if(pwv.dataset.on)return; pwv.dataset.on="1"; clickSnd(); pwv.textContent=vaultPw; chime(); nt.className="note good";
-          nt.innerHTML=T({ko:"<b>\uc5ec\uae30 \uc788\uc5b4\uc694!</b> \uc5b8\uc81c\ub4e0 \uc774\ub807\uac8c \uc800\uc7a5\ub41c \ube44\ubc00\ubc88\ud638\ub97c \ub2e4\uc2dc \ubcfc \uc218 \uc788\uc5b4\uc694 \ud83c\udf89",en:"<b>There it is!</b> You can always look up a saved password like this \ud83c\udf89"});
-          setTimeout(()=>done("\ud83d\udd0e",{ko:"\uc800\uc7a5\ub41c \ube44\ubc00\ubc88\ud638\ub97c \ub2e4\uc2dc \ucc3e\uc544\ubd24\uc5b4\uc694!",en:"You looked up your saved password!"}),1200); };
-        eye.onclick=reveal; pwv.onclick=reveal;
-      };
-    }},
-
-  { title:{ko:"\u2463 \uc704\ud5d8\ud55c \ube44\ubc00\ubc88\ud638 \uace0\uce58\uae30",en:"\u2463 Fix a risky password"},
-    instr:{ko:"\uc571\uc740 <b>\ubcf4\uc548 \uc810\uac80</b>\ub3c4 \ud574\uc918\uc694. \uc57d\ud55c \ube44\ubc00\ubc88\ud638\ub97c \ucc3e\uc73c\uba74 \uc54c\ub824\uc8fc\uc8e0. <b>\uac15\ud55c \ube44\ubc00\ubc88\ud638\ub85c \ubcc0\uacbd</b>\uc744 \ub20c\ub7ec \uace0\uce58\uc138\uc694.",en:"The app also runs a <b>security check</b>. It warns you about weak passwords. Tap <b>Change to a strong password</b> to fix it."},
-    hint:{ko:"\uc57d\ud558\uac70\ub098 \uc5ec\ub7ec \uacf3\uc5d0 \ub3cc\ub824\uc4f4 \ube44\ubc00\ubc88\ud638\ub97c \uc571\uc774 \ucc3e\uc544 \uc918\uc694. \ud55c \ubc88 \ub204\ub974\uba74 \uc548\uc804\ud574\uc838\uc694.",en:"The app finds weak or reused passwords for you. One tap makes it safe."},
+  { title:{ko:"③ 안전하게 쓰기",en:"③ Use it safely"},
+    instr:{ko:"자동 채우기는 <b>내 계정</b>이 보이고 <b>얼굴로 확인</b>할 때만 안전해요. 안전한 쪽을 골라 보세요.",en:"Autofill is safe when it shows <b>your account</b> and asks for your <b>face</b>. Choose the safe one."},
+    hint:{ko:"평소 자동으로 채워지던 곳인데 갑자기 '직접 입력'하라고 하면 가짜 사이트일 수 있어요. 조심하세요.",en:"If a site that usually autofills suddenly asks you to TYPE your password, it may be fake. Be careful."},
     render(stage,done){
       stage.innerHTML=`<div class="panel">
-        <div class="secban">\u26a0\ufe0f ${T({ko:"<b>\ubcf4\uc548 \uad8c\uc7a5 \uc0ac\ud56d 1\uac1c</b> \u2014 \uc57d\ud55c \ube44\ubc00\ubc88\ud638\ub97c \ucc3e\uc558\uc5b4\uc694",en:"<b>1 Security Recommendation</b> \u2014 a weak password was found"})}</div>
-        <div class="psheet">
-          <div class="shd"><div class="st">\u2615 ${T({ko:"\ucee4\ud53c \uc571",en:"Coffee App"})}</div></div>
-          <div class="pfield"><div class="fl">${T({ko:"\ube44\ubc00\ubc88\ud638",en:"Password"})}</div><div class="fv mono" id="pwv" style="color:#ef4444;">123456 <span style="color:#ef4444;font-size:13px;font-weight:800;">${T({ko:"\uc57d\ud568",en:"Weak"})}</span></div></div>
-          <button class="iosfill" id="fixBtn">${T({ko:"\ud83d\udd01 \uac15\ud55c \ube44\ubc00\ubc88\ud638\ub85c \ubcc0\uacbd",en:"\ud83d\udd01 Change to a strong password"})}</button>
-        </div>
-        <div class="note" id="nt">${T({ko:"\uc704\ud5d8\ud55c \ube44\ubc00\ubc88\ud638\ub97c \uac15\ud55c \uac83\uc73c\ub85c \ubc14\uafd4 \uc8fc\uc138\uc694.",en:"Change the risky password to a strong one."})}</div>
+        <div class="note">${T({ko:"어느 쪽이 <b>안전한 자동 채우기</b>일까요?",en:"Which one is <b>safe autofill</b>?"})}</div>
+        <button class="kbtn" id="optA" style="background:linear-gradient(90deg,#22c55e,#16a34a);">${T({ko:"🔑 내 이메일(mom@icloud.com)이 보이는 제안을 누르고 얼굴로 확인",en:"🔑 A suggestion showing MY email (mom@icloud.com), confirmed by my face"})}</button>
+        <button class="kbtn" id="optB" style="background:#94a3b8;">${T({ko:"⚠️ 낯선 사이트가 비밀번호를 '직접 입력'하라고 함",en:"⚠️ A strange site asks me to TYPE my password by hand"})}</button>
+        <div class="note" id="nt">${T({ko:"안전한 쪽을 눌러 보세요.",en:"Tap the safe one."})}</div>
       </div>`;
-      stage.querySelector("#fixBtn").onclick=()=>{ clickSnd(); const np=generateStrong(15);
-        const pwv=stage.querySelector("#pwv"), nt=stage.querySelector("#nt"), fx=stage.querySelector("#fixBtn");
-        pwv.style.color="#1c1c1e"; pwv.innerHTML=np+' <span class="strongTag">'+T({ko:"\uac15\ub825\ud568",en:"Strong"})+'</span>'; fx.disabled=true; chime();
-        nt.className="note good"; nt.innerHTML=T({ko:"<b>\uac15\ud55c \ube44\ubc00\ubc88\ud638\ub85c \ubc14\uafe8\uc5b4\uc694!</b> \uc774\uc81c \uc548\uc804\ud574\uc694 \ud83c\udf89",en:"<b>Changed to a strong password!</b> Now it's safe \ud83c\udf89"});
-        setTimeout(()=>done("\ud83d\udee1\ufe0f",{ko:"\uc704\ud5d8\ud55c \ube44\ubc00\ubc88\ud638\ub97c \uace0\uCCE4\uc5b4\uc694!",en:"You fixed the risky password!"}),1100);
+      const optA=stage.querySelector("#optA"), optB=stage.querySelector("#optB"), nt=stage.querySelector("#nt");
+      optA.onclick=()=>{ clickSnd(); chime(); optB.disabled=true; optA.disabled=true; nt.className="note good";
+        nt.innerHTML=T({ko:"<b>맞아요!</b> 내 계정이 보이고 얼굴로 확인하니 안전해요 🎉",en:"<b>Right!</b> It shows your account and checks your face, so it's safe 🎉"});
+        setTimeout(()=>done("🛡️",{ko:"안전한 자동 채우기를 골랐어요!",en:"You chose safe autofill!"}),1200);
+      };
+      optB.onclick=()=>{ buzz(); nt.className="note bad";
+        nt.innerHTML=T({ko:"<b>조심하세요!</b> 평소 자동으로 채워지던 곳인데 갑자기 직접 입력하라면 가짜일 수 있어요. 다시 골라 보세요.",en:"<b>Careful!</b> If a site that usually autofills suddenly wants you to type it, it may be fake. Try again."});
       };
     }},
 ];
@@ -452,7 +421,7 @@ function goNext(){
 function skipStep(){ if(phase==="intro"){ nextIntro(); return; } doneGuard=true;
   lidx++; if(lidx>=LESSONS.length) showFinal(); else loadLesson(lidx); }
 function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
-  try{localStorage.setItem("momHub:done:passwords4","1");}catch(e){}
+  try{localStorage.setItem("momHub:done:autofill","1");}catch(e){}
   els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
 function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.final.style.display="none"; showIntro(); }
 

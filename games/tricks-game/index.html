@@ -347,6 +347,43 @@ const levels=[
       app.addEventListener("click",()=>{ if(locked)return; done("🏦",{ko:"링크 대신 진짜 앱으로 직접 확인했어요!",en:"You checked using your real app, not the link!"}); });
       markTarget(app); autoDemo(demoTap(()=>app),900);
     } },
+  { title:{ko:"가짜 광고 (스폰서) 조심하기",en:"Watch out for fake ads (Sponsored)"},
+    instr:{ko:"이번엔 검색 결과에 숨은 ‘가짜 광고’를 알아봐요.",en:"Now let's learn about the fake ads hidden in search results."},
+    hint:{ko:"읽고 ‘알겠어요’를 누르세요.",en:"Read it and click ‘Got it’."},
+    build(done){
+      const d=desk(); const card=document.createElement("div"); card.className="macCard recap";
+      card.innerHTML=`<div class="recapIcon">📢</div><div class="recapText">${T({
+        ko:"사기꾼은 <b>‘가짜 광고’</b>도 써요. 진짜 은행·쇼핑몰인 척 <b>광고를 돈 주고 사서</b>, 검색 결과 <b>맨 위</b>에 올려요 — 당신의 <b>돈이나 비밀번호</b>를 노리는 거죠.<br><br>구글에서 검색하면 광고에는 <b>‘스폰서(Sponsored)’</b>라고 작게 적혀 있어요.<br><br>누르기 전에 꼭 <b>‘스폰서’ 표시가 있는지</b> 보세요. 있으면 넘기고, <b>진짜 공식 주소</b>를 찾으세요!",
+        en:"Scammers also use <b>fake ads</b>. Pretending to be your real bank or store, they <b>pay for an ad</b> so it shows up <b>at the very top</b> of search results — aiming for your <b>money or password</b>.<br><br>On Google, ads have a small <b>‘Sponsored’</b> label.<br><br>Before you click, look for the <b>‘Sponsored’</b> label. If it's there, skip it and find the <b>real official address</b>!"})}</div><button class="big gotBtn">${T({ko:"알겠어요",en:"Got it"})}</button>`;
+      d.appendChild(card); card.querySelector(".gotBtn").addEventListener("click",()=>{ if(!locked) done("📢",{ko:"‘스폰서’ 광고를 조심하는 법을 배웠어요!",en:"You learned to watch for ‘Sponsored’ ads!"}); });
+      autoDemo(null);
+    } },
+  { title:{ko:"진짜 결과 고르기",en:"Pick the real result"},
+    instr:{ko:"‘내 은행’을 검색했어요. 맨 위 ‘스폰서’ 광고를 넘기고 진짜 공식 사이트를 고르세요.",en:"You searched for your bank. Skip the top ‘Sponsored’ ad and choose the real official site."},
+    hint:{ko:"‘스폰서’라고 적힌 건 광고예요. mybank.com 처럼 진짜 주소를 고르세요.",en:"The one marked ‘Sponsored’ is an ad. Choose the real address like mybank.com."},
+    build(done){
+      const d=desk();
+      const wrap=document.createElement("div"); wrap.className="macCard";
+      wrap.style.cssText="width:min(560px,94%);background:#fff;border-radius:14px;padding:16px;text-align:left;";
+      wrap.innerHTML=`
+        <div style="display:flex;align-items:center;gap:9px;border:1px solid #dfe1e5;border-radius:999px;padding:9px 15px;margin-bottom:15px;color:#5f6368;font-size:16px;">🔍 <span>${T({ko:"내 은행 로그인",en:"my bank login"})}</span></div>
+        <div class="adResult" style="cursor:pointer;padding:11px;border-radius:11px;border:2px solid transparent;margin-bottom:11px;">
+          <div style="font-size:13px;font-weight:800;color:#5f6368;">${T({ko:"스폰서 · 광고",en:"Sponsored · Ad"})}</div>
+          <div style="color:#1a0dab;font-size:19px;line-height:1.3;">${T({ko:"내 은행 — 지금 로그인 (긴급)",en:"My Bank — Log In Now (Urgent)"})}</div>
+          <div style="color:#006621;font-size:14px;">www.my-bank-secure-verify.info</div>
+          <div style="color:#4d5156;font-size:14px;">${T({ko:"계정이 곧 잠깁니다! 지금 눌러 본인 확인을 하세요!!!",en:"Your account will be locked soon! Click now to verify yourself!!!"})}</div>
+        </div>
+        <div class="realResult" style="cursor:pointer;padding:11px;border-radius:11px;border:2px solid transparent;">
+          <div style="color:#1a0dab;font-size:19px;line-height:1.3;">${T({ko:"내 은행 — 공식 홈페이지",en:"My Bank — Official Website"})}</div>
+          <div style="color:#006621;font-size:14px;">www.mybank.com</div>
+          <div style="color:#4d5156;font-size:14px;">${T({ko:"내 은행의 공식 사이트입니다. 계좌·카드·고객센터 안내.",en:"The official website of My Bank. Accounts, cards, and customer service."})}</div>
+        </div>`;
+      d.appendChild(wrap);
+      const ad=wrap.querySelector(".adResult"), real=wrap.querySelector(".realResult");
+      ad.addEventListener("click",()=>{ if(locked)return; gentle({ko:"잠깐! 이건 맨 위 ‘스폰서’ 광고예요. 사기꾼이 진짜처럼 보이는 광고를 사서 돈을 노려요. ‘스폰서’ 표시가 있으면 넘기세요.",en:"Wait! That's a ‘Sponsored’ ad at the top. Scammers buy ads that look real to take your money. If it says ‘Sponsored,’ skip it."}); });
+      real.addEventListener("click",()=>{ if(locked)return; done("🔍",{ko:"‘스폰서’ 광고를 넘기고 진짜 공식 사이트를 골랐어요!",en:"You skipped the ‘Sponsored’ ad and chose the real official site!"}); });
+      markTarget(real); autoDemo(demoTap(()=>real),1000);
+    } },
   { title:{ko:"누가 보냈는지 확인하기",en:"Check who really sent it"},
     instr:{ko:"애플인 척하는 사칭 이메일을 골라 보세요. 주소를 보면 알 수 있어요.",en:"Spot the email impersonating Apple. The sender's address gives it away."},
     hint:{ko:"주소가 이상하고 겁을 주는 쪽이 가짜예요.",en:"The one with a weird address that scares you is fake."},
