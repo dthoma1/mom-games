@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>내 맥북 살펴보기</title>
+<style>
+  :root{
+    --bg1:#eef2ff; --bg2:#fdf2f8; --ink:#1f2937; --soft:#6b7280;
+    --accent:#6366f1; --accent2:#ec4899; --good:#22c55e;
+    --desk1:#2b6cff; --desk2:#8a5cf6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:none;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+
+  /* intro */
+  #introView{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(99,102,241,.12);padding:26px 22px;text-align:center;}
+  #introArt{font-size:74px;line-height:1;margin-bottom:6px;animation:pop .5s ease;}
+  #introTitle{font-size:23px;font-weight:800;margin-bottom:8px;}
+  #introText{font-size:16px;color:#374151;line-height:1.6;max-width:560px;}
+  #introText b{color:var(--accent);}
+  .introBtns{display:flex;gap:12px;margin-top:20px;}
+  .introBtns button{font-size:16px;font-weight:700;border-radius:999px;padding:11px 26px;cursor:pointer;border:none;}
+  #introBack{background:#f1f5f9;color:#64748b;}
+  #introNext{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #dots{display:flex;gap:7px;margin-top:16px;}
+  #dots .d{width:9px;height:9px;border-radius:50%;background:#e5e7eb;}
+  #dots .d.on{background:var(--accent);}
+
+  /* lesson banner */
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .hint{font-size:13px;color:var(--soft);margin-top:3px;}
+
+  /* stage */
+  #stage{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;
+    background:linear-gradient(135deg,#e8ecff,#f5e9fb);display:flex;align-items:center;justify-content:center;padding:16px;}
+
+  /* laptop illustration */
+  .laptop{position:relative;width:min(430px,92%);}
+  .part{cursor:pointer;transition:filter .12s,transform .12s;}
+  .part:hover{filter:brightness(1.04);}
+  .lid{position:relative;background:#161617;border-radius:16px 16px 5px 5px;padding:11px 11px 12px;
+    box-shadow:0 10px 26px rgba(0,0,0,.28);}
+  .camera{position:absolute;top:4px;left:50%;transform:translateX(-50%);width:34px;height:12px;border-radius:0 0 8px 8px;
+    background:#0c0c0d;display:flex;align-items:center;justify-content:center;z-index:3;}
+  .camera .lens{width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#3b4a6b,#0a0a12);
+    box-shadow:0 0 0 2px #1c1c20;}
+  .screen{aspect-ratio:16/10;border-radius:8px;background:linear-gradient(135deg,var(--desk1),var(--desk2));
+    position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+  .screen .wall{position:absolute;inset:0;background:
+    radial-gradient(circle at 26% 24%,rgba(255,255,255,.35),transparent 42%),
+    radial-gradient(circle at 78% 74%,rgba(255,255,255,.20),transparent 46%);}
+  .screen .menubar{position:absolute;top:0;left:0;right:0;height:16px;background:rgba(255,255,255,.22);
+    backdrop-filter:blur(2px);display:flex;align-items:center;gap:8px;padding:0 8px;font-size:9px;color:#fff;}
+  .screen .apple{font-size:10px;}
+  .screen .dock{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:5px;
+    background:rgba(255,255,255,.28);border-radius:9px;padding:4px 6px;}
+  .screen .dico{width:15px;height:15px;border-radius:4px;font-size:11px;display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.85);}
+  .screen .stouch{position:relative;z-index:2;color:#fff;font-size:13px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.35);
+    background:rgba(0,0,0,.16);padding:5px 12px;border-radius:999px;opacity:0;transition:opacity .2s;}
+  .screen.buzz .stouch{opacity:1;}
+
+  /* deck / base */
+  .deck{position:relative;margin-top:3px;background:linear-gradient(#e6e7ea,#cdced2);
+    border-radius:4px 4px 15px 15px;padding:9px 12px 12px;box-shadow:0 12px 22px rgba(0,0,0,.16);}
+  .deck::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:56px;height:5px;
+    background:#b9babf;border-radius:0 0 7px 7px;}
+  .keyboard{position:relative;background:#26272b;border-radius:7px;padding:6px;display:flex;flex-direction:column;gap:3px;}
+  .krow{display:flex;gap:3px;}
+  .key{flex:1;height:13px;border-radius:3px;background:linear-gradient(#3a3b40,#2b2c31);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 1px 0 #17181b;}
+  .touchid{width:15px;height:13px;border-radius:3px;flex:0 0 auto;
+    background:linear-gradient(#4a4b52,#34353b);box-shadow:inset 0 0 0 1px #55565d;position:relative;}
+  .touchid::after{content:"";position:absolute;inset:3px;border-radius:50%;
+    background:repeating-radial-gradient(circle at 50% 50%,#8b8c93 0 1px,transparent 1px 2px);opacity:.8;}
+  .trackpad{margin-top:8px;height:76px;border-radius:9px;background:linear-gradient(#f4f5f7,#e2e3e7);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.06),inset 0 2px 5px rgba(0,0,0,.04);}
+
+  /* side view (ports) */
+  .sideWrap{margin-top:12px;}
+  .sideCap{font-size:12px;color:#6b7280;text-align:center;margin-bottom:4px;font-weight:600;}
+  .edge{height:30px;border-radius:7px;background:linear-gradient(#c9cace,#a7a8ad);
+    display:flex;align-items:center;justify-content:center;gap:20px;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 10px rgba(0,0,0,.12);}
+  .usbc{width:26px;height:9px;border-radius:5px;background:#242427;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.7),inset 0 -1px 1px rgba(255,255,255,.08);}
+  .jack{width:14px;height:14px;border-radius:50%;background:#242427;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.7),inset 0 -1px 1px rgba(255,255,255,.08);}
+
+  /* name label bubble on correct tap */
+  .plabel{position:absolute;background:#111827;color:#fff;font-size:12px;font-weight:700;padding:5px 11px;
+    border-radius:999px;white-space:nowrap;z-index:20;box-shadow:0 6px 16px rgba(0,0,0,.3);pointer-events:none;
+    transform:translate(-50%,-50%);animation:pop .3s ease;}
+  .part.found{filter:brightness(1.12);}
+  .ringGlow{position:absolute;border:3px solid #fbbf24;border-radius:12px;pointer-events:none;z-index:15;
+    box-shadow:0 0 14px rgba(251,191,36,.7);animation:pop .3s ease;}
+
+  /* pulsing focus ring */
+  .focusRing{position:absolute;border:4px solid rgba(236,72,153,.95);border-radius:50%;
+    width:64px;height:64px;pointer-events:none;z-index:18;transform:translate(-50%,-50%);
+    box-shadow:0 0 0 4px rgba(236,72,153,.25);animation:focusPulse 1.15s ease-in-out infinite;}
+  @keyframes focusPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.95;}
+    50%{transform:translate(-50%,-50%) scale(1.28);opacity:.55;}}
+
+  /* toast */
+  .miniToast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(43,47,54,.94);
+    color:#fff;font-size:13px;font-weight:600;padding:9px 16px;border-radius:999px;z-index:35;max-width:88%;
+    box-shadow:0 6px 16px rgba(0,0,0,.3);transition:opacity .2s;text-align:center;}
+
+  @keyframes pop{0%{transform:scale(.6);opacity:0;}70%{transform:scale(1.12);}100%{transform:scale(1);opacity:1;}}
+
+  /* success overlay */
+  #successOverlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.82);backdrop-filter:blur(3px);border-radius:12px;z-index:60;}
+  #successOverlay .be{font-size:76px;animation:pop .5s ease;}
+  #successOverlay .msg{font-size:22px;font-weight:800;color:var(--accent);margin-top:6px;text-align:center;padding:0 20px;}
+
+  .confetti{position:fixed;top:-24px;z-index:120;pointer-events:none;animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;
+    padding:11px 24px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+
+    <div id="introView">
+      <div id="introArt"></div>
+      <div id="introTitle"></div>
+      <div id="introText"></div>
+      <div class="introBtns">
+        <button id="introBack" onclick="prevIntro()"></button>
+        <button id="introNext" onclick="nextIntro()"></button>
+      </div>
+      <div id="dots"></div>
+    </div>
+
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="hint" id="bHint"></div>
+      </div>
+      <div id="stage"></div>
+    </div>
+
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div></div>
+  </div>
+</div>
+
+<script>
+/* ---------- language ---------- */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  title:{ko:"내 맥북 살펴보기",en:"Meet Your MacBook"},
+  h1:{ko:"💻 내 맥북 살펴보기",en:"💻 Meet Your MacBook"},
+  sub:{ko:"노트북의 각 부분 이름을 하나씩 알아봐요. 그림에서 찾아 톡 눌러 보세요 😊",en:"Let's learn the name of each part. Find it in the picture and give it a tap 😊"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  back:{ko:"‹ 뒤로",en:"‹ Back"}, next:{ko:"다음 ›",en:"Next ›"}, start:{ko:"시작하기 ›",en:"Let's start ›"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"}, hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"내 노트북 박사님! 🎓",en:"You know your laptop! 🎓"},
+  finalMsg:{ko:"카메라·키보드·트랙패드·터치 아이디·옆면 구멍까지 — 이제 다 아시죠? 정말 잘하셨어요 💖",en:"Camera, keyboard, trackpad, Touch ID, and the holes on the side — you know them all now. Wonderful work 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`}, finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  hintPrefix:{ko:"💡 ",en:"💡 "}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG; document.title=T(UI.title);
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("introBack").textContent=T(UI.back);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(inIntro){ showIntro(introIdx); }
+  else if(!doneLock){ loadLevel(current); }
+}
+
+/* ---------- praise + sound + confetti ---------- */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨","훌륭해요! 🌟"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨","Wonderful! 🌟"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ---------- laptop illustration ---------- */
+const stage=document.getElementById("stage");
+const PARTNAME={
+  camera:{ko:"카메라",en:"Camera"}, screen:{ko:"화면",en:"Screen"},
+  keyboard:{ko:"키보드",en:"Keyboard"}, trackpad:{ko:"트랙패드",en:"Trackpad"},
+  touchid:{ko:"터치 아이디",en:"Touch ID"}, usbc:{ko:"USB-C 포트",en:"USB-C port"},
+  jack:{ko:"헤드폰 구멍",en:"Headphone jack"}
+};
+const LESSONEMOJI={camera:"📷",screen:"🖥️",keyboard:"⌨️",trackpad:"🖐️",touchid:"👆",usbc:"🔌",jack:"🎧"};
+function laptopHTML(){
+  return `<div class="laptop" id="laptop">
+    <div class="lid">
+      <div class="part camera" data-part="camera"><span class="lens"></span></div>
+      <div class="part screen" data-part="screen">
+        <div class="wall"></div>
+        <div class="menubar"><span class="apple"></span><span>Finder</span></div>
+        <div class="stouch">${T({ko:"아무 일도 없어요 🙂",en:"Nothing happens 🙂"})}</div>
+        <div class="dock"><span class="dico">🧭</span><span class="dico">✉️</span><span class="dico">📷</span><span class="dico">🗂️</span></div>
+      </div>
+    </div>
+    <div class="deck">
+      <div class="part keyboard" data-part="keyboard">
+        <div class="krow">${'<span class="key"></span>'.repeat(11)}<div class="part touchid" data-part="touchid"></div></div>
+        <div class="krow">${'<span class="key"></span>'.repeat(12)}</div>
+        <div class="krow">${'<span class="key"></span>'.repeat(11)}</div>
+        <div class="krow">${'<span class="key"></span>'.repeat(9)}</div>
+      </div>
+      <div class="part trackpad" data-part="trackpad"></div>
+    </div>
+    <div class="sideWrap">
+      <div class="sideCap">${T({ko:"⬇︎ 옆면 · 노트북 옆에 있는 구멍들",en:"⬇︎ Side view · the holes on the side"})}</div>
+      <div class="edge">
+        <div class="part usbc" data-part="usbc"></div>
+        <div class="part usbc" data-part="usbc"></div>
+        <div class="part jack" data-part="jack"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* focus ring */
+let focusTarget=null;
+function clearFocus(){ const r=stage.querySelector(".focusRing"); if(r)r.remove(); focusTarget=null; }
+function focusOn(sel){ focusTarget=sel; placeFocus(); }
+function placeFocus(){
+  const lap=document.getElementById("laptop"); if(!lap||!focusTarget) return;
+  const t=lap.querySelector(focusTarget); if(!t) return;
+  let r=stage.querySelector(".focusRing");
+  if(!r){ r=document.createElement("div"); r.className="focusRing"; stage.appendChild(r); }
+  const s=stage.getBoundingClientRect(), b=t.getBoundingClientRect();
+  const sz=Math.max(46,Math.min(80,Math.max(b.width,b.height)+30));
+  r.style.width=sz+"px"; r.style.height=sz+"px";
+  r.style.left=(b.left-s.left+b.width/2)+"px"; r.style.top=(b.top-s.top+b.height/2)+"px";
+}
+
+function showToast(msg){ let t=stage.querySelector(".miniToast");
+  if(!t){ t=document.createElement("div"); t.className="miniToast"; stage.appendChild(t); }
+  t.textContent=T(msg); t.style.opacity="1"; clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>{ t.style.opacity="0"; },2200); }
+
+function labelPart(el){
+  const lap=document.getElementById("laptop"); const lb=lap.getBoundingClientRect(), b=el.getBoundingClientRect();
+  const tag=document.createElement("div"); tag.className="plabel";
+  tag.textContent=T(PARTNAME[el.dataset.part]);
+  tag.style.left=(b.left-lb.left+b.width/2)+"px";
+  tag.style.top=(b.top-lb.top-14)+"px";
+  lap.appendChild(tag);
+  const g=document.createElement("div"); g.className="ringGlow";
+  g.style.left=(b.left-lb.left-4)+"px"; g.style.top=(b.top-lb.top-4)+"px";
+  g.style.width=(b.width+8)+"px"; g.style.height=(b.height+8)+"px";
+  lap.appendChild(g);
+}
+
+function renderLaptop(target, done){
+  stage.innerHTML=laptopHTML();
+  focusOn(".part."+target);
+  requestAnimationFrame(placeFocus);
+  stage.querySelectorAll(".part").forEach(el=>{
+    el.addEventListener("click",e=>{
+      e.stopPropagation();
+      if(locked) return;
+      const p=el.dataset.part;
+      clearFocus();
+      if(p===target){
+        locked=true;
+        if(target==="screen"){ el.classList.add("buzz"); beep(300,.18); }
+        el.classList.add("found"); labelPart(el);
+        const msg = target==="screen"
+          ? {ko:"맞아요! 화면은 만져도 아무 일이 없어요 🙂",en:"Right! Tapping the screen does nothing 🙂"}
+          : {ko:T(PARTNAME[target])+" 찾았어요!",en:"You found the "+T(PARTNAME[target])+"!"};
+        setTimeout(()=>done(LESSONEMOJI[target]||"✨",msg),650);
+      } else {
+        beep(360,.08);
+        showToast({ko:"거긴 "+T(PARTNAME[p])+"예요. "+T(PARTNAME[target])+"를 찾아보세요 🙂",
+                   en:"That's the "+T(PARTNAME[p])+". Look for the "+T(PARTNAME[target])+" 🙂"});
+        setTimeout(()=>{ if(!locked){ focusOn(".part."+target); placeFocus(); } },200);
+      }
+    });
+  });
+}
+
+/* ---------- intro ---------- */
+const INTRO=[
+  { art:"💻", title:{ko:"이건 하나의 기계예요",en:"It's a machine of parts"},
+    html:{ko:"노트북은 여러 <b>부분</b>이 모여 만들어졌어요. 얼굴에 눈·코·입이 있듯이, 노트북에는 <b>카메라</b>, <b>키보드</b>, <b>트랙패드</b>가 있어요. 하나씩 이름을 알면 훨씬 덜 무서워요 😊",
+          en:"A laptop is made of several <b>parts</b>. Just like a face has eyes and a mouth, a laptop has a <b>camera</b>, a <b>keyboard</b>, and a <b>trackpad</b>. Knowing their names makes it far less scary 😊"} },
+  { art:"🖐️", title:{ko:"화면은 만지는 게 아니에요",en:"The screen is not a touchscreen"},
+    html:{ko:"중요해요! 노트북 <b>화면은 손으로 만져도 안 돼요</b> — 휴대폰과 달라요. 화면을 눌러도 아무 일이 없어요. 대신 <b>트랙패드</b>로 손가락을 움직여 가리켜요.",
+          en:"Important! You do <b>not touch the laptop screen</b> — it's different from your phone. Tapping the screen does nothing. Instead you point by moving your finger on the <b>trackpad</b>."} },
+  { art:"🔌", title:{ko:"옆면에는 구멍이 있어요",en:"There are holes on the side"},
+    html:{ko:"노트북 <b>옆면</b>에는 구멍(포트)이 있어요. <b>타원 모양</b>은 <b>USB-C 포트</b>예요 — 두 개가 있고, <b>둘 다 충전</b>할 수 있어요. <b>동그란 구멍</b>은 <b>헤드폰</b> 줄을 꽂는 곳이에요. 이제 하나씩 찾아봐요!",
+          en:"On the <b>side</b> of your laptop there are holes (ports). The <b>oval</b> one is a <b>USB-C port</b> — there are two, and <b>both can charge</b> your laptop. The <b>round</b> hole is for a <b>headphone</b> cord. Let's go find them all!"} }
+];
+let inIntro=true, introIdx=0;
+function showIntro(i){
+  inIntro=true; introIdx=i;
+  els.intro.style.display="flex"; els.main.style.display="none"; els.final.style.display="none"; els.skip.style.display="none";
+  const s=INTRO[i];
+  document.getElementById("introArt").textContent=s.art;
+  document.getElementById("introTitle").textContent=T(s.title);
+  document.getElementById("introText").innerHTML=T(s.html);
+  document.getElementById("introBack").style.visibility=i===0?"hidden":"visible";
+  document.getElementById("introNext").textContent=i===INTRO.length-1?T(UI.start):T(UI.next);
+  const dots=document.getElementById("dots"); dots.innerHTML="";
+  INTRO.forEach((_,k)=>{const d=document.createElement("div");d.className="d"+(k===i?" on":"");dots.appendChild(d);});
+  els.bar.style.width="0%"; els.step.textContent="";
+}
+function nextIntro(){ if(introIdx<INTRO.length-1) showIntro(introIdx+1); else startLessons(); }
+function prevIntro(){ if(introIdx>0) showIntro(introIdx-1); }
+function startLessons(){ inIntro=false; els.intro.style.display="none"; els.main.style.display="flex"; els.skip.style.display="block"; loadLevel(0); }
+
+/* ---------- lessons ---------- */
+const levels=[
+  { target:"camera", title:{ko:"카메라",en:"Camera"},
+    instr:{ko:"화면 맨 위 가운데 작은 점이 카메라예요. 영상 통화할 때 얼굴을 비춰줘요.",en:"The tiny dot at the top center of the screen is the camera. It shows your face on video calls."},
+    hint:{ko:"화면 맨 위 가운데 작은 카메라를 눌러 보세요.",en:"Tap the little camera at the top center of the screen."} },
+  { target:"screen", title:{ko:"화면 (만지면 안 돼요)",en:"Screen (don't touch)"},
+    instr:{ko:"큰 화면이에요. 휴대폰과 달리 손으로 만져도 안 돼요. 한번 눌러서 확인해 봐요!",en:"This is the big screen. Unlike your phone, touching it does nothing. Give it a tap to see!"},
+    hint:{ko:"화면 가운데를 한번 눌러 보세요 — 아무 일도 안 일어나요.",en:"Tap the middle of the screen — nothing will happen."} },
+  { target:"keyboard", title:{ko:"키보드",en:"Keyboard"},
+    instr:{ko:"글자를 입력하는 곳이에요. 버튼(키)이 줄지어 있어요.",en:"This is where you type. It's rows of buttons called keys."},
+    hint:{ko:"가운데 있는 키보드(자판)를 눌러 보세요.",en:"Tap the keyboard (the keys) in the middle."} },
+  { target:"trackpad", title:{ko:"트랙패드",en:"Trackpad"},
+    instr:{ko:"키보드 아래 넓고 매끈한 판이에요. 여기서 손가락을 움직여 화면을 가리켜요.",en:"The wide smooth pad below the keyboard. You move your finger here to point on the screen."},
+    hint:{ko:"키보드 바로 아래 넓은 트랙패드를 눌러 보세요.",en:"Tap the wide trackpad just below the keyboard."} },
+  { target:"touchid", title:{ko:"터치 아이디 버튼",en:"Touch ID button"},
+    instr:{ko:"키보드 오른쪽 위 작은 버튼이에요. 손가락(지문)을 대면 비밀번호 없이 로그인돼요.",en:"The small button at the top-right of the keyboard. Rest your finger on it to log in without a password."},
+    hint:{ko:"키보드 맨 오른쪽 위, 지문 무늬 버튼을 눌러 보세요.",en:"Tap the fingerprint button at the top-right of the keyboard."} },
+  { target:"usbc", title:{ko:"USB-C 포트 (타원 구멍)",en:"USB-C port (oval hole)"},
+    instr:{ko:"옆면의 타원 모양 구멍이에요. 두 개가 있고, 둘 다 충전기를 꽂을 수 있어요.",en:"The oval-shaped hole on the side. There are two, and either one can charge your laptop."},
+    hint:{ko:"옆면에서 타원 모양 구멍(둘 중 아무거나)을 눌러 보세요.",en:"Tap one of the oval holes on the side (either one)."} },
+  { target:"jack", title:{ko:"헤드폰 구멍",en:"Headphone jack"},
+    instr:{ko:"옆면의 동그란 구멍이에요. 헤드폰(이어폰) 줄을 여기에 꽂아요.",en:"The round hole on the side. This is where you plug in a headphone cord."},
+    hint:{ko:"옆면에서 동그란 구멍을 눌러 보세요.",en:"Tap the round hole on the side."} }
+];
+
+/* ---------- engine ---------- */
+let current=0, doneLock=false, locked=false;
+const els={ bar:document.getElementById("progressBar"), step:document.getElementById("stepText"),
+  intro:document.getElementById("introView"),
+  main:document.getElementById("mainView"), final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"), msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+
+function loadLevel(i){
+  locked=false; clearFocus();
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.textContent=T(lv.instr); banner.h.textContent=T(UI.hintPrefix)+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  renderLaptop(lv.target,onLevelDone);
+}
+function onLevelDone(emoji,msg){
+  if(doneLock) return; doneLock=true; locked=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(()=>{
+    els.msg.textContent=msg?T(msg):praise();
+    els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime();
+    setTimeout(()=>{ els.overlay.style.display="none"; doneLock=false;
+      current++; if(current>=levels.length) showFinal(); else loadLevel(current); },1500);
+  },500);
+}
+function skipLevel(){ if(doneLock) return; current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block";
+  try{localStorage.setItem("momHub:done:hardware","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ current=0; doneLock=false; els.final.style.display="none"; showIntro(0); }
+
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+window.addEventListener("resize",()=>{ if(!inIntro) placeFocus(); });
+applyStatic(); showIntro(0);
+</script>
+</body>
+</html>
