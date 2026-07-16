@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>사진 함께 보기 / Photos everywhere</title>
+<style>
+  :root{--bg1:#eef2ff;--bg2:#fdf2f8;--ink:#1f2937;--soft:#6b7280;--accent:#6366f1;--accent2:#ec4899;
+    --good:#22c55e;--macblue:#0a63ff;--desk1:#2b6cff;--desk2:#8a5cf6;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0;}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 8px;}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;
+    border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;}
+  #langToggle button{border:none;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700;}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;align-items:center;text-decoration:none;
+    background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:#6366f1;
+    padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90;cursor:pointer;}
+  #homeBtn:hover{background:#f5f5ff;}
+  #homeBtn .en{display:none;}
+  html[lang="en"] #homeBtn .ko{display:none;}
+  html[lang="en"] #homeBtn .en{display:inline;}
+  #progressWrap{width:100%;height:12px;background:#fce7f3;border-radius:999px;overflow:hidden;margin-bottom:4px;}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .45s ease;}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px;}
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px;}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;}
+  button.ghostBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80;}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(99,102,241,.12);padding:10px 16px;text-align:center;position:relative;}
+  #banner .t{font-size:19px;font-weight:800;}
+  #banner .i{font-size:15px;margin-top:2px;}
+  #banner .h{font-size:13px;color:var(--soft);margin-top:3px;}
+  #banner .extra{margin-top:8px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;}
+  #replayBtn{font-size:14px;font-weight:700;color:var(--accent);background:#eef2ff;border:1px solid #dfe4ff;
+    border-radius:999px;padding:7px 16px;cursor:pointer;display:none;}
+  #stage{position:relative;flex:1;min-height:0;border-radius:12px;overflow:hidden;
+    background:linear-gradient(135deg,var(--desk1),var(--desk2));display:flex;align-items:center;justify-content:center;padding:18px;}
+
+  .bwin{background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.30);width:min(580px,96%);overflow:hidden;
+    display:flex;flex-direction:column;}
+  .btool{height:46px;background:linear-gradient(#f6f6f7,#e9e9eb);display:flex;align-items:center;gap:8px;padding:0 12px;
+    border-bottom:1px solid #e1e1e4;}
+  .dots{display:flex;gap:7px;margin-right:4px;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dot.r{background:#ff5f57;}.dot.y{background:#febc2e;}.dot.g{background:#28c840;}
+  .navbtn{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#5b6270;
+    font-size:17px;cursor:pointer;flex:0 0 auto;}
+  .navbtn:hover{background:rgba(0,0,0,.06);}
+  .navbtn.off{opacity:.32;pointer-events:none;}
+  .addrbar{flex:1;height:32px;background:#fff;border:1px solid #d5d5da;border-radius:8px;display:flex;align-items:center;
+    padding:0 10px;gap:7px;font-size:14px;color:#374151;box-shadow:inset 0 1px 2px rgba(0,0,0,.05);min-width:0;}
+  .addrbar .lock{font-size:11px;color:#9ca3af;}
+  .addrbar input{border:none;outline:none;flex:1;font-size:14px;background:transparent;min-width:0;color:#374151;}
+  .addrbar.focusRing{border-color:var(--macblue);box-shadow:0 0 0 3px rgba(10,99,255,.25);}
+  .tabstrip{height:34px;background:#e6e6e9;display:flex;align-items:flex-end;gap:2px;padding:0 8px;}
+  .tab{height:29px;background:#d3d3d8;border-radius:8px 8px 0 0;padding:0 12px;display:flex;align-items:center;gap:8px;
+    font-size:13px;color:#4b5563;max-width:170px;white-space:nowrap;overflow:hidden;}
+  .tab.active{background:#fff;color:#1f2937;}
+  .tabx{font-size:13px;color:#9ca3af;cursor:pointer;border-radius:4px;padding:0 3px;}
+  .tabx:hover{background:rgba(0,0,0,.1);}
+  .bcontent{background:#fff;flex:1;min-height:150px;padding:24px;text-align:center;overflow:hidden;transition:font-size .2s;}
+  .bcontent h2{margin:6px 0;}
+  .bcontent p{color:#6b7280;line-height:1.5;margin:8px 0;}
+  .fav{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+  .favIcon{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;
+    box-shadow:0 3px 8px rgba(0,0,0,.12);}
+
+  @keyframes tpulse{0%,100%{box-shadow:0 0 0 0 rgba(10,99,255,.55);}50%{box-shadow:0 0 0 7px rgba(10,99,255,0);}}
+  .target{animation:tpulse 1.4s infinite;border-radius:8px;position:relative;z-index:5;}
+  .miniToast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(43,47,54,.92);color:#fff;
+    font-size:13px;font-weight:600;padding:8px 15px;border-radius:999px;z-index:35;box-shadow:0 6px 16px rgba(0,0,0,.3);transition:opacity .2s;}
+
+  .demoCursor{position:absolute;width:26px;height:26px;z-index:40;pointer-events:none;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));transition:left .5s ease,top .5s ease,opacity .2s;}
+  .demoCursor.click{animation:clickPulse .35s ease;}
+  @keyframes clickPulse{0%{transform:scale(1);}50%{transform:scale(.8);}100%{transform:scale(1);}}
+  .clickRipple{position:absolute;width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
+    z-index:39;pointer-events:none;animation:ripple .5s ease-out forwards;}
+  @keyframes ripple{from{transform:scale(.3);opacity:.85;}to{transform:scale(2.4);opacity:0;}}
+
+  #successOverlay{position:absolute;left:10px;right:10px;bottom:10px;top:auto;background:#f2fdf6;
+    border:2px solid var(--good);box-shadow:0 10px 28px rgba(0,0,0,.16);display:none;
+    flex-direction:row;align-items:center;gap:12px;border-radius:16px;z-index:60;padding:12px 14px;}
+  #successOverlay .be{font-size:40px;animation:pop .5s ease;flex-shrink:0;}
+  #successOverlay .msg{font-size:17px;font-weight:800;color:var(--good);flex:1;line-height:1.35;}
+  #nextBtn{flex-shrink:0;font-size:16px;font-weight:800;color:#fff;cursor:pointer;border:none;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:11px 22px;
+    box-shadow:0 4px 12px rgba(99,102,241,.35);animation:nbpulse 1.4s ease-in-out infinite;}
+  #nextBtn:hover{filter:brightness(1.05);}
+  @keyframes nbpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+  .confetti{position:fixed;top:-20px;z-index:95;animation:fall linear forwards;pointer-events:none;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9;}}
+  #finalScreen{display:none;text-align:center;background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+  #finalScreen .tr{font-size:100px;animation:pop .6s ease;}
+  button.big{margin-top:12px;font-size:17px;font-weight:700;color:#fff;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
+
+
+  /* ===== photos everywhere game ===== */
+  .photoWorld{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:72px;min-height:330px;}
+  .icloud{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font-size:54px;filter:drop-shadow(0 8px 12px rgba(255,255,255,.35));animation:cloudFloat 2.6s ease-in-out infinite;z-index:2;}
+  .icloud .syncText{display:block;font-size:14px;font-weight:800;color:#fff;text-shadow:0 2px 7px rgba(0,0,0,.28);text-align:center;margin-top:-4px;}
+  @keyframes cloudFloat{0%,100%{transform:translate(-50%,-50%)}50%{transform:translate(-50%,-58%)}}
+  .iphone{width:200px;height:380px;background:#111827;border-radius:36px;padding:12px;box-shadow:0 24px 46px rgba(0,0,0,.34);position:relative;flex:0 0 auto;}
+  .island{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:72px;height:20px;background:#030712;border-radius:999px;z-index:5;}
+  .phoneScreen{height:100%;border-radius:27px;background:linear-gradient(160deg,#dbeafe,#fef3c7 55%,#fce7f3);overflow:hidden;position:relative;border:2px solid #222;}
+  .phoneStatus{height:34px;padding:10px 15px 0;font-size:11px;font-weight:800;display:flex;justify-content:space-between;color:#111827;}
+  .cameraView{position:absolute;inset:34px 0 0;background:linear-gradient(160deg,#8dd7ff,#ffd6a5 55%,#ffafcc);display:flex;align-items:center;justify-content:center;}
+  .cameraScene{font-size:62px;text-shadow:0 4px 12px rgba(255,255,255,.5);}
+  .shutter{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);width:58px;height:58px;border-radius:50%;background:#fff;border:6px solid rgba(255,255,255,.55);box-shadow:0 0 0 3px rgba(17,24,39,.25),0 8px 18px rgba(0,0,0,.25);cursor:pointer;}
+  .phoneThumb{position:absolute;left:18px;bottom:26px;width:46px;height:46px;border-radius:11px;background:linear-gradient(135deg,#fff7ed,#f9a8d4);border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 5px 14px rgba(0,0,0,.24);opacity:0;transform:scale(.6);transition:.35s;}
+  .phoneThumb.on{opacity:1;transform:scale(1);}
+  .macPhotos{width:min(480px,52vw);height:340px;background:#fff;border-radius:13px;box-shadow:0 20px 52px rgba(0,0,0,.32);overflow:hidden;position:relative;flex:0 1 480px;}
+  .macTitle{height:40px;background:linear-gradient(#f8f8fa,#e9e9ec);display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid #ddd;}
+  .photosIcon{font-size:18px}.macTitleText{font-weight:800;color:#374151;font-size:14px;}
+  .photoBody{height:calc(100% - 40px);background:#fbfbfd;padding:16px;overflow:hidden;}
+  .photoGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .photoTile{height:86px;border-radius:13px;background:linear-gradient(135deg,#fee2e2,#fde68a,#bfdbfe);display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 5px 14px rgba(0,0,0,.12);cursor:pointer;border:3px solid #fff;position:relative;transition:transform .2s,opacity .45s;}
+  .photoTile:hover{transform:translateY(-2px)}
+  .photoTile.new{background:linear-gradient(135deg,#fef3c7,#fbcfe8,#bfdbfe);}
+  .photoTile.appear{animation:photoAppear .75s ease both;}
+  @keyframes photoAppear{from{opacity:0;transform:scale(.55) rotate(-6deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+  .bigPhoto{height:100%;border-radius:14px;background:linear-gradient(135deg,#fef3c7,#fbcfe8,#bfdbfe);display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:82px;box-shadow:inset 0 0 0 5px #fff;}
+  .bigPhoto span{font-size:17px;font-weight:800;color:#374151;margin-top:8px;}
+  .syncBeam{position:absolute;left:34%;right:43%;top:45%;height:5px;background:linear-gradient(90deg,rgba(255,255,255,0),#fff,rgba(255,255,255,0));border-radius:999px;animation:beam 1.2s ease-in-out infinite;z-index:1;}
+  @keyframes beam{0%{opacity:.2;transform:scaleX(.45)}50%{opacity:.9;transform:scaleX(1)}100%{opacity:.2;transform:scaleX(.45)}}
+  .noteBubble{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.95);border:1px solid #e0e7ff;color:#374151;border-radius:18px;padding:12px 18px;max-width:720px;text-align:center;font-weight:800;box-shadow:0 10px 24px rgba(0,0,0,.12);z-index:6;}
+  .syncHint{position:absolute;top:52px;right:18px;background:#eef2ff;border:1px solid #c7d2fe;color:#4f46e5;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:800;}
+  @media (max-width:760px){.photoWorld{gap:24px;transform:scale(.82)}.icloud{font-size:42px}.macPhotos{width:410px}.iphone{width:180px;height:340px}}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/moms-arcade/"><span class="ko">🏠 교실</span><span class="en">🏠 Classroom</span></a>
+    <h1 id="h1"></h1>
+    <p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div>
+    <div id="stepText"></div>
+  </header>
+  <div id="card">
+    <button class="ghostBtn" id="skipBtn" onclick="skipLevel()"></button>
+    <div id="mainView">
+      <div id="banner">
+        <div class="t" id="bTitle"></div>
+        <div class="i" id="bInstr"></div>
+        <div class="h" id="bHint"></div>
+        <div class="extra"><button id="replayBtn" onclick="replayDemo()"></button></div>
+      </div>
+      <div id="stage"></div>
+    </div>
+    <div id="finalScreen">
+      <div class="tr">🏆</div>
+      <div style="font-size:26px;font-weight:800;" id="finalTitle"></div>
+      <div style="font-size:17px;margin-top:6px;" id="finalMsg"></div>
+      <button class="big" id="restartBtn" onclick="restart()"></button>
+      <div style="margin-top:12px;"><a id="hubLink" href="https://dthoma1.github.io/moms-arcade/" style="display:inline-block;text-decoration:none;font-size:15px;font-weight:700;color:#6366f1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:10px 18px;"></a></div>
+    </div>
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div><button id="nextBtn" onclick="goNext()"></button></div>
+  </div>
+</div>
+
+<script>
+/* ===== language ===== */
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){ return (o&&typeof o==="object"&&("ko" in o))?(o[LANG]!=null?o[LANG]:o.ko):o; }
+const UI={
+  h1:{ko:"🖼️ 아이폰 사진이 맥에도!",en:"🖼️ Your iPhone photos on your Mac!"},
+  sub:{ko:"아이폰으로 찍은 사진이 맥북에 저절로 나타나요. 마법 같죠? 😊",en:"Photos you take on iPhone appear on your Mac automatically — like magic 😊"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},
+  replay:{ko:"👀 다시 보여주기",en:"👀 Show me again"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},
+  hub:{ko:"🏠 교실로 돌아가기",en:"🏠 Back to classroom"},
+  finalTitle:{ko:"사진은 어디서나!",en:"Photos, everywhere!"},
+  finalMsg:{ko:"이제 아이폰 사진을 맥에서도 크게 볼 수 있어요 💖",en:"Now you can see your iPhone photos big on your Mac 💖"},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},
+  finalStep:{ko:"완료! 🎊",en:"Done! 🎊"},
+  next:{ko:"다음 ›",en:"Next ›"}
+};
+function applyStatic(){
+  document.documentElement.lang=LANG;
+  document.getElementById("h1").textContent=T(UI.h1);
+  document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);
+  document.getElementById("replayBtn").textContent=T(UI.replay);
+  document.getElementById("restartBtn").textContent=T(UI.restart);
+  document.getElementById("nextBtn").textContent=T(UI.next);
+  document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);
+  document.getElementById("finalMsg").textContent=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("momLang",l); applyStatic();
+  if(els.final.style.display==="block"){ els.step.textContent=T(UI.finalStep); }
+  else if(!doneLock){ loadLevel(current); } }
+
+/* ===== praise + sound + confetti ===== */
+const PRAISE={ko:["잘했어요! 🎉","완벽해요! 👏","최고예요! ⭐","멋져요! 💖","정확해요! ✨"],
+              en:["Well done! 🎉","Perfect! 👏","Great! ⭐","Lovely! 💖","Exactly! ✨"]};
+const praise=()=>{const a=PRAISE[LANG]||PRAISE.ko;return a[Math.floor(Math.random()*a.length)];};
+let actx=null;
+function beep(f=660,d=.14){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.connect(g);g.connect(actx.destination);
+  o.start();o.stop(actx.currentTime+d);}catch(e){}}
+const chime=()=>{beep(660,.12);setTimeout(()=>beep(880,.16),110);};
+function confetti(){const E=["🎉","✨","💖","⭐","🌸","🎊","💛"];for(let i=0;i<26;i++){const c=document.createElement("div");
+  c.className="confetti";c.textContent=E[Math.floor(Math.random()*E.length)];c.style.left=Math.random()*100+"vw";
+  c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);} }
+
+/* ===== cursors ===== */
+const SVG_ARROW=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 3 L5 20 L9.5 15.8 L12.6 22 L15.2 20.8 L12.1 14.8 L18 14.8 Z" fill="#111" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+const SVG_IBEAM=`<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g><g fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"/><path d="M9 4.5 h6 M9 19.5 h6"/></g></svg>`;
+function makeCursor(kind){ const c=document.createElement("div"); c.className="demoCursor";
+  c.innerHTML=kind==="ibeam"?SVG_IBEAM:SVG_ARROW; return c; }
+
+/* ===== state + helpers ===== */
+const stage=document.getElementById("stage");
+let locked=false,currentDemo=null;
+function clearStage(){ stage.innerHTML=""; }
+function stageXY(el){ const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect();
+  return {x:r.left-s.left+r.width/2,y:r.top-s.top+r.height/2}; }
+function ripple(x,y){ const r=document.createElement("div"); r.className="clickRipple";
+  r.style.left=(x-13)+"px"; r.style.top=(y-13)+"px"; stage.appendChild(r); setTimeout(()=>r.remove(),520); }
+function markTarget(el){ if(el) el.classList.add("target"); }
+function showToast(msg){ let t=stage.querySelector(".miniToast");
+  if(!t){ t=document.createElement("div"); t.className="miniToast"; stage.appendChild(t); }
+  t.textContent=msg; t.style.opacity="1"; clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>{ t.style.opacity="0"; },1800); }
+
+/* ===== demos ===== */
+function replayDemo(){ if(currentDemo) currentDemo(); }
+function showReplay(on){ document.getElementById("replayBtn").style.display=on?"inline-flex":"none"; }
+function autoDemo(fn,delay){ currentDemo=fn; showReplay(!!fn); if(fn) setTimeout(()=>{ if(!locked) fn(); },delay||800); }
+function demoTap(getTarget,atClick,reset,holdMs,kind){
+  return function run(){ if(locked) return; locked=true;
+    const target=getTarget(); if(!target){ locked=false; return; }
+    const cur=makeCursor(kind); stage.appendChild(cur);
+    const {x,y}=stageXY(target);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+34)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-4)+"px"; cur.style.top=(kind==="ibeam"?y-13:y-2)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(560,.05); if(atClick)atClick(target); },760);
+    setTimeout(()=>{ if(reset)reset(target); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },760+(holdMs||900));
+  };
+}
+function demoType(getInput,word,holdMs){
+  return function run(){ if(locked) return; locked=true;
+    const f=getInput(); if(!f){ locked=false; return; }
+    const bar=f.closest(".addrbar"); const {x,y}=stageXY(f);
+    const cur=makeCursor("ibeam"); stage.appendChild(cur);
+    cur.style.left=(x-32)+"px"; cur.style.top=(y+28)+"px"; cur.style.opacity="0";
+    requestAnimationFrame(()=>{ cur.style.opacity="1"; cur.style.left=(x-6)+"px"; cur.style.top=(y-13)+"px"; });
+    setTimeout(()=>{ cur.classList.add("click"); ripple(x,y); beep(540,.05); if(bar)bar.classList.add("focusRing"); f.value="";
+      let i=0; const iv=setInterval(()=>{ f.value=word.slice(0,++i); beep(700,.03); if(i>=word.length) clearInterval(iv); },170);
+    },780);
+    setTimeout(()=>{ f.value=""; if(bar)bar.classList.remove("focusRing"); cur.style.opacity="0"; setTimeout(()=>cur.remove(),260); locked=false; },780+(holdMs||1600));
+  };
+}
+
+/* ===== photos stage builders ===== */
+function deviceStage(opts){
+  opts=opts||{};
+  stage.innerHTML=`
+    <div class="photoWorld">
+      <div class="syncBeam"></div>
+      <div class="iphone">
+        <div class="island"></div>
+        <div class="phoneScreen">
+          <div class="phoneStatus"><span>9:41</span><span>📶 🔋</span></div>
+          <div class="cameraView"><div class="cameraScene">${opts.phoneEmoji||"🌷"}</div></div>
+          <div class="phoneThumb ${opts.phonePhoto?'on':''}">${opts.phonePhoto||"📸"}</div>
+          <button class="shutter" aria-label="${T({ko:'사진 찍기',en:'Take photo'})}"></button>
+        </div>
+      </div>
+      <div class="icloud">☁️<span class="syncText">${T({ko:'iCloud',en:'iCloud'})}</span></div>
+      <div class="macPhotos">
+        <div class="macTitle"><div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div><span class="photosIcon">🌈</span><span class="macTitleText">${T({ko:'사진',en:'Photos'})}</span></div>
+        <div class="photoBody"><div class="photoGrid"></div></div>
+      </div>
+    </div>`;
+  const grid=stage.querySelector('.photoGrid');
+  (opts.tiles||[]).forEach((tile,i)=>{
+    const el=document.createElement('div'); el.className='photoTile '+(tile.cls||''); el.dataset.idx=i; el.textContent=tile.emoji||'🌷'; grid.appendChild(el);
+  });
+  if(opts.note){ const n=document.createElement('div'); n.className='noteBubble'; n.textContent=T(opts.note); stage.querySelector('.photoWorld').appendChild(n); }
+  return {phone:stage.querySelector('.iphone'),shutter:stage.querySelector('.shutter'),thumb:stage.querySelector('.phoneThumb'),mac:stage.querySelector('.macPhotos'),grid,body:stage.querySelector('.photoBody'),world:stage.querySelector('.photoWorld')};
+}
+function photoTiles(includeNew){
+  const arr=[{emoji:'🌸'},{emoji:'🍰'},{emoji:'🐶'},{emoji:'🌊'},{emoji:'☕'}];
+  if(includeNew) arr.splice(1,0,{emoji:'📸',cls:'new'});
+  return arr;
+}
+
+/* ===== levels ===== */
+const levels=[
+  { title:{ko:"아이폰으로 사진 찍기",en:"Take a photo on iPhone"},
+    instr:{ko:"아이폰 카메라의 하얀 셔터 버튼을 누르면 새 사진이 생겨요.",en:"Tap the white shutter button on the iPhone camera to make a new photo."},
+    hint:{ko:"동그란 셔터 버튼을 눌러 보세요.",en:"Tap the round shutter button."},
+    build(done){
+      const ui=deviceStage({tiles:photoTiles(false)}); markTarget(ui.shutter);
+      ui.shutter.addEventListener('click',()=>{ if(locked)return; ui.thumb.textContent='📸'; ui.thumb.classList.add('on'); done('📸',{ko:'사진을 찍었어요!',en:'You took a photo!'}); });
+      autoDemo(demoTap(()=>stage.querySelector('.shutter'),()=>{ui.thumb.textContent='📸';ui.thumb.classList.add('on');},()=>ui.thumb.classList.remove('on'),900),900);
+    } },
+  { title:{ko:"맥에도 나타나요 (iCloud)",en:"It shows up on Mac (iCloud)"},
+    instr:{ko:"iCloud가 사진을 조용히 옮겨 줘요. 아이폰의 사진이 맥 사진 앱에도 나타납니다.",en:"iCloud quietly syncs your photo, so the iPhone picture appears in the Mac Photos app too."},
+    hint:{ko:"맥에 새로 나타난 사진을 눌러 확인해 보세요.",en:"Click the newly appeared photo on the Mac to confirm."},
+    build(done){
+      const ui=deviceStage({phonePhoto:'📸',tiles:photoTiles(true)});
+      const n=document.createElement('div'); n.className='syncHint'; n.textContent=T({ko:'동기화 중…',en:'Syncing…'}); ui.mac.appendChild(n);
+      const synced=ui.grid.querySelector('.new'); synced.classList.add('appear'); markTarget(synced);
+      setTimeout(()=>{ n.textContent=T({ko:'동기화 완료 ✓',en:'Synced ✓'}); },700);
+      synced.addEventListener('click',()=>{ if(locked)return; done('☁️',{ko:'맥에서도 사진을 찾았어요!',en:'You found it on the Mac!'}); });
+      autoDemo(demoTap(()=>stage.querySelector('.photoTile.new')),1000);
+    } },
+  { title:{ko:"맥에서 크게 보기",en:"View it big on the Mac"},
+    instr:{ko:"맥의 사진 앱에서는 작은 사진을 누르면 크게 열려서 자세히 볼 수 있어요.",en:"In Photos on Mac, click a thumbnail to open it big and see the details."},
+    hint:{ko:"맥 사진첩의 사진 하나를 눌러 크게 열어 보세요.",en:"Click a thumbnail in the Mac library to open it large."},
+    build(done){
+      const ui=deviceStage({phonePhoto:'📸',tiles:photoTiles(true)});
+      const target=ui.grid.querySelector('.photoTile.new'); markTarget(target);
+      target.addEventListener('click',()=>{ if(locked)return; ui.body.innerHTML=`<div class="bigPhoto">📸<span>${T({ko:'맥에서 크게 보여요!',en:'Big on your Mac!'})}</span></div>`; done('🖼️',{ko:'사진을 크게 열었어요!',en:'You opened the photo big!'}); });
+      autoDemo(demoTap(()=>stage.querySelector('.photoTile.new'),()=>{ui.body.innerHTML=`<div class="bigPhoto">📸<span>${T({ko:'맥에서 크게 보여요!',en:'Big on your Mac!'})}</span></div>`;},()=>{ui.body.innerHTML='<div class="photoGrid"></div>'; const g=ui.body.querySelector('.photoGrid'); photoTiles(true).forEach((tile,i)=>{const el=document.createElement('div');el.className='photoTile '+(tile.cls||'');el.dataset.idx=i;el.textContent=tile.emoji;g.appendChild(el);}); markTarget(g.querySelector('.new')); g.querySelector('.new').addEventListener('click',()=>{ if(locked)return; ui.body.innerHTML=`<div class="bigPhoto">📸<span>${T({ko:'맥에서 크게 보여요!',en:'Big on your Mac!'})}</span></div>`; done('🖼️',{ko:'사진을 크게 열었어요!',en:'You opened the photo big!'}); });},900),900);
+    } },
+  { title:{ko:"다 함께 보기",en:"See them together"},
+    instr:{ko:"아이폰과 맥이 같은 사진첩을 봐요. 한쪽에서 찍으면 양쪽에 다 있어요!",en:"Your iPhone and Mac share one library — snap on one, see it on both!"},
+    hint:{ko:"따뜻한 마음으로 확인하고 완료를 눌러요.",en:"Enjoy the shared library, then tap Done."},
+    build(done){
+      deviceStage({phonePhoto:'📸',tiles:photoTiles(true),note:{ko:'아이폰과 맥이 같은 사진첩을 봐요. 한쪽에서 찍으면 양쪽에 다 있어요!',en:'Your iPhone and Mac share one library — snap on one, see it on both!'}});
+      const done2=document.createElement('button'); done2.className='big'; done2.textContent=T({ko:'완료 ✓',en:'Done ✓'});
+      done2.style.cssText='position:absolute;bottom:16px;right:16px;margin:0;z-index:30;';
+      done2.addEventListener('click',()=>{ if(!locked) done('💖',{ko:'사진을 어디서나 볼 수 있어요!',en:'Photos are everywhere!'}); });
+      stage.appendChild(done2); markTarget(done2); autoDemo(null);
+    } }
+];
+
+/* ===== engine ===== */
+let current=0,doneLock=false;
+const els={ bar:document.getElementById("progressBar"),step:document.getElementById("stepText"),
+  main:document.getElementById("mainView"),final:document.getElementById("finalScreen"),
+  overlay:document.getElementById("successOverlay"),msg:document.getElementById("successMsg"),
+  skip:document.getElementById("skipBtn") };
+const banner={t:document.getElementById("bTitle"),i:document.getElementById("bInstr"),h:document.getElementById("bHint")};
+function loadLevel(i){
+  clearStage(); locked=false; currentDemo=null; showReplay(false);
+  const lv=levels[i];
+  banner.t.textContent=T(lv.title); banner.i.textContent=T(lv.instr); banner.h.textContent="💡 "+T(lv.hint);
+  els.step.textContent=UI.step[LANG](i+1,levels.length);
+  els.bar.style.width=(i/levels.length*100)+"%";
+  requestAnimationFrame(()=>lv.build(onLevelDone));
+}
+function onLevelDone(emoji,msg){
+  if(doneLock) return; doneLock=true; locked=true;
+  els.bar.style.width=((current+1)/levels.length*100)+"%";
+  setTimeout(()=>{
+    els.msg.textContent=msg?T(msg):praise();
+    els.overlay.querySelector(".be").textContent=emoji||"🎉";
+    els.overlay.style.display="flex"; confetti(); chime();
+  },650);
+}
+function goNext(){
+  els.overlay.style.display="none"; doneLock=false;
+  current++; if(current>=levels.length) showFinal(); else loadLevel(current);
+}
+function skipLevel(){ if(doneLock) return; current++; if(current>=levels.length) showFinal(); else loadLevel(current); }
+function showFinal(){ els.main.style.display="none"; els.skip.style.display="none"; els.final.style.display="block"; try{localStorage.setItem("momHub:done:photos","1");}catch(e){}
+  els.bar.style.width="100%"; els.step.textContent=T(UI.finalStep); confetti(); setTimeout(confetti,500); setTimeout(confetti,1000); chime(); }
+function restart(){ current=0; doneLock=false; els.main.style.display="flex"; els.skip.style.display="block";
+  els.final.style.display="none"; loadLevel(0); }
+document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.addEventListener("gesturestart",e=>e.preventDefault());
+applyStatic(); loadLevel(0);
+</script>
+</body>
+</html>
