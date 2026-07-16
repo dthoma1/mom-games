@@ -1,7 +1,8 @@
 /* ==========================================================================
    Shared two-column lesson layout for Mom's Arcade games.
    Works together with twocol.js, which builds #topbar and adds the
-   .twocol class to #mainView (lesson text on the left, game on the right).
+   .twocol class to #introView / #mainView / #lessonView, plus a .lessonCol
+   on the left (lesson text) so the game/illustration sits on the right.
    Loaded after each game's own <style>, so equal-specificity rules win here.
    ========================================================================== */
 
@@ -13,13 +14,17 @@
 #topbar #homeBtn,#topbar #langToggle{position:static;top:auto;left:auto;right:auto;bottom:auto;margin:0;}
 
 /* two-column body */
-#mainView.twocol,#lessonView.twocol{display:flex;flex-direction:row;align-items:stretch;gap:18px;}
-#mainView.twocol > #lessonCol,#lessonView.twocol > #lessonCol{flex:0 0 40%;max-width:440px;min-width:0;
-  display:flex;flex-direction:column;gap:10px;overflow:auto;}
-#mainView.twocol > #lessonCol #banner{text-align:left;}
-#mainView.twocol > #lessonCol #banner .extra{justify-content:flex-start;}
-/* everything in the play container that isn't the lesson column is the game area */
-#mainView.twocol > *:not(#lessonCol),#lessonView.twocol > *:not(#lessonCol){flex:1;min-width:0;min-height:0;}
+#introView.twocol,#mainView.twocol,#lessonView.twocol{display:flex;flex-direction:row;align-items:stretch;gap:18px;}
+#introView.twocol{align-items:center;text-align:left;}
+#introView.twocol > .lessonCol,#mainView.twocol > .lessonCol,#lessonView.twocol > .lessonCol{
+  flex:0 0 40%;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:10px;overflow:auto;}
+#mainView.twocol > .lessonCol #banner{text-align:left;}
+#mainView.twocol > .lessonCol #banner .extra{justify-content:flex-start;}
+#introView.twocol .introBtns{justify-content:flex-start;}
+/* everything in the play container that isn't the lesson column is the game / illustration */
+#introView.twocol > *:not(.lessonCol),#mainView.twocol > *:not(.lessonCol),#lessonView.twocol > *:not(.lessonCol){
+  flex:1;min-width:0;min-height:0;}
+#introView.twocol > #introArt{display:flex;align-items:center;justify-content:center;}
 
 /* Previous / Next under the lesson text */
 #lessonNav{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding-top:2px;}
@@ -34,7 +39,11 @@
 
 /* stack on phones / narrow windows */
 @media (max-width:760px){
-  #mainView.twocol,#lessonView.twocol{flex-direction:column;}
-  #mainView.twocol > #lessonCol,#lessonView.twocol > #lessonCol{flex:none;max-width:none;overflow:visible;}
-  #mainView.twocol > *:not(#lessonCol),#lessonView.twocol > *:not(#lessonCol){min-height:320px;}
+  #introView.twocol,#mainView.twocol,#lessonView.twocol{flex-direction:column;}
+  #introView.twocol{text-align:center;}
+  #introView.twocol .introBtns{justify-content:center;}
+  #introView.twocol > .lessonCol,#mainView.twocol > .lessonCol,#lessonView.twocol > .lessonCol{
+    flex:none;max-width:none;overflow:visible;}
+  #mainView.twocol > *:not(.lessonCol),#lessonView.twocol > *:not(.lessonCol){min-height:320px;}
+  #introView.twocol > #introArt{min-height:0;}
 }
