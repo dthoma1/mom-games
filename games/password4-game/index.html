@@ -157,6 +157,7 @@
   .iosfill:disabled{opacity:.5;cursor:default;}
   .secban{width:340px;max-width:100%;background:#fff2f2;border:1px solid #fecaca;border-radius:14px;padding:12px 14px;color:#b91c1c;font-weight:700;font-size:15px;text-align:left;}
 </style>
+  <link rel="stylesheet" href="../_shared/twocol.css" />
 </head>
 <body>
 <div id="app">
@@ -459,5 +460,6 @@ function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.fina
 document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
 applyStatic(); showIntro();
 </script>
+<script src="../_shared/twocol.js"></script>
 </body>
 </html>

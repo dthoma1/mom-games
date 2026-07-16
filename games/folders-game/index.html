@@ -123,6 +123,7 @@
     background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:999px;padding:11px 24px;cursor:pointer;}
   button.big.soft{background:#fff;color:var(--accent);border:2px solid var(--accent);}
 </style>
+  <link rel="stylesheet" href="../_shared/twocol.css" />
 </head>
 <body>
 <div id="app">
@@ -449,5 +450,6 @@ function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.fina
 document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
 applyStatic(); showIntro();
 </script>
+<script src="../_shared/twocol.js"></script>
 </body>
 </html>

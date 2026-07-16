@@ -170,6 +170,7 @@
   .afbar .kt{flex:1;min-width:0;} .afbar .kt b{font-size:15px;color:#1c1c1e;} .afbar .kt span{display:block;font-size:13px;color:#8e8e93;}
   .afbar .kgo{color:#007aff;font-weight:800;font-size:20px;flex-shrink:0;}
 </style>
+  <link rel="stylesheet" href="../_shared/twocol.css" />
 </head>
 <body>
 <div id="app">
@@ -428,5 +429,6 @@ function restart(){ introIdx=0; lidx=0; els.skip.style.display="block"; els.fina
 document.querySelectorAll("#langToggle button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
 applyStatic(); showIntro();
 </script>
+<script src="../_shared/twocol.js"></script>
 </body>
 </html>

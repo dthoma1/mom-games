@@ -1,0 +1,40 @@
+/* ==========================================================================
+   Shared two-column lesson layout for Mom's Arcade games.
+   Works together with twocol.js, which builds #topbar and adds the
+   .twocol class to #mainView (lesson text on the left, game on the right).
+   Loaded after each game's own <style>, so equal-specificity rules win here.
+   ========================================================================== */
+
+#app{max-width:1180px;}
+
+/* top bar: Classroom (left) · language picker (right) */
+#topbar{width:100%;display:flex;align-items:center;justify-content:space-between;
+  gap:10px;margin-bottom:8px;}
+#topbar #homeBtn,#topbar #langToggle{position:static;top:auto;left:auto;right:auto;bottom:auto;margin:0;}
+
+/* two-column body */
+#mainView.twocol,#lessonView.twocol{display:flex;flex-direction:row;align-items:stretch;gap:18px;}
+#mainView.twocol > #lessonCol,#lessonView.twocol > #lessonCol{flex:0 0 40%;max-width:440px;min-width:0;
+  display:flex;flex-direction:column;gap:10px;overflow:auto;}
+#mainView.twocol > #lessonCol #banner{text-align:left;}
+#mainView.twocol > #lessonCol #banner .extra{justify-content:flex-start;}
+/* everything in the play container that isn't the lesson column is the game area */
+#mainView.twocol > *:not(#lessonCol),#lessonView.twocol > *:not(#lessonCol){flex:1;min-width:0;min-height:0;}
+
+/* Previous / Next under the lesson text */
+#lessonNav{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding-top:2px;}
+#lessonNav:empty{display:none;}
+#lessonNav .navBtn{font-size:17px;font-weight:800;color:#fff;border:none;cursor:pointer;
+  border-radius:999px;padding:12px 20px;background:linear-gradient(90deg,#6366f1,#ec4899);
+  box-shadow:0 6px 16px rgba(99,102,241,.30);}
+#lessonNav .navBtn:hover{filter:brightness(1.04);}
+#lessonNav .navBtn.back{background:#fff;color:#6366f1;border:1px solid #dfe4ff;
+  box-shadow:0 3px 8px rgba(0,0,0,.08);}
+#lessonNav .navBtn:disabled{opacity:.4;cursor:default;filter:none;}
+
+/* stack on phones / narrow windows */
+@media (max-width:760px){
+  #mainView.twocol,#lessonView.twocol{flex-direction:column;}
+  #mainView.twocol > #lessonCol,#lessonView.twocol > #lessonCol{flex:none;max-width:none;overflow:visible;}
+  #mainView.twocol > *:not(#lessonCol),#lessonView.twocol > *:not(#lessonCol){min-height:320px;}
+}
