@@ -48,3 +48,13 @@
   #mainView.twocol > *:not(.lessonCol),#lessonView.twocol > *:not(.lessonCol){min-height:320px;}
   #introView.twocol > #introArt{min-height:0;font-size:clamp(84px,26vw,150px);}
 }
+
+/* ==========================================================================
+   Legibility bump for the lesson instruction box (helps older readers).
+   Loaded after each game's own <style>, so these equal-specificity rules
+   win: larger instruction / hint text and a darker (higher-contrast) grey
+   for the small hint line that used to be light grey on white.
+   ========================================================================== */
+#banner .t{font-size:22px;line-height:1.3;}
+#banner .i{font-size:19px;line-height:1.55;margin-top:6px;}
+#banner .h,#banner .hint{font-size:17px;line-height:1.5;margin-top:8px;color:#374151;}
