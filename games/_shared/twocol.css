@@ -24,7 +24,8 @@
 /* everything in the play container that isn't the lesson column is the game / illustration */
 #introView.twocol > *:not(.lessonCol),#mainView.twocol > *:not(.lessonCol),#lessonView.twocol > *:not(.lessonCol){
   flex:1;min-width:0;min-height:0;}
-#introView.twocol > #introArt{display:flex;align-items:center;justify-content:center;}
+#introView.twocol > #introArt{display:flex;align-items:center;justify-content:center;
+  font-size:clamp(110px,15vw,200px);line-height:1;margin:0;}
 
 /* Previous / Next under the lesson text */
 #lessonNav{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding-top:2px;}
@@ -45,5 +46,5 @@
   #introView.twocol > .lessonCol,#mainView.twocol > .lessonCol,#lessonView.twocol > .lessonCol{
     flex:none;max-width:none;overflow:visible;}
   #mainView.twocol > *:not(.lessonCol),#lessonView.twocol > *:not(.lessonCol){min-height:320px;}
-  #introView.twocol > #introArt{min-height:0;}
+  #introView.twocol > #introArt{min-height:0;font-size:clamp(84px,26vw,150px);}
 }
