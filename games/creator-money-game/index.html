@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>콘텐츠로 수익 만들기 · 크리에이터 되기</title>
+<style>
+  :root{--bg1:#fff1f2;--bg2:#eef2ff;--ink:#1f2937;--soft:#4b5563;--accent:#ef4444;--accent2:#f472b6;--good:#16a34a;--blue:#4f46e5;}
+  *{box-sizing:border-box;-webkit-user-select:none;user-select:none;}
+  html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2));overflow:hidden;overscroll-behavior:none;touch-action:manipulation;}
+  #app{height:100%;display:flex;flex-direction:column;align-items:center;padding:12px;max-width:1040px;margin:0 auto;}
+  header{width:100%;text-align:center;position:relative;}
+  h1{font-size:22px;margin:2px 0}.sub{color:var(--soft);font-size:14px;margin:0 0 8px}
+  #langToggle{position:absolute;top:-2px;right:0;display:inline-flex;background:#fff;border:1px solid #e5e7eb;border-radius:999px;overflow:hidden;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90}
+  #langToggle button{border:0;background:transparent;padding:6px 11px;cursor:pointer;color:#9ca3af;font-weight:700}
+  #langToggle button.on{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff}
+  #homeBtn{position:absolute;top:-2px;left:0;display:inline-flex;text-decoration:none;background:#fff;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;font-weight:700;color:var(--accent);padding:6px 11px;box-shadow:0 2px 6px rgba(0,0,0,.08);z-index:90}
+  #homeBtn .en{display:none}html[lang="en"] #homeBtn .ko{display:none}html[lang="en"] #homeBtn .en{display:inline}
+  #progressWrap{width:100%;height:12px;background:#ffe4e6;border-radius:999px;overflow:hidden;margin-bottom:4px}
+  #progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s}
+  #stepText{font-size:12px;color:var(--soft);margin-bottom:8px}
+  #card{position:relative;width:100%;flex:1;display:flex;flex-direction:column;min-height:0;gap:10px}
+  #skipBtn{position:absolute;right:2px;top:-4px;font-size:12px;color:var(--soft);background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 12px;cursor:pointer;z-index:80}
+  #mainView{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+  #banner{background:#fff;border-radius:16px;box-shadow:0 8px 22px rgba(239,68,68,.12);padding:10px 16px;text-align:center}
+  #banner .t{font-size:19px;font-weight:800}#banner .i{font-size:15px;margin-top:3px;line-height:1.5}#banner .i b{color:var(--accent)}#banner .h{font-size:13px;color:var(--soft);margin-top:4px}
+  #stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(239,68,68,.1);padding:18px;overflow:auto}
+  .story{width:100%;max-width:720px;text-align:center}.art{font-size:54px;line-height:1.2;margin-bottom:10px}.txt{font-size:17px;line-height:1.65;color:#374151}.txt b{color:var(--accent)}
+  .cards{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:10px 0}.mini{flex:1;min-width:175px;max-width:220px;border:2px solid #e0e7ff;background:#f5f7ff;border-radius:16px;padding:14px}.mini .emoji{font-size:34px}.mini .name{font-size:16px;font-weight:800;margin:5px 0}.mini .desc{font-size:13px;line-height:1.45;color:#4b5563}
+  .flow{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0}.flow span{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:13px;padding:11px;font-size:14px;font-weight:800}.arrow{color:var(--blue);font-size:20px}
+  .checklist{max-width:620px;margin:8px auto;text-align:left}.check{display:flex;gap:10px;align-items:flex-start;background:#f9fafb;border-radius:12px;padding:9px 12px;margin:7px 0;font-size:15px;line-height:1.45}.check i{font-style:normal;color:var(--good);font-weight:900}
+  .notice{background:#fff7ed;border:1px solid #fed7aa;border-radius:13px;padding:10px 13px;margin:10px auto;max-width:650px;font-size:14px;line-height:1.5;color:#7c2d12}
+  .money{font-size:28px;font-weight:900;color:var(--good);margin:8px}.gotBtn{margin-top:14px;font-size:17px;font-weight:800;color:#fff;border:0;cursor:pointer;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:12px 26px;box-shadow:0 8px 20px rgba(239,68,68,.3)}
+  .quiz{width:100%;max-width:650px}.question{font-size:18px;font-weight:800;margin-bottom:14px}.answer{display:block;width:100%;background:#fff;border:2px solid #dfe4ff;border-radius:13px;padding:12px;margin:9px 0;font-size:15px;font-weight:700;color:#374151;cursor:pointer}.answer:hover{border-color:#818cf8}.answer.wrong{border-color:#ef4444;background:#fff1f2}.answer.right{border-color:var(--good);background:#f0fdf4}
+  .sources{font-size:12px;line-height:1.6;margin-top:12px}.sources a{color:var(--blue)}
+  #finalScreen{display:none;flex:1;min-height:0;flex-direction:column;align-items:center;justify-content:center;background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(239,68,68,.12);padding:26px;text-align:center}
+  #finalScreen .tr{font-size:64px}#finalScreen .big{margin-top:14px;font-size:17px;font-weight:800;color:#fff;border:0;cursor:pointer;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;padding:12px 26px}
+  #successOverlay{display:none;position:absolute;inset:0;background:rgba(255,255,255,.86);border-radius:18px;flex-direction:column;align-items:center;justify-content:center;z-index:60}#successOverlay .be{font-size:60px}#successOverlay .msg{font-size:22px;font-weight:800;margin-top:6px}
+  .pulse{animation:pulse 1.2s infinite}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.45)}50%{box-shadow:0 0 0 10px rgba(239,68,68,0)}}
+  .confetti{position:fixed;top:-40px;z-index:200;pointer-events:none;animation:fall linear forwards}@keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:.9}}
+</style>
+<link rel="stylesheet" href="../_shared/twocol.css" />
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="langToggle"><button data-l="ko">한국어</button><button data-l="en">EN</button></div>
+    <a id="homeBtn" href="https://dthoma1.github.io/mom-games/becoming-a-content-creator/"><span class="ko">‹ 수업 목록</span><span class="en">‹ Lessons</span></a>
+    <h1 id="h1"></h1><p class="sub" id="sub"></p>
+    <div id="progressWrap"><div id="progressBar"></div></div><div id="stepText"></div>
+  </header>
+  <div id="card">
+    <button id="skipBtn" onclick="skipLevel()"></button>
+    <div id="mainView"><div id="banner"><div class="t" id="bTitle"></div><div class="i" id="bInstr"></div><div class="h" id="bHint"></div></div><div id="stage"></div></div>
+    <div id="finalScreen"><div class="tr">🏆</div><div style="font-size:26px;font-weight:800" id="finalTitle"></div><div style="font-size:17px;margin-top:8px;max-width:650px;line-height:1.6" id="finalMsg"></div><button class="big" id="restartBtn" onclick="restart()"></button><div style="margin-top:12px"><a id="hubLink" href="https://dthoma1.github.io/mom-games/becoming-a-content-creator/" style="text-decoration:none;font-size:15px;font-weight:700;color:var(--accent)"></a></div></div>
+    <div id="successOverlay"><div class="be">🎉</div><div class="msg" id="successMsg"></div></div>
+  </div>
+</div>
+<script>
+let LANG=localStorage.getItem("momLang")||"ko";
+function T(o){return o&&typeof o==="object"&&"ko" in o?(o[LANG]!=null?o[LANG]:o.ko):o}
+const UI={
+  h1:{ko:"💰 콘텐츠로 수익 만들기",en:"💰 How Creators Get Paid"},
+  sub:{ko:"AdSense와 인스타그램 수익화, 어렵지 않게 알아봐요",en:"A gentle guide to AdSense and Instagram monetization"},
+  skip:{ko:"건너뛰기 ›",en:"Skip ›"},got:{ko:"알겠어요 ›",en:"Got it ›"},
+  restart:{ko:"다시 하기 🔁",en:"Play again 🔁"},hub:{ko:"🏠 수업 목록으로",en:"🏠 Back to lessons"},
+  finalTitle:{ko:"수익화의 큰 그림을 알았어요!",en:"You understand the monetization map!"},
+  finalMsg:{ko:"팔로워 수만으로 자동으로 돈이 생기지는 않아요. <b>좋은 콘텐츠와 진짜 신뢰</b>를 먼저 쌓고, 각 서비스의 <b>프로페셔널 대시보드</b>에서 현재 자격을 확인하세요. 조건과 제공 국가는 바뀔 수 있어요.",
+    en:"Follower count alone does not automatically create income. Build <b>useful content and real trust</b> first, then check current eligibility in each service's <b>Professional Dashboard</b>. Features and countries can change."},
+  step:{ko:(a,b)=>`${a} / ${b} 단계`,en:(a,b)=>`Step ${a} / ${b}`},done:{ko:"완료! 🎊",en:"Done! 🎊"}
+};
+const els={stage:document.getElementById("stage"),main:document.getElementById("mainView"),final:document.getElementById("finalScreen"),bar:document.getElementById("progressBar"),step:document.getElementById("stepText"),overlay:document.getElementById("successOverlay")};
+function applyStatic(){
+  document.documentElement.lang=LANG;document.getElementById("h1").textContent=T(UI.h1);document.getElementById("sub").textContent=T(UI.sub);
+  document.getElementById("skipBtn").textContent=T(UI.skip);document.getElementById("restartBtn").textContent=T(UI.restart);document.getElementById("hubLink").textContent=T(UI.hub);
+  document.getElementById("finalTitle").textContent=T(UI.finalTitle);document.getElementById("finalMsg").innerHTML=T(UI.finalMsg);
+  document.querySelectorAll("#langToggle button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG));
+}
+document.querySelectorAll("#langToggle button").forEach(b=>b.onclick=()=>{LANG=b.dataset.l;localStorage.setItem("momLang",LANG);applyStatic();if(els.final.style.display==="flex")els.step.textContent=T(UI.done);else loadLevel(current)});
+function story(html,api){els.stage.innerHTML="";const d=document.createElement("div");d.className="story";d.innerHTML=html;const b=document.createElement("button");b.className="gotBtn pulse";b.textContent=T(UI.got);b.onclick=api.next;d.appendChild(b);els.stage.appendChild(d)}
+const check=(ko,en)=>`<div class="check"><i>✓</i><span>${T({ko,en})}</span></div>`;
+const levels=[
+  {title:{ko:"크리에이터는 어떻게 돈을 벌까요?",en:"How do creators earn money?"},instr:{ko:"수익은 크게 <b>광고, 팬, 브랜드</b> 세 길에서 와요.",en:"Income usually comes from <b>ads, fans, or brands</b>."},hint:{ko:"세 가지 길을 살펴봐요.",en:"Look at the three paths."},build(api){story(`<div class="art">📣 💛 🤝</div><div class="cards"><div class="mini"><div class="emoji">📣</div><div class="name">${T({ko:"광고",en:"Ads"})}</div><div class="desc">${T({ko:"Google 같은 광고 서비스가 광고 수익 일부를 나눠요.",en:"An ad service such as Google shares some ad revenue."})}</div></div><div class="mini"><div class="emoji">💛</div><div class="name">${T({ko:"팬",en:"Fans"})}</div><div class="desc">${T({ko:"구독, 선물, 상품 구매로 직접 응원해요.",en:"Fans support through subscriptions, gifts, or purchases."})}</div></div><div class="mini"><div class="emoji">🤝</div><div class="name">${T({ko:"브랜드",en:"Brands"})}</div><div class="desc">${T({ko:"회사가 협찬 콘텐츠 제작비를 지급해요.",en:"A company pays for sponsored content."})}</div></div></div>`,api)}},
+  {title:{ko:"Google AdSense는 어떻게 작동할까요?",en:"How does Google AdSense work?"},instr:{ko:"웹사이트에 Google 광고 자리를 만들면, 유효한 광고 노출이나 클릭에서 생긴 수익 일부를 받아요.",en:"You place Google ad spaces on a website and receive a share from valid ad views or clicks."},hint:{ko:"광고주부터 크리에이터까지 돈의 길을 따라가요.",en:"Follow the money from advertiser to creator."},build(api){story(`<div class="flow"><span>🏢 ${T({ko:"광고주",en:"Advertiser"})}</span><b class="arrow">→</b><span>🔎 Google</span><b class="arrow">→</b><span>🖥️ ${T({ko:"내 사이트 광고",en:"Ad on my site"})}</span><b class="arrow">→</b><span>💰 ${T({ko:"수익 일부",en:"Revenue share"})}</span></div><div class="txt">${T({ko:"광고를 내가 직접 찾아다닐 필요는 없어요. Google이 광고를 골라 보여주고 계산해요. <b>내 광고를 누르거나 다른 사람에게 눌러 달라고 하면 안 돼요.</b>",en:"You do not have to find each advertiser. Google selects ads and calculates earnings. <b>Never click your own ads or ask others to click.</b>"})}</div>`,api)}},
+  {title:{ko:"AdSense 신청 조건",en:"AdSense eligibility"},instr:{ko:"팔로워나 방문자 수의 공식 최저선보다 <b>내 콘텐츠의 품질과 정책 준수</b>가 중요해요.",en:"There is no official traffic minimum; <b>content quality and policy compliance</b> matter."},hint:{ko:"공식 기본 조건을 확인해요.",en:"Review the official basics."},build(api){story(`<div class="checklist">${check("내가 소유하고 관리하는 웹사이트","A website I own and control")}${check("독창적이고 유용한 고품질 콘텐츠","Original, useful, high-quality content")}${check("AdSense 프로그램 정책을 지키는 콘텐츠","Content that follows AdSense Program policies")}${check("신청자는 만 18세 이상","Applicant is at least 18")}</div><div class="notice">${T({ko:"18세 미만이면 부모나 보호자가 자기 Google 계정으로 신청하며, 지급도 그 성인에게 이루어져요.",en:"If the creator is under 18, a parent or guardian may apply with their own Google Account; payments go to that adult."})}</div>`,api)}},
+  {title:{ko:"AdSense는 언제 입금될까요?",en:"When does AdSense pay?"},instr:{ko:"수익은 매달 확정되고, 기준액과 확인 절차를 모두 충족하면 지급돼요.",en:"Earnings are finalized monthly and paid after thresholds and verification are complete."},hint:{ko:"미국 달러 계정의 예를 봐요.",en:"See the U.S. dollar example."},build(api){story(`<div class="money">US$100</div><div class="txt">${T({ko:"미국 달러 계정의 지급 기준액이에요. 기준액 미만이면 다음 달로 넘어가요. 기준액 이상이고 지급 보류가 없다면 보통 <b>다음 달 21~26일</b>에 지급이 시작돼요.",en:"This is the payment threshold for a U.S. dollar account. A smaller balance rolls over. If the threshold is met and there are no holds, payment is generally issued on the <b>21st–26th of the next month</b>."})}</div><div class="notice">${T({ko:"통화마다 기준액이 달라요. 세금 정보, 신원·주소 확인, 지급 방법 등록이 필요할 수 있어요.",en:"Thresholds vary by currency. Tax information, identity/address verification, and a payment method may be required."})}</div>`,api)}},
+  {title:{ko:"인스타그램은 무엇으로 돈을 벌까요?",en:"How can Instagram creators earn?"},instr:{ko:"인스타그램은 하나의 월급이 아니라 <b>여러 수익 도구</b>를 제공해요.",en:"Instagram does not provide one creator salary; it offers <b>different earning tools</b>."},hint:{ko:"각 도구의 돈을 누가 내는지 보세요.",en:"Notice who pays for each tool."},build(api){story(`<div class="cards"><div class="mini"><div class="emoji">🎁</div><div class="name">${T({ko:"릴스 선물",en:"Reels Gifts"})}</div><div class="desc">${T({ko:"팬이 Stars로 선물해요. 자격을 갖춘 크리에이터는 Star 1개당 미화 1센트를 받아요.",en:"Fans send gifts with Stars. Eligible creators receive US$0.01 per Star."})}</div></div><div class="mini"><div class="emoji">🔐</div><div class="name">${T({ko:"구독",en:"Subscriptions"})}</div><div class="desc">${T({ko:"팬이 매달 내고 구독자 전용 콘텐츠를 봐요.",en:"Fans pay monthly for subscriber-only content."})}</div></div><div class="mini"><div class="emoji">🤝</div><div class="name">${T({ko:"브랜드 협찬",en:"Brand deals"})}</div><div class="desc">${T({ko:"브랜드가 크리에이터에게 직접 비용을 지급하고, 유료 파트너십 표시를 해요.",en:"A brand pays the creator, who labels the paid partnership."})}</div></div></div><div class="notice">${T({ko:"조회 수나 팔로워 수만으로 Instagram이 자동 지급하는 것은 아니에요. 계정마다 사용할 수 있는 도구가 달라요.",en:"Instagram does not automatically pay merely for views or follower count. Available tools differ by account."})}</div>`,api)}},
+  {title:{ko:"인스타그램 지급 자격 확인",en:"Checking Instagram eligibility"},instr:{ko:"앱의 <b>프로페셔널 대시보드 → 수익화</b>가 내 계정의 가장 정확한 안내서예요.",en:"Your app's <b>Professional Dashboard → Monetization</b> is the best guide for your account."},hint:{ko:"공통 조건과 선물 조건을 확인해요.",en:"Review common and Gifts requirements."},build(api){story(`<div class="checklist">${check("크리에이터 또는 비즈니스 프로페셔널 계정","A Creator or Business professional account")}${check("만 18세 이상, 지원되는 국가 거주","Age 18+ and living in a supported country")}${check("커뮤니티·수익화 정책 준수와 진정성 있는 활동","Compliance with community/monetization policies and an authentic presence")}${check("신원·세금·은행 지급 정보 설정","Identity, tax, and bank payout information set up")}</div><div class="notice">${T({ko:"릴스 선물은 현재 보통 팔로워 500명 이상이 필요하며 한국도 지원 국가예요. 구독과 다른 도구는 초대 여부·국가·계정 상태에 따라 달라질 수 있으니 대시보드에서 확인하세요.",en:"Reels Gifts currently generally require at least 500 followers, and South Korea is supported. Subscriptions and other tools can depend on invitation, country, and account status, so check the dashboard."})}</div>`,api)}},
+  {title:{ko:"마지막 확인 문제",en:"Final check"},instr:{ko:"맞는 설명을 골라 보세요.",en:"Choose the correct statement."},hint:{ko:"팔로워 수만으로 자동 지급되지는 않아요.",en:"Follower count alone does not trigger automatic payment."},build(api){els.stage.innerHTML=`<div class="quiz"><div class="question">${T({ko:"인스타그램 팔로워가 많아지면 어떤 일이 생길까요?",en:"What happens when an Instagram account gains many followers?"})}</div><button class="answer" data-right="0">${T({ko:"인스타그램이 무조건 월급을 보낸다.",en:"Instagram automatically sends a salary."})}</button><button class="answer" data-right="1">${T({ko:"수익 기회는 늘 수 있지만, 각 도구의 자격·정책·지급 설정을 따로 충족해야 한다.",en:"Opportunities may grow, but each tool has separate eligibility, policy, and payout requirements."})}</button><button class="answer" data-right="0">${T({ko:"모든 게시물에 광고가 자동으로 붙는다.",en:"Ads automatically appear on every post."})}</button></div>`;els.stage.querySelectorAll(".answer").forEach(b=>b.onclick=()=>{if(b.dataset.right==="1"){b.classList.add("right");setTimeout(api.next,450)}else{b.classList.add("wrong");setTimeout(()=>b.classList.remove("wrong"),500)}})}},
+  {title:{ko:"공식 정보에서 다시 확인해요",en:"Check the official sources"},instr:{ko:"수익화 조건은 바뀔 수 있어요. 신청 전 공식 도움말을 확인하세요.",en:"Monetization rules can change. Check official help before applying."},hint:{ko:"링크를 저장해 두면 좋아요.",en:"These links are useful to save."},build(api){story(`<div class="art">🔎 ✅</div><div class="txt">${T({ko:"대시보드에 도구가 보이지 않으면 아직 내 계정이나 지역에 제공되지 않는 것일 수 있어요. 돈을 내면 자격을 열어 준다는 메시지는 사기일 수 있으니 조심하세요.",en:"If a tool is missing from your dashboard, it may not yet be available to your account or region. Beware of messages claiming they can unlock eligibility for a fee."})}</div><div class="sources"><a href="https://support.google.com/adsense/answer/9724" target="_blank" rel="noopener">Google AdSense eligibility</a> · <a href="https://support.google.com/adsense/answer/1709871" target="_blank" rel="noopener">AdSense thresholds</a> · <a href="https://www.facebook.com/help/instagram/738469380549477" target="_blank" rel="noopener">Instagram Gifts</a> · <a href="https://www.facebook.com/help/instagram/406451644272016" target="_blank" rel="noopener">Instagram Subscriptions</a></div>`,api)}}
+];
+let current=0,doneLock=false;
+function loadLevel(i){current=i;doneLock=false;els.main.style.display="flex";els.final.style.display="none";const l=levels[i];document.getElementById("bTitle").textContent=T(l.title);document.getElementById("bInstr").innerHTML=T(l.instr);document.getElementById("bHint").textContent=T(l.hint);els.bar.style.width=((i/levels.length)*100)+"%";els.step.textContent=T(UI.step)(i+1,levels.length);l.build({next:nextLevel})}
+function nextLevel(){if(doneLock)return;doneLock=true;els.overlay.style.display="flex";document.getElementById("successMsg").textContent=T({ko:"잘했어요! 🎉",en:"Well done! 🎉"});setTimeout(()=>{els.overlay.style.display="none";if(current+1<levels.length)loadLevel(current+1);else finish()},650)}
+function skipLevel(){if(current+1<levels.length)loadLevel(current+1);else finish()}
+function finish(){els.main.style.display="none";els.final.style.display="flex";els.bar.style.width="100%";els.step.textContent=T(UI.done);confetti()}
+function restart(){current=0;loadLevel(0)}
+function confetti(){const e=["🎉","✨","💖","⭐","💛"];for(let i=0;i<24;i++){const c=document.createElement("div");c.className="confetti";c.textContent=e[Math.floor(Math.random()*e.length)];c.style.left=Math.random()*100+"vw";c.style.animationDuration=(1.6+Math.random()*1.4)+"s";c.style.fontSize=(18+Math.random()*20)+"px";document.body.appendChild(c);setTimeout(()=>c.remove(),3200)}}
+applyStatic();loadLevel(0);
+</script>
+<script src="../_shared/twocol.js"></script>
+</body>
+</html>
